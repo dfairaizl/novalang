@@ -74,7 +74,7 @@ class Lexer {
   readIdentifier () {
     let token = '';
 
-    while (!this.isNull() && this.isIdentifier() && !this.scanner.eof()) {
+    while (!this.isWhiteSpace() && this.isIdentifier() && !this.scanner.eof()) {
       token += this.currentToken;
       this.nextCharacter();
     }
