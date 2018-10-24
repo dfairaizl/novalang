@@ -11,6 +11,28 @@ describe('Lexer', () => {
     });
   });
 
+  describe('whitespace', () => {
+    it('skips white space before tokens', () => {
+      const lex = new Lexer('    +');
+      expect(lex.nextToken()).toEqual('+');
+    });
+
+    it('skips white space between tokens', () => {
+      const lex = new Lexer('1   +   2');
+
+      expect(lex.nextToken()).toEqual('1');
+      expect(lex.nextToken()).toEqual('+');
+      expect(lex.nextToken()).toEqual('2');
+    });
+
+    it('skips white space after tokens', () => {
+      const lex = new Lexer('+    ');
+
+      expect(lex.nextToken()).toEqual('+');
+      expect(lex.nextToken()).toBe(null);
+    });
+  });
+
   describe('operators', () => {
     it('lexes `+`', () => {
       const lex = new Lexer('+');

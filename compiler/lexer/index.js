@@ -41,7 +41,7 @@ class Lexer {
   readOperator () {
     let token = '';
 
-    while (!this.isNull() && this.isOperator() && !this.scanner.eof()) {
+    while (this.isOperator() && !this.scanner.eof()) {
       token += this.currentToken;
       this.nextCharacter();
     }
@@ -50,12 +50,9 @@ class Lexer {
   }
 
   readPunctuator () {
-    let token = '';
+    let token = this.currentToken;
 
-    if (!this.isNull() && this.isPunctuator() && !this.scanner.eof()) {
-      token += this.currentToken;
-      this.nextCharacter();
-    }
+    this.nextCharacter();
 
     return token;
   }
@@ -63,7 +60,7 @@ class Lexer {
   readDigit () {
     let token = '';
 
-    while (!this.isNull() && this.isDigit() && !this.scanner.eof()) {
+    while (this.isDigit() && !this.scanner.eof()) {
       token += this.currentToken;
       this.nextCharacter();
     }
@@ -74,6 +71,10 @@ class Lexer {
   readIdentifier () {
     let token = '';
 
+    if (this.isNull()) {
+      return null;
+    }
+
     while (!this.isWhiteSpace() && this.isIdentifier() && !this.scanner.eof()) {
       token += this.currentToken;
       this.nextCharacter();
@@ -83,16 +84,17 @@ class Lexer {
   }
 
   nextToken () {
-    // skip any leading whitespace
-    while (this.isWhiteSpace()) {
-      this.nextCharacter();
-    }
-
     if (!this.scanner.eof()) {
       if (this.isNull()) {
         this.nextCharacter();
       }
 
+      // skip any leading whitespace
+      while (this.isWhiteSpace()) {
+        this.nextCharacter();
+      }
+
+      // tokenize the current character
       if (this.isPunctuator()) {
         return this.readPunctuator();
       }

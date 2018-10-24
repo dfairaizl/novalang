@@ -21,7 +21,7 @@ describe('Scanner', () => {
     });
   });
 
-  describe('decode', () => {
+  describe('decodeCharAt()', () => {
     it('decodes characters in range', () => {
       const scanner = new Scanner('aaaa bbbb cccc');
 

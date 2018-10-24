@@ -1,18 +1,22 @@
 {
-  "name": "@novalang/nova",
-  "version": "0.0.1",
-  "description": "The Nova Programming Language",
-  "main": "index.js",
-  "scripts": {
-    "test": "jest"
-  },
   "author": "",
-  "license": "MIT",
   "dependencies": {
     "libllvm": "file:../LibLLVM",
     "utf8": "^3.0.0"
   },
+  "description": "The Nova Programming Language",
   "devDependencies": {
     "jest": "^23.6.0"
-  }
+  },
+  "jest": {
+    "collectCoverage": true,
+    "verbose": true
+  },
+  "license": "MIT",
+  "main": "index.js",
+  "name": "@novalang/nova",
+  "scripts": {
+    "test": "jest"
+  },
+  "version": "0.0.1"
 }
