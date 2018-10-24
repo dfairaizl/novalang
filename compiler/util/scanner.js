@@ -10,7 +10,7 @@ class Scanner {
   }
 
   eof () {
-    return this.pos >= this.rawBuffer.length;
+    return this.input.length === 0 || this.pos > this.rawBuffer.length;
   }
 
   getChar () {
@@ -21,6 +21,8 @@ class Scanner {
       return view.value;
     }
 
+    this.pos += 1; // bump the cursor by one when we read a null
+
     return null;
   }
 
@@ -30,6 +32,10 @@ class Scanner {
   decodeCharAt (pos) {
     let c, c1, c2, c3;
     c = this.readByteAt(pos);
+
+    if (c === null) {
+      return null;
+    }
 
     // Zero continuation (0 to 127)
     if ((c & 0x80) === 0) {
@@ -99,8 +105,9 @@ class Scanner {
   }
 
   readByteAt (pos) {
-    if (this.rawBuffer.length <= 0 || this.eof()) {
-      return 0x0;
+    // dont read a byte our of the bounds of the buffer
+    if (this.rawBuffer.length <= 0 || pos >= this.rawBuffer.length) {
+      return null;
     }
 
     return this.rawBuffer.readUInt8(pos) & 0xFF;

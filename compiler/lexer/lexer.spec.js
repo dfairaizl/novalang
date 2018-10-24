@@ -118,6 +118,12 @@ describe('Lexer', () => {
       const lex = new Lexer('"');
       expect(lex.nextToken()).toEqual('"');
     });
+
+    it('lexes `()` as two seprate punctuators', () => {
+      const lex = new Lexer('()');
+      expect(lex.nextToken()).toEqual('(');
+      expect(lex.nextToken()).toEqual(')');
+    });
   });
 
   describe('numbers', () => {
@@ -151,6 +157,11 @@ describe('Lexer', () => {
     it('lexes `something`', () => {
       const lex = new Lexer('something');
       expect(lex.nextToken()).toEqual('something');
+    });
+
+    it('lexes `c1`', () => {
+      const lex = new Lexer('c1');
+      expect(lex.nextToken()).toEqual('c1');
     });
   });
 });

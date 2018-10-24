@@ -77,7 +77,7 @@ describe('Scanner', () => {
 
     it('returns empty string when empty input is given', () => {
       const scanner = new Scanner('');
-      expect(scanner.getChar()).toBe('\u{0000}');
+      expect(scanner.getChar()).toBe(null);
     });
   });
 });

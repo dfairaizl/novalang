@@ -7,11 +7,13 @@ const DIGIT = new RegExp(/[0-9.]+/);
 
 class Lexer {
   constructor (input) {
-    this.rawInput = input;
-    this.inputLength = input.length;
     this.scanner = new Scanner(input);
 
     this.currentToken = null;
+  }
+
+  isNull () {
+    return this.currentToken === null;
   }
 
   isWhiteSpace () {
@@ -30,58 +32,65 @@ class Lexer {
     return DIGIT.test(this.currentToken) === true;
   }
 
+  isIdentifier () {
+    return !this.isNull() && !this.isOperator() && !this.isPunctuator();
+  }
+
   // tokenization
 
   readOperator () {
-    let token = this.currentToken;
+    let token = '';
 
-    while (this.isOperator() && !this.scanner.eof()) {
-      token += this.scanner.getChar();
+    while (!this.isNull() && this.isOperator() && !this.scanner.eof()) {
+      token += this.currentToken;
+      this.nextCharacter();
     }
 
     return token;
   }
 
   readPunctuator () {
-    let token = this.currentToken;
+    let token = '';
 
-    while (this.isPunctuator() && !this.scanner.eof()) {
-      token += this.scanner.getChar();
+    if (!this.isNull() && this.isPunctuator() && !this.scanner.eof()) {
+      token += this.currentToken;
+      this.nextCharacter();
     }
 
     return token;
   }
 
   readDigit () {
-    let token = this.currentToken;
+    let token = '';
 
-    while (this.isDigit() && !this.scanner.eof()) {
-      token += this.scanner.getChar();
+    while (!this.isNull() && this.isDigit() && !this.scanner.eof()) {
+      token += this.currentToken;
+      this.nextCharacter();
     }
 
     return token;
   }
 
   readIdentifier () {
-    let token = this.currentToken;
+    let token = '';
 
-    while (!this.isWhiteSpace() && !this.scanner.eof()) {
-      token += this.scanner.getChar();
+    while (!this.isNull() && this.isIdentifier() && !this.scanner.eof()) {
+      token += this.currentToken;
+      this.nextCharacter();
     }
 
     return token;
   }
 
   nextToken () {
+    // skip any leading whitespace
     while (this.isWhiteSpace()) {
-      this.currentToken = this.scanner.getChar();
+      this.nextCharacter();
     }
 
-    while (!this.scanner.eof()) {
-      this.currentToken = this.scanner.getChar();
-
-      if (this.isWhiteSpace()) {
-        break;
+    if (!this.scanner.eof()) {
+      if (this.isNull()) {
+        this.nextCharacter();
       }
 
       if (this.isPunctuator()) {
@@ -100,6 +109,10 @@ class Lexer {
     }
 
     return null;
+  }
+
+  nextCharacter () {
+    this.currentToken = this.scanner.getChar();
   }
 }
 
