@@ -1,5 +1,12 @@
 const Scanner = require('../util/scanner');
 
+const {
+  IdentifierToken,
+  NumberToken,
+  OperatorToken,
+  PunctuatorToken
+} = require('./tokens');
+
 const WHITE_SPACE = new RegExp(/^\s+$/);
 const OPERATOR = new RegExp(/[+-/*><=]+/);
 const PUNCTUATOR = new RegExp(/[{},;()'"]+/);
@@ -46,7 +53,7 @@ class Lexer {
       this.nextCharacter();
     }
 
-    return token;
+    return new OperatorToken(token);
   }
 
   readPunctuator () {
@@ -54,7 +61,7 @@ class Lexer {
 
     this.nextCharacter();
 
-    return token;
+    return new PunctuatorToken(token);
   }
 
   readDigit () {
@@ -65,7 +72,7 @@ class Lexer {
       this.nextCharacter();
     }
 
-    return token;
+    return new NumberToken(token);
   }
 
   readIdentifier () {
@@ -80,7 +87,7 @@ class Lexer {
       this.nextCharacter();
     }
 
-    return token;
+    return new IdentifierToken(token);
   }
 
   nextToken () {

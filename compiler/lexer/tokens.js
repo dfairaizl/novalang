@@ -5,7 +5,13 @@ class Token {
 }
 
 class IdentifierToken extends Token {}
+class NumberToken extends Token {}
+class OperatorToken extends Token {}
+class PunctuatorToken extends Token {}
 
 module.exports = {
-  IdentifierToken
+  IdentifierToken,
+  NumberToken,
+  OperatorToken,
+  PunctuatorToken
 };
