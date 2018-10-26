@@ -16,7 +16,8 @@
   "main": "index.js",
   "name": "@novalang/nova",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "test-watch": "jest --watch --collectCoverage=false"
   },
   "version": "0.0.1"
 }

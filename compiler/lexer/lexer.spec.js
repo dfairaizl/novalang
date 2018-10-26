@@ -11,6 +11,13 @@ describe('Lexer', () => {
     });
   });
 
+  describe('tokenize()', () => {
+    it('returns an array of tokens from the given input', () => {
+      const lex = new Lexer('const a = 40 + 2');
+      expect(lex.tokenize()).toEqual(['const', 'a', '=', '40', '+', '2']);
+    });
+  });
+
   describe('whitespace', () => {
     it('skips white space before tokens', () => {
       const lex = new Lexer('    +');

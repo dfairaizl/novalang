@@ -113,6 +113,16 @@ class Lexer {
     return null;
   }
 
+  tokenize () {
+    const tokens = [];
+
+    do {
+      tokens.push(this.nextToken());
+    } while (this.currentToken !== null);
+
+    return tokens;
+  }
+
   nextCharacter () {
     this.currentToken = this.scanner.getChar();
   }
