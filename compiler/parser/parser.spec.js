@@ -3,73 +3,104 @@
 const Parser = require('.');
 
 describe('Parser', () => {
-  describe('expressions', () => {
-    it('parses function invocations', () => {
+  describe('atomic expressions', () => {
+    it('parses identifiers', () => {
+      const parser = new Parser();
+      parser.parse('x');
+
+      expect(parser.parseAtomic()).toEqual({
+        identifier: 'x'
+      });
+    });
+
+    it('parses integer literals', () => {
+      const parser = new Parser();
+      parser.parse('1');
+
+      expect(parser.parseAtomic()).toEqual({
+        value: '1'
+      });
+    });
+
+    it('parses floating point literals', () => {
+      const parser = new Parser();
+      parser.parse('3.14');
+
+      expect(parser.parseAtomic()).toEqual({
+        value: '3.14'
+      });
+    });
+  });
+
+  describe('binary operations', () => {
+    it('parses basic assignment expressions', () => {
+      const parser = new Parser();
+      parser.parse('x = 1');
+
+      expect(parser.parseBinary()).toEqual({
+        left: { identifier: 'x' },
+        operator: { value: '=' },
+        right: { value: '1' }
+      });
+    });
+
+    it('parses complex assignment expressions', () => {
+      const parser = new Parser();
+      parser.parse('x = 1 + 1');
+
+      expect(parser.parseBinary()).toEqual({
+        left: { identifier: 'x' },
+        operator: { value: '=' },
+        right: {
+          left: { value: '1' },
+          operator: { value: '+' },
+          right: { value: '1' }
+        }
+      });
+    });
+  });
+
+  describe('paren expressions', () => {
+    it('parses expressions wrapped in parens', () => {
+      const parser = new Parser();
+      parser.parse('(x + 1)');
+
+      expect(parser.parseParen()).toEqual({
+        left: { identifier: 'x' },
+        operator: { value: '+' },
+        right: { value: '1' }
+      });
+    });
+  });
+
+  describe('invocation expressions', () => {
+    it('parses function invocations with no parameters', () => {
       const parser = new Parser();
       parser.parse('helloWorld()');
 
-      expect(parser.parseBinaryExpression()).toEqual({
+      expect(parser.parseInvocation()).toEqual({
         name: 'helloWorld',
         args: []
       });
     });
 
-    describe('simple binary expressions', () => {
-      it('parses simple addition', () => {
-        const parser = new Parser();
-        parser.parse('1+1');
+    it('parses function invocations with a single paramater', () => {
+      const parser = new Parser();
+      parser.parse('incr(1)');
 
-        expect(parser.parseBinaryExpression()).toEqual({
-          operator: '+',
-          left: '1',
-          right: '1'
-        });
-      });
-
-      it('parses simple subtraction', () => {
-        const parser = new Parser();
-        parser.parse('1-1');
-
-        expect(parser.parseBinaryExpression()).toEqual({
-          operator: '-',
-          left: '1',
-          right: '1'
-        });
-      });
-
-      it('parses simple multiplication', () => {
-        const parser = new Parser();
-        parser.parse('1*1');
-
-        expect(parser.parseBinaryExpression()).toEqual({
-          operator: '*',
-          left: '1',
-          right: '1'
-        });
-      });
-
-      it('parses simple division', () => {
-        const parser = new Parser();
-        parser.parse('1/1');
-
-        expect(parser.parseBinaryExpression()).toEqual({
-          operator: '/',
-          left: '1',
-          right: '1'
-        });
+      expect(parser.parseInvocation()).toEqual({
+        name: 'incr',
+        args: ['1']
       });
     });
 
-    describe.only('complex binary expressions', () => {
-      it('parses nested addition expressions', () => {
-        const parser = new Parser();
-        parser.parse('1+(1+3)');
+    it('parses function invocations with multiple parameters', () => {
+      const parser = new Parser();
+      parser.parse('add(1, 2)');
 
-        expect(parser.parseBinaryExpression()).toEqual({
-          operator: '+',
-          left: '1',
-          right: '1'
-        });
+      expect(parser.parseInvocation()).toEqual({
+        name: 'add',
+        args: ['1', '2']
       });
     });
   });

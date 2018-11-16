@@ -21,72 +21,76 @@ class Parser {
   }
 
   parseExpression () {
-    let idExpr = this.parsePrimary();
-    return idExpr;
+    // check current keyword?
+    return this.parseBinary();
   }
 
-  parsePrimary () {
-    if (this.peekNextToken() instanceof IdentifierToken) {
-      return this.parseIdentifier();
-    } else if (this.peekNextToken() instanceof NumberToken) {
-      return this.parseNumber();
-    } else if (this.peekNextToken() instanceof PunctuatorToken && this.peekNextToken().value === '(') {
-      return this.parseParenExpression();
+  // Basic atomic operations
+  parseAtomic () {
+    const token = this.peekNextToken();
+
+    switch (token.constructor) {
+      case IdentifierToken:
+        return this.parseIdentifier();
+      case NumberToken:
+        return this.parseNumber();
     }
-  }
-
-  parseBinaryExpression () {
-    debugger;
-    const leftExpr = this.getNextToken();
-
-    // determine operator type
-    const operator = this.getNextToken();
-    if (!(operator instanceof OperatorToken)) {
-      return leftExpr;
-    }
-
-    const rightExpr = this.parseExpression();
-
-    return {
-      operator: operator.value,
-      left: leftExpr.value,
-      right: rightExpr.value
-    };
   }
 
   parseIdentifier () {
-    const identifier = this.getNextToken();
-
-    return identifier;
+    const token = this.getNextToken();
+    return { identifier: token.value };
   }
 
   parseNumber () {
     const numIdentifier = this.getNextToken();
-
-    return numIdentifier;
+    return { value: numIdentifier.value };
   }
 
-  parseParenExpression () {
-    this.getNextToken(); // consume `(`
+  // Binary operations
+  parseBinary () {
+    const left = this.parseAtomic();
+    let right = null;
+
+    const operator = this.peekNextToken();
+    if (operator instanceof OperatorToken) {
+      this.getNextToken(); // consume operator
+
+      right = this.parseExpression();
+
+      return {
+        left,
+        operator,
+        right
+      };
+    }
+
+    return left; // base case
+  }
+
+  parseParen () {
+    this.validateNextToken('(');
 
     const expr = this.parseExpression();
 
-    if (this.getNextToken().value !== ')') {
-      return null;
-    }
+    this.validateNextToken(')');
+
+    return expr;
   }
+
+  // function operations
 
   parseInvocation () {
     const funcIdentifier = this.getNextToken();
     const args = [];
-    this.getNextToken(); // `(`
+    this.validateNextToken('(');
 
     let paramTok = this.getNextToken();
-    while (paramTok !== ')') {
-      args.push(paramTok);
+    while (paramTok.value !== ')') {
+      args.push(paramTok.value);
       paramTok = this.getNextToken();
 
-      if (paramTok === ',') {
+      if (paramTok.value === ',') {
         paramTok = this.getNextToken();
         continue;
       } else {
@@ -95,7 +99,7 @@ class Parser {
     }
 
     return {
-      name: funcIdentifier,
+      name: funcIdentifier.value,
       args
     };
   }
