@@ -35,6 +35,8 @@ class Parser {
       case NumberToken:
         return this.parseNumber();
     }
+
+    return null;
   }
 
   parseIdentifier () {
@@ -128,13 +130,14 @@ class Parser {
 
     this.validateNextToken('{');
 
-    // TODO: parse function body as primary
+    const body = this.parseExpression();
 
     this.validateNextToken('}');
 
     return {
       name: funcName.value,
-      args
+      args,
+      body
     };
   }
 

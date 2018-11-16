@@ -112,7 +112,8 @@ describe('Parser', () => {
 
       expect(parser.parseFunctionDeclaration()).toEqual({
         name: 'hello',
-        args: []
+        args: [],
+        body: null
       });
     });
 
@@ -122,7 +123,8 @@ describe('Parser', () => {
 
       expect(parser.parseFunctionDeclaration()).toEqual({
         name: 'hello',
-        args: ['name']
+        args: ['name'],
+        body: null
       });
     });
 
@@ -132,7 +134,23 @@ describe('Parser', () => {
 
       expect(parser.parseFunctionDeclaration()).toEqual({
         name: 'hello',
-        args: ['first', 'last']
+        args: ['first', 'last'],
+        body: null
+      });
+    });
+
+    it('parses function declarations with binary operations in body', () => {
+      const parser = new Parser();
+      parser.parse('function incr(x) { x + 1}');
+
+      expect(parser.parseFunctionDeclaration()).toEqual({
+        name: 'incr',
+        args: ['x'],
+        body: {
+          left: { identifier: 'x' },
+          operator: { value: '+' },
+          right: { value: '1' }
+        }
       });
     });
   });
