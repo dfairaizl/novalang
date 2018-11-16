@@ -3,7 +3,78 @@
 const Parser = require('.');
 
 describe('Parser', () => {
-  describe('functions', () => {
+  describe('expressions', () => {
+    it('parses function invocations', () => {
+      const parser = new Parser();
+      parser.parse('helloWorld()');
+
+      expect(parser.parseBinaryExpression()).toEqual({
+        name: 'helloWorld',
+        args: []
+      });
+    });
+
+    describe('simple binary expressions', () => {
+      it('parses simple addition', () => {
+        const parser = new Parser();
+        parser.parse('1+1');
+
+        expect(parser.parseBinaryExpression()).toEqual({
+          operator: '+',
+          left: '1',
+          right: '1'
+        });
+      });
+
+      it('parses simple subtraction', () => {
+        const parser = new Parser();
+        parser.parse('1-1');
+
+        expect(parser.parseBinaryExpression()).toEqual({
+          operator: '-',
+          left: '1',
+          right: '1'
+        });
+      });
+
+      it('parses simple multiplication', () => {
+        const parser = new Parser();
+        parser.parse('1*1');
+
+        expect(parser.parseBinaryExpression()).toEqual({
+          operator: '*',
+          left: '1',
+          right: '1'
+        });
+      });
+
+      it('parses simple division', () => {
+        const parser = new Parser();
+        parser.parse('1/1');
+
+        expect(parser.parseBinaryExpression()).toEqual({
+          operator: '/',
+          left: '1',
+          right: '1'
+        });
+      });
+    });
+
+    describe.only('complex binary expressions', () => {
+      it('parses nested addition expressions', () => {
+        const parser = new Parser();
+        parser.parse('1+(1+3)');
+
+        expect(parser.parseBinaryExpression()).toEqual({
+          operator: '+',
+          left: '1',
+          right: '1'
+        });
+      });
+    });
+  });
+
+  describe('function declarations', () => {
     it('parses basic function declarations', () => {
       const parser = new Parser();
       parser.parse('function hello() {}');
