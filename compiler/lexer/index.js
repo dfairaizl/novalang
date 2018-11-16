@@ -14,7 +14,8 @@ const PUNCTUATOR = new RegExp(/[{},;()'"]+/);
 const DIGIT = new RegExp(/[0-9.]+/);
 const KEYWORDS = [
   'const',
-  'function'
+  'function',
+  'let'
 ];
 
 class Lexer {

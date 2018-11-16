@@ -206,6 +206,14 @@ describe('Lexer', () => {
       expect(token).toEqual(new KeywordToken('const'));
     });
 
+    it('lexes `let`', () => {
+      const lex = new Lexer('let');
+      const token = lex.nextToken();
+
+      expect(token).toBeInstanceOf(KeywordToken);
+      expect(token).toEqual(new KeywordToken('let'));
+    });
+
     it('lexes `function`', () => {
       const lex = new Lexer('function');
       const token = lex.nextToken();

@@ -1,12 +1,11 @@
 const Lexer = require('../lexer');
 const {
   IdentifierToken,
+  KeywordToken,
   NumberToken,
   OperatorToken,
   PunctuatorToken
 } = require('../lexer/tokens');
-
-const OPERATORS = '+-*/';
 
 class Parser {
   constructor (options) {
@@ -20,129 +19,84 @@ class Parser {
     this.readTokens();
   }
 
+  // top level parser to handle main blocks in a source file
   parseExpression () {
-    // check current keyword?
-    return this.parseBinary();
-  }
+    const currentToken = this.peekNextToken();
 
-  // Basic atomic operations
-  parseAtomic () {
-    const token = this.peekNextToken();
-
-    switch (token.constructor) {
-      case IdentifierToken:
-        return this.parseIdentifier();
+    switch (currentToken.constructor) {
+      case KeywordToken:
+        return this.parseKeywordExpression(currentToken);
       case NumberToken:
-        return this.parseNumber();
-      case PunctuatorToken:
-        if (token.value === '(') {
-          return this.parseParen();
-        }
+        return this.parseNumberLiteral();
     }
 
     return null;
   }
 
-  parseIdentifier () {
-    const token = this.getNextToken();
-    return { identifier: token.value };
+  // keywords
+  parseKeywordExpression (keywordToken) {
+    if (keywordToken.value === 'const' || keywordToken.value === 'let') {
+      return this.parseVariableDeclaration();
+    }
   }
 
-  parseNumber () {
-    const numIdentifier = this.getNextToken();
-    return { value: numIdentifier.value };
-  }
+  // variables
+  parseVariableDeclaration () {
+    const declarationType = this.getNextToken();
+    const identifier = this.parseIdentifier();
 
-  // Binary operations
-  parseBinary () {
-    const left = this.parseAtomic();
-    let right = null;
-
-    const operator = this.peekNextToken();
-    if (operator instanceof OperatorToken) {
-      this.getNextToken(); // consume operator
-
-      right = this.parseExpression();
+    if (declarationType.value === 'const') {
+      // an assignment expression is required
+      this.validateNextToken('=');
+      const assignmentExpr = this.parseExpression();
 
       return {
-        left,
-        operator,
-        right
+        mutable: false,
+        identifier,
+        assignmentExpr
+      };
+    } else if (declarationType.value === 'let') {
+      let assignmentExpr = null;
+      let token = this.peekNextToken();
+
+      // assignment is optional for mutable vars
+      if (token instanceof OperatorToken && token.value === '=') {
+        this.validateNextToken('=');
+
+        assignmentExpr = this.parseExpression();
+      }
+
+      return {
+        mutable: true,
+        identifier,
+        assignmentExpr
+      };
+    }
+  }
+
+  // atomics and literals
+  parseIdentifier () {
+    const identifier = this.getNextToken();
+
+    if (identifier instanceof IdentifierToken) {
+      return {
+        identifier: identifier.value
       };
     }
 
-    return left; // base case
+    return null;
   }
 
-  parseParen () {
-    this.validateNextToken('(');
+  parseNumberLiteral () {
+    const literal = this.getNextToken();
 
-    const expr = this.parseExpression();
-
-    this.validateNextToken(')');
-
-    return expr;
-  }
-
-  // function operations
-
-  parseInvocation () {
-    const funcIdentifier = this.getNextToken();
-    const args = [];
-    this.validateNextToken('(');
-
-    let paramTok = this.getNextToken();
-    while (paramTok.value !== ')') {
-      args.push(paramTok.value);
-      paramTok = this.getNextToken();
-
-      if (paramTok.value === ',') {
-        paramTok = this.getNextToken();
-        continue;
-      } else {
-        break;
-      }
+    if (literal instanceof NumberToken) {
+      return {
+        value: literal.value
+      };
     }
 
-    return {
-      name: funcIdentifier.value,
-      args
-    };
-  }
-
-  parseFunctionDeclaration () {
-    this.getNextToken(); // consume `function` keyword
-    const funcName = this.getNextToken();
-
-    this.validateNextToken('(');
-
-    const args = [];
-
-    let paramTok = this.getNextToken();
-    while (paramTok.value !== ')') {
-      args.push(paramTok.value);
-
-      paramTok = this.getNextToken();
-
-      if (paramTok.value === ',') {
-        paramTok = this.getNextToken();
-        continue;
-      } else {
-        break;
-      }
-    }
-
-    this.validateNextToken('{');
-
-    const body = this.parseExpression();
-
-    this.validateNextToken('}');
-
-    return {
-      name: funcName.value,
-      args,
-      body
-    };
+    return null;
   }
 
   // helper methods
