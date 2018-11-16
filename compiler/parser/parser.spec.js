@@ -58,6 +58,25 @@ describe('Parser', () => {
         }
       });
     });
+
+    it('parses complex operations', () => {
+      const parser = new Parser();
+      parser.parse('x = 2 + (1 + 1)');
+
+      expect(parser.parseBinary()).toEqual({
+        left: { identifier: 'x' },
+        operator: { value: '=' },
+        right: {
+          left: { value: '2' },
+          operator: { value: '+' },
+          right: {
+            left: { value: '1' },
+            operator: { value: '+' },
+            right: { value: '1' }
+          }
+        }
+      });
+    });
   });
 
   describe('paren expressions', () => {

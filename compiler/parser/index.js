@@ -34,6 +34,10 @@ class Parser {
         return this.parseIdentifier();
       case NumberToken:
         return this.parseNumber();
+      case PunctuatorToken:
+        if (token.value === '(') {
+          return this.parseParen();
+        }
     }
 
     return null;
