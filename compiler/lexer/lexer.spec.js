@@ -4,6 +4,7 @@ const Lexer = require('.');
 
 const {
   IdentifierToken,
+  KeywordToken,
   NumberToken,
   OperatorToken,
   PunctuatorToken
@@ -193,6 +194,24 @@ describe('Lexer', () => {
     it('lexes `3.14159`', () => {
       const lex = new Lexer('3.14159');
       expect(lex.nextToken()).toEqual(new NumberToken('3.14159'));
+    });
+  });
+
+  describe('keywords', () => {
+    it('lexes `const`', () => {
+      const lex = new Lexer('const');
+      const token = lex.nextToken();
+
+      expect(token).toBeInstanceOf(KeywordToken);
+      expect(token).toEqual(new KeywordToken('const'));
+    });
+
+    it('lexes `function`', () => {
+      const lex = new Lexer('function');
+      const token = lex.nextToken();
+
+      expect(token).toBeInstanceOf(KeywordToken);
+      expect(token).toEqual(new KeywordToken('function'));
     });
   });
 

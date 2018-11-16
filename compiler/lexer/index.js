@@ -2,6 +2,7 @@ const Scanner = require('../util/scanner');
 
 const {
   IdentifierToken,
+  KeywordToken,
   NumberToken,
   OperatorToken,
   PunctuatorToken
@@ -11,6 +12,10 @@ const WHITE_SPACE = new RegExp(/^\s+$/);
 const OPERATOR = new RegExp(/[+-/*><=]+/);
 const PUNCTUATOR = new RegExp(/[{},;()'"]+/);
 const DIGIT = new RegExp(/[0-9.]+/);
+const KEYWORDS = [
+  'const',
+  'function'
+];
 
 class Lexer {
   constructor (input) {
@@ -75,7 +80,7 @@ class Lexer {
     return new NumberToken(token);
   }
 
-  readIdentifier () {
+  readKeywordOrIdentifier () {
     let token = '';
 
     if (this.isNull()) {
@@ -85,6 +90,10 @@ class Lexer {
     while (!this.isWhiteSpace() && this.isIdentifier() && !this.scanner.eof()) {
       token += this.currentToken;
       this.nextCharacter();
+    }
+
+    if (KEYWORDS.includes(token)) {
+      return new KeywordToken(token);
     }
 
     return new IdentifierToken(token);
@@ -114,7 +123,7 @@ class Lexer {
         return this.readDigit();
       }
 
-      return this.readIdentifier();
+      return this.readKeywordOrIdentifier();
     }
 
     return null;
