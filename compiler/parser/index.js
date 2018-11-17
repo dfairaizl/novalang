@@ -20,14 +20,47 @@ class Parser {
   }
 
   // top level parser to handle main blocks in a source file
-  parseExpression () {
+  parsePrimaryExpression () {
     const currentToken = this.peekNextToken();
 
     switch (currentToken.constructor) {
       case KeywordToken:
         return this.parseKeywordExpression(currentToken);
+      // TODO: top level things, classes, module imports
+    }
+
+    return this.parseExpression();
+  }
+
+  parseExpression () {
+    const left = this.parseAtomic();
+    let right = null;
+
+    const operator = this.peekNextToken();
+    if (operator instanceof OperatorToken) {
+      this.getNextToken(); // consume operator
+
+      right = this.parseExpression();
+
+      return {
+        left,
+        operator,
+        right
+      };
+    }
+
+    return left; // base case
+  }
+
+  parseAtomic () {
+    const currentToken = this.peekNextToken();
+
+    switch (currentToken.constructor) {
       case NumberToken:
         return this.parseNumberLiteral();
+      case IdentifierToken:
+        return this.parseIdentifierExpression();
+      // TODO: string literals
     }
 
     return null;
@@ -37,7 +70,74 @@ class Parser {
   parseKeywordExpression (keywordToken) {
     if (keywordToken.value === 'const' || keywordToken.value === 'let') {
       return this.parseVariableDeclaration();
+    } else if (keywordToken.value === 'function') {
+      return this.parseFunctionDeclaration();
     }
+  }
+
+  // functions
+  parseFunctionDeclaration () {
+    this.validateNextToken('function');
+    const funcIdentifier = this.getNextToken();
+
+    if (!(funcIdentifier instanceof IdentifierToken)) {
+      return null;
+    }
+
+    const args = [];
+
+    this.validateNextToken('(');
+
+    let paramTok = this.getNextToken();
+    while (paramTok.value !== ')') {
+      args.push(paramTok.value);
+
+      paramTok = this.getNextToken();
+
+      if (paramTok.value === ',') {
+        paramTok = this.getNextToken();
+        continue;
+      } else {
+        break;
+      }
+    }
+
+    this.validateNextToken('{');
+
+    const body = this.parsePrimaryExpression();
+
+    this.validateNextToken('}');
+
+    return {
+      name: funcIdentifier.value,
+      args,
+      body
+    };
+  }
+
+  parseFunctionInvocation (funcIdentifier) {
+    const args = [];
+
+    this.validateNextToken('(');
+
+    let paramTok = this.getNextToken();
+    while (paramTok.value !== ')') {
+      args.push(paramTok.value);
+
+      paramTok = this.getNextToken();
+
+      if (paramTok.value === ',') {
+        paramTok = this.getNextToken();
+        continue;
+      } else {
+        break;
+      }
+    }
+
+    return {
+      name: funcIdentifier.identifier,
+      args
+    };
   }
 
   // variables
@@ -97,6 +197,19 @@ class Parser {
     }
 
     return null;
+  }
+
+  parseIdentifierExpression () {
+    const identifier = this.parseIdentifier();
+
+    const token = this.peekNextToken();
+
+    // is an invocation
+    if (token instanceof PunctuatorToken && token.value === '(') {
+      return this.parseFunctionInvocation(identifier);
+    }
+
+    return identifier;
   }
 
   // helper methods
