@@ -15,7 +15,8 @@ const DIGIT = new RegExp(/[0-9.]+/);
 const KEYWORDS = [
   'const',
   'function',
-  'let'
+  'let',
+  'return'
 ];
 
 class Lexer {

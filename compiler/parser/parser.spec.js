@@ -141,4 +141,15 @@ describe('Parser', () => {
       });
     });
   });
+
+  describe('return statements', () => {
+    it.only('parses the expression to return', () => {
+      const parser = new Parser();
+      parser.parse('return x');
+
+      expect(parser.parsePrimaryExpression()).toEqual({
+        identifier: 'x'
+      });
+    });
+  });
 });

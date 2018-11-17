@@ -26,7 +26,6 @@ class Parser {
     switch (currentToken.constructor) {
       case KeywordToken:
         return this.parseKeywordExpression(currentToken);
-      // TODO: top level things, classes, module imports
     }
 
     return this.parseExpression();
@@ -41,6 +40,12 @@ class Parser {
       this.getNextToken(); // consume operator
 
       right = this.parseExpression();
+
+      const terminator = this.peekNextToken();
+      console.log(terminator);
+      if (terminator instanceof PunctuatorToken && terminator.value === ';') {
+        this.validateNextToken(';');
+      }
 
       return {
         left,
@@ -72,7 +77,15 @@ class Parser {
       return this.parseVariableDeclaration();
     } else if (keywordToken.value === 'function') {
       return this.parseFunctionDeclaration();
+    } else if (keywordToken.value === 'return') {
+      return this.parseReturnExpression();
     }
+  }
+
+  parseReturnExpression () {
+    this.validateNextToken('return');
+
+    return this.parseExpression();
   }
 
   // functions
