@@ -1,0 +1,5 @@
+external function abs(x: int): int {
+
+}
+
+abs(-10); // calls the `abs` function from linked in c stdlib
