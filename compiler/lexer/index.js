@@ -135,7 +135,10 @@ class Lexer {
     const tokens = [];
 
     do {
-      tokens.push(this.nextToken());
+      const token = this.nextToken();
+      if (token) {
+        tokens.push(token);
+      }
     } while (this.currentToken !== null);
 
     return tokens;

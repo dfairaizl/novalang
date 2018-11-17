@@ -3,6 +3,16 @@
 const Parser = require('.');
 
 describe('Parser', () => {
+  describe('end of input', () => {
+    it('does not parse after EOF', () => {
+      const parser = new Parser();
+      parser.parse('const x = 1');
+
+      expect(parser.parsePrimaryExpression()).toBeTruthy();
+      expect(parser.parsePrimaryExpression()).not.toBeDefined();
+    });
+  });
+
   describe('variable declarations', () => {
     it('parses immutable variables with number literal assignment', () => {
       const parser = new Parser();
@@ -143,7 +153,7 @@ describe('Parser', () => {
   });
 
   describe('return statements', () => {
-    it.only('parses the expression to return', () => {
+    it('parses the expression to return', () => {
       const parser = new Parser();
       parser.parse('return x');
 

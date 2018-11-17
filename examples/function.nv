@@ -1,0 +1,5 @@
+function addOne(x) {
+  return x + 1;
+}
+
+const ten = addOne(9);

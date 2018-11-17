@@ -23,6 +23,10 @@ class Parser {
   parsePrimaryExpression () {
     const currentToken = this.peekNextToken();
 
+    if (!currentToken) {
+      return; // EOF
+    }
+
     switch (currentToken.constructor) {
       case KeywordToken:
         return this.parseKeywordExpression(currentToken);
@@ -42,7 +46,7 @@ class Parser {
       right = this.parseExpression();
 
       const terminator = this.peekNextToken();
-      console.log(terminator);
+
       if (terminator instanceof PunctuatorToken && terminator.value === ';') {
         this.validateNextToken(';');
       }
@@ -241,7 +245,11 @@ class Parser {
   }
 
   peekNextToken () {
-    return this.tokens[this.pos];
+    if (this.pos < this.tokens.length) {
+      return this.tokens[this.pos];
+    }
+
+    return null;
   }
 
   readTokens () {
