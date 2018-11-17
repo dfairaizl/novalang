@@ -13,6 +13,29 @@ describe('Parser', () => {
     });
   });
 
+  describe('multile statements', () => {
+    it('delimits statements based on semicolons', () => {
+      const parser = new Parser();
+      parser.parse('const x = 1; const y = x + 2');
+
+      expect(parser.parsePrimaryExpression()).toEqual({
+        mutable: false,
+        identifier: { identifier: 'x' },
+        assignmentExpr: { value: '1' }
+      });
+
+      expect(parser.parsePrimaryExpression()).toEqual({
+        mutable: false,
+        identifier: { identifier: 'y' },
+        assignmentExpr: {
+          left: { identifier: 'x' },
+          operator: { value: '+' },
+          right: { value: '2' }
+        }
+      });
+    });
+  });
+
   describe('variable declarations', () => {
     it('parses immutable variables with number literal assignment', () => {
       const parser = new Parser();

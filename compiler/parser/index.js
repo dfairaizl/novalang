@@ -58,6 +58,12 @@ class Parser {
       };
     }
 
+    const terminator = this.peekNextToken();
+
+    if (terminator instanceof PunctuatorToken && terminator.value === ';') {
+      this.validateNextToken(';');
+    }
+
     return left; // base case
   }
 
