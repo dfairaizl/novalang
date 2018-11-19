@@ -7,6 +7,10 @@ const {
   PunctuatorToken
 } = require('../lexer/tokens');
 
+const {
+  VariableNode
+} = require('../graph/nodes');
+
 class Parser {
   constructor (options) {
     this.options = options || {};
@@ -173,11 +177,7 @@ class Parser {
       this.validateNextToken('=');
       const assignmentExpr = this.parseExpression();
 
-      return {
-        mutable: false,
-        identifier,
-        assignmentExpr
-      };
+      return new VariableNode(false, identifier.identifier, assignmentExpr);
     } else if (declarationType.value === 'let') {
       let assignmentExpr = null;
       let token = this.peekNextToken();
@@ -189,11 +189,7 @@ class Parser {
         assignmentExpr = this.parseExpression();
       }
 
-      return {
-        mutable: true,
-        identifier,
-        assignmentExpr
-      };
+      return new VariableNode(true, identifier.identifier, assignmentExpr);
     }
   }
 

@@ -1,6 +1,9 @@
 /* global describe, it, expect */
 
 const Parser = require('.');
+const {
+  VariableNode
+} = require('../graph/nodes');
 
 describe('Parser', () => {
   describe('end of input', () => {
@@ -18,21 +21,21 @@ describe('Parser', () => {
       const parser = new Parser();
       parser.parse('const x = 1; const y = x + 2');
 
-      expect(parser.parsePrimaryExpression()).toEqual({
-        mutable: false,
-        identifier: { identifier: 'x' },
-        assignmentExpr: { value: '1' }
-      });
+      expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
+        false,
+        'x',
+        { value: '1' }
+      ));
 
-      expect(parser.parsePrimaryExpression()).toEqual({
-        mutable: false,
-        identifier: { identifier: 'y' },
-        assignmentExpr: {
+      expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
+        false,
+        'y',
+        {
           left: { identifier: 'x' },
           operator: { value: '+' },
           right: { value: '2' }
         }
-      });
+      ));
     });
   });
 
@@ -41,70 +44,70 @@ describe('Parser', () => {
       const parser = new Parser();
       parser.parse('const x = 1');
 
-      expect(parser.parsePrimaryExpression()).toEqual({
-        mutable: false,
-        identifier: { identifier: 'x' },
-        assignmentExpr: { value: '1' }
-      });
+      expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
+        false,
+        'x',
+        { value: '1' }
+      ));
     });
 
     it('parses immutable variables with identifier assignment', () => {
       const parser = new Parser();
       parser.parse('const x = y');
 
-      expect(parser.parsePrimaryExpression()).toEqual({
-        mutable: false,
-        identifier: { identifier: 'x' },
-        assignmentExpr: { identifier: 'y' }
-      });
+      expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
+        false,
+        'x',
+        { identifier: 'y' }
+      ));
     });
 
     it('parses immutable variables with function invocation assignment', () => {
       const parser = new Parser();
       parser.parse('const x = sqrt(9)');
 
-      expect(parser.parsePrimaryExpression()).toEqual({
-        mutable: false,
-        identifier: { identifier: 'x' },
-        assignmentExpr: { name: 'sqrt', args: ['9'] }
-      });
+      expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
+        false,
+        'x',
+        { name: 'sqrt', args: ['9'] }
+      ));
     });
 
     it('parses immutable variables with binary expression assignment', () => {
       const parser = new Parser();
       parser.parse('const x = 1 + 2');
 
-      expect(parser.parsePrimaryExpression()).toEqual({
-        mutable: false,
-        identifier: { identifier: 'x' },
-        assignmentExpr: {
+      expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
+        false,
+        'x',
+        {
           left: { value: '1' },
           operator: { value: '+' },
           right: { value: '2' }
         }
-      });
+      ));
     });
 
     it('parses mutable variable delcarations', () => {
       const parser = new Parser();
       parser.parse('let x = 1');
 
-      expect(parser.parsePrimaryExpression()).toEqual({
-        mutable: true,
-        identifier: { identifier: 'x' },
-        assignmentExpr: { value: '1' }
-      });
+      expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
+        true,
+        'x',
+        { value: '1' }
+      ));
     });
 
     it('parses mutable variable delcarations with no assignment', () => {
       const parser = new Parser();
       parser.parse('let x');
 
-      expect(parser.parsePrimaryExpression()).toEqual({
-        mutable: true,
-        identifier: { identifier: 'x' },
-        assignmentExpr: null
-      });
+      expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
+        true,
+        'x',
+        null
+      ));
     });
   });
 
