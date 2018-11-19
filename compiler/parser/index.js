@@ -8,6 +8,8 @@ const {
 } = require('../lexer/tokens');
 
 const {
+  FunctionNode,
+  InvocationNode,
   NumberNode,
   VariableNode
 } = require('../graph/nodes');
@@ -136,11 +138,7 @@ class Parser {
 
     this.validateNextToken('}');
 
-    return {
-      name: funcIdentifier.value,
-      args,
-      body
-    };
+    return new FunctionNode(funcIdentifier.value, args, body);
   }
 
   parseFunctionInvocation (funcIdentifier) {
@@ -162,10 +160,7 @@ class Parser {
       }
     }
 
-    return {
-      name: funcIdentifier,
-      args
-    };
+    return new InvocationNode(funcIdentifier, args);
   }
 
   // variables

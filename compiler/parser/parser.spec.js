@@ -2,6 +2,8 @@
 
 const Parser = require('.');
 const {
+  FunctionNode,
+  InvocationNode,
   NumberNode,
   VariableNode
 } = require('../graph/nodes');
@@ -18,6 +20,26 @@ describe('Parser', () => {
   });
 
   describe('multile statements', () => {
+    it('one per line', () => {
+      const parser = new Parser();
+      parser.parse(`
+        const x = 1
+        const y = 2
+      `);
+
+      expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
+        false,
+        'x',
+        new NumberNode('1')
+      ));
+
+      expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
+        false,
+        'y',
+        new NumberNode('2')
+      ));
+    });
+
     it('delimits statements based on semicolons', () => {
       const parser = new Parser();
       parser.parse('const x = 1; const y = 2');
@@ -113,33 +135,33 @@ describe('Parser', () => {
       const parser = new Parser();
       parser.parse('function sayHello() {}');
 
-      expect(parser.parsePrimaryExpression()).toEqual({
-        name: 'sayHello',
-        args: [],
-        body: null
-      });
+      expect(parser.parsePrimaryExpression()).toEqual(new FunctionNode(
+        'sayHello',
+        [],
+        null
+      ));
     });
 
     it('parses functions with a single argument', () => {
       const parser = new Parser();
       parser.parse('function incr(x) {}');
 
-      expect(parser.parsePrimaryExpression()).toEqual({
-        name: 'incr',
-        args: ['x'],
-        body: null
-      });
+      expect(parser.parsePrimaryExpression()).toEqual(new FunctionNode(
+        'incr',
+        ['x'],
+        null
+      ));
     });
 
     it('parses functions with multiple arguments', () => {
       const parser = new Parser();
       parser.parse('function add(x, y) {}');
 
-      expect(parser.parsePrimaryExpression()).toEqual({
-        name: 'add',
-        args: ['x', 'y'],
-        body: null
-      });
+      expect(parser.parsePrimaryExpression()).toEqual(new FunctionNode(
+        'add',
+        ['x', 'y'],
+        null
+      ));
     });
   });
 
@@ -148,30 +170,21 @@ describe('Parser', () => {
       const parser = new Parser();
       parser.parse('random()');
 
-      expect(parser.parsePrimaryExpression()).toEqual({
-        name: 'random',
-        args: []
-      });
+      expect(parser.parsePrimaryExpression()).toEqual(new InvocationNode('random', []));
     });
 
     it('parses invocations with one argument', () => {
       const parser = new Parser();
       parser.parse('incr(1)');
 
-      expect(parser.parsePrimaryExpression()).toEqual({
-        name: 'incr',
-        args: ['1']
-      });
+      expect(parser.parsePrimaryExpression()).toEqual(new InvocationNode('incr', ['1']));
     });
 
     it('parses invocations with multiple', () => {
       const parser = new Parser();
       parser.parse('add(1, 2)');
 
-      expect(parser.parsePrimaryExpression()).toEqual({
-        name: 'add',
-        args: ['1', '2']
-      });
+      expect(parser.parsePrimaryExpression()).toEqual(new InvocationNode('add', ['1', '2']));
     });
   });
 
