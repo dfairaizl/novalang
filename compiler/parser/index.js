@@ -8,6 +8,7 @@ const {
 } = require('../lexer/tokens');
 
 const {
+  NumberNode,
   VariableNode
 } = require('../graph/nodes');
 
@@ -210,9 +211,7 @@ class Parser {
     const literal = this.getNextToken();
 
     if (literal instanceof NumberToken) {
-      return {
-        value: literal.value
-      };
+      return new NumberNode(literal.value);
     }
 
     return null;

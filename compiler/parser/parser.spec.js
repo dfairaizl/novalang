@@ -2,6 +2,7 @@
 
 const Parser = require('.');
 const {
+  NumberNode,
   VariableNode
 } = require('../graph/nodes');
 
@@ -24,7 +25,7 @@ describe('Parser', () => {
       expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
         false,
         'x',
-        { value: '1' }
+        new NumberNode('1')
       ));
 
       expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
@@ -33,7 +34,7 @@ describe('Parser', () => {
         {
           left: { identifier: 'x' },
           operator: { value: '+' },
-          right: { value: '2' }
+          right: new NumberNode('2')
         }
       ));
     });
@@ -47,7 +48,7 @@ describe('Parser', () => {
       expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
         false,
         'x',
-        { value: '1' }
+        new NumberNode('1')
       ));
     });
 
@@ -81,9 +82,9 @@ describe('Parser', () => {
         false,
         'x',
         {
-          left: { value: '1' },
+          left: new NumberNode('1'),
           operator: { value: '+' },
-          right: { value: '2' }
+          right: new NumberNode('2')
         }
       ));
     });
@@ -95,7 +96,7 @@ describe('Parser', () => {
       expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
         true,
         'x',
-        { value: '1' }
+        new NumberNode('1')
       ));
     });
 
