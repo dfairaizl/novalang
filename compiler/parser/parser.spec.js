@@ -20,7 +20,7 @@ describe('Parser', () => {
   describe('multile statements', () => {
     it('delimits statements based on semicolons', () => {
       const parser = new Parser();
-      parser.parse('const x = 1; const y = x + 2');
+      parser.parse('const x = 1; const y = 2');
 
       expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
         false,
@@ -31,11 +31,7 @@ describe('Parser', () => {
       expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
         false,
         'y',
-        {
-          left: { identifier: 'x' },
-          operator: { value: '+' },
-          right: new NumberNode('2')
-        }
+        new NumberNode('2')
       ));
     });
   });
@@ -59,7 +55,7 @@ describe('Parser', () => {
       expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
         false,
         'x',
-        { identifier: 'y' }
+        'y'
       ));
     });
 
@@ -184,9 +180,7 @@ describe('Parser', () => {
       const parser = new Parser();
       parser.parse('return x');
 
-      expect(parser.parsePrimaryExpression()).toEqual({
-        identifier: 'x'
-      });
+      expect(parser.parsePrimaryExpression()).toEqual('x');
     });
   });
 });

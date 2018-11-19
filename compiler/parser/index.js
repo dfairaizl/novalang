@@ -163,7 +163,7 @@ class Parser {
     }
 
     return {
-      name: funcIdentifier.identifier,
+      name: funcIdentifier,
       args
     };
   }
@@ -178,7 +178,7 @@ class Parser {
       this.validateNextToken('=');
       const assignmentExpr = this.parseExpression();
 
-      return new VariableNode(false, identifier.identifier, assignmentExpr);
+      return new VariableNode(false, identifier, assignmentExpr);
     } else if (declarationType.value === 'let') {
       let assignmentExpr = null;
       let token = this.peekNextToken();
@@ -190,7 +190,7 @@ class Parser {
         assignmentExpr = this.parseExpression();
       }
 
-      return new VariableNode(true, identifier.identifier, assignmentExpr);
+      return new VariableNode(true, identifier, assignmentExpr);
     }
   }
 
@@ -199,9 +199,7 @@ class Parser {
     const identifier = this.getNextToken();
 
     if (identifier instanceof IdentifierToken) {
-      return {
-        identifier: identifier.value
-      };
+      return identifier.value;
     }
 
     return null;
