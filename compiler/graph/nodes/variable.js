@@ -9,6 +9,10 @@ class VariableNode extends BaseNode {
 
     this.source = sourceExpr;
   }
+
+  toString () {
+    return `VariableNode(${this.varName})`;
+  }
 }
 
 module.exports = VariableNode;

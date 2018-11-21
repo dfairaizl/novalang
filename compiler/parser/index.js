@@ -8,6 +8,7 @@ const {
 } = require('../lexer/tokens');
 
 const {
+  ClosureNode,
   FunctionNode,
   InvocationNode,
   NumberNode,
@@ -22,8 +23,14 @@ class Parser {
 
   parse (input) {
     this.lexer = new Lexer(input);
+    this.moduleScope = new ClosureNode();
 
     this.readTokens();
+  }
+
+  connect (edge) {
+    this.moduleScope.addOutgoing(edge);
+    return edge;
   }
 
   // top level parser to handle main blocks in a source file
@@ -36,10 +43,10 @@ class Parser {
 
     switch (currentToken.constructor) {
       case KeywordToken:
-        return this.parseKeywordExpression(currentToken);
+        return this.connect(this.parseKeywordExpression(currentToken));
     }
 
-    return this.parseExpression();
+    return this.connect(this.parseExpression());
   }
 
   parseExpression () {

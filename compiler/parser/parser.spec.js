@@ -27,17 +27,30 @@ describe('Parser', () => {
         const y = 2
       `);
 
-      expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
-        false,
-        'x',
-        new NumberNode('1')
-      ));
+      // there has to be a bretter way to do this
+      const expr1 = parser.parsePrimaryExpression();
 
-      expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
-        false,
-        'y',
-        new NumberNode('2')
-      ));
+      expect(expr1).toHaveProperty('mutable', false);
+      expect(expr1).toHaveProperty('varName', 'x');
+      expect(expr1).toHaveProperty('source', new NumberNode('1'));
+
+      const expr2 = parser.parsePrimaryExpression();
+
+      expect(expr2).toHaveProperty('mutable', false);
+      expect(expr2).toHaveProperty('varName', 'y');
+      expect(expr2).toHaveProperty('source', new NumberNode('2'));
+
+      // expect().toEqual(new VariableNode(
+      //   false,
+      //   'x',
+      //   new NumberNode('1')
+      // ));
+      //
+      // expect(parser.parsePrimaryExpression()).toEqual(new VariableNode(
+      //   false,
+      //   'y',
+      //   new NumberNode('2')
+      // ));
     });
 
     it('delimits statements based on semicolons', () => {
@@ -194,6 +207,20 @@ describe('Parser', () => {
       parser.parse('return x');
 
       expect(parser.parsePrimaryExpression()).toEqual('x');
+    });
+  });
+
+  describe('closures', () => {
+    it('creates a global closure to hold variables', () => {
+      const parser = new Parser();
+      parser.parse('const x = 1; const y = x');
+
+      const xVar = parser.parsePrimaryExpression(); // const x = 1
+      const yVar = parser.parsePrimaryExpression();
+
+      const closure = yVar.scope().filterFor(VariableNode);
+
+      expect(closure).toEqual([yVar, xVar]);
     });
   });
 });
