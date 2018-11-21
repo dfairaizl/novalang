@@ -16,16 +16,17 @@ const {
 } = require('../graph/nodes');
 
 class Parser {
-  constructor (options) {
+  constructor (input, options) {
     this.options = options || {};
-    this.lexer = null;
-  }
 
-  parse (input) {
     this.lexer = new Lexer(input);
     this.moduleScope = new ClosureNode();
 
     this.readTokens();
+  }
+
+  parse () {
+    return this.connect(this.parsePrimaryExpression());
   }
 
   connect (edge) {
@@ -43,10 +44,10 @@ class Parser {
 
     switch (currentToken.constructor) {
       case KeywordToken:
-        return this.connect(this.parseKeywordExpression(currentToken));
+        return this.parseKeywordExpression(currentToken);
     }
 
-    return this.connect(this.parseExpression());
+    return this.parseExpression();
   }
 
   parseExpression () {
