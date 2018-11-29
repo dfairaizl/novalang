@@ -162,43 +162,26 @@ describe('Directed Graph', () => {
 
       expect(nodes).toEqual([nodeB, nodeC]);
     });
+  });
 
-    it.only('visits all adjacent nodes respecting specified depth', () => {
+  describe('breadth-first search traversal', () => {
+    it('visits all nodes', () => {
       const graph = new Graph();
       const nodes = [];
 
-      /*
-           (a) - (c)
-           /      /\
-        (b)    (f) (g)
-        /\
-     (d) (e)
-      */
+      const node1 = graph.addNode({ name: 'node 1' });
+      const node2 = graph.addNode({ name: 'node 2' });
+      const node3 = graph.addNode({ name: 'node 3' });
 
-      const nodeA = graph.addNode({ name: 'a' });
-      const nodeB = graph.addNode({ name: 'b' });
-      const nodeC = graph.addNode({ name: 'c' });
-      const nodeD = graph.addNode({ name: 'd' });
-      const nodeE = graph.addNode({ name: 'e' });
-      const nodeF = graph.addNode({ name: 'f' });
-      const nodeG = graph.addNode({ name: 'g' });
+      graph.addEdge(node1, node2);
+      graph.addEdge(node1, node3);
 
-      graph.addEdge(nodeA, nodeB);
-      graph.addEdge(nodeA, nodeC);
-      graph.addEdge(nodeB, nodeD);
-      graph.addEdge(nodeB, nodeE);
-      graph.addEdge(nodeC, nodeF);
-      graph.addEdge(nodeC, nodeG);
-
-      debugger;
-      const iterator = graph.traverse(nodeF, 1);
-
-      iterator.forEach((n) => {
-        console.log(n.attributes.name);
-        nodes.push(n.attributes.name);
+      const iterator = graph.traverse(null);
+      iterator.forEachBFS((n) => {
+        nodes.push(n);
       });
 
-      expect(nodes).toEqual([nodeB, nodeC]);
+      expect(nodes.length).toBe(3);
     });
   });
 });

@@ -67,7 +67,6 @@ class Iterator {
     }
 
     const iterator = (node, depth, maxDepth) => {
-      console.log(depth, maxDepth);
       this.visitCache[node.id] = true;
 
       node.edges.forEach((e) => {
@@ -82,6 +81,33 @@ class Iterator {
     };
 
     iterator(this.head, 1, this.traversalDepth);
+  }
+
+  forEachBFS (callback) {
+    let queue = [];
+
+    if (!this.head) {
+      this.head = Object.values(this.graph.nodes)[0]; // pick an arbitrary node in the graph to start at
+    }
+
+    queue.push(this.head);
+
+    if (!this.visitCache[this.head.id]) {
+      callback(this.head);
+      this.visitCache[this.head.id] = true;
+    }
+
+    while (queue.length > 0) {
+      const node = queue.pop();
+      node.edges.forEach((e) => {
+        const target = e.target;
+        if (!this.visitCache[target.id]) {
+          callback(target);
+          this.visitCache[target.id] = true;
+          queue = [node].concat(queue);
+        }
+      });
+    }
   }
 }
 
