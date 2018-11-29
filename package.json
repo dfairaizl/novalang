@@ -2,7 +2,8 @@
   "author": "",
   "dependencies": {
     "libllvm": "file:../LibLLVM",
-    "utf8": "^3.0.0"
+    "utf8": "^3.0.0",
+    "uuid": "^3.3.2"
   },
   "description": "The Nova Programming Language",
   "devDependencies": {
