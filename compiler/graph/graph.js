@@ -63,13 +63,15 @@ class Iterator {
   forEach (callback) {
     if (!this.head) {
       this.head = Object.values(this.graph.nodes)[0]; // pick an arbitrary node in the graph to start at
-      callback(this.head); // and visit it
+      callback(this.head); // visit the start node and mark it
     }
+
+    this.visitCache[this.head.id] = true;
 
     const iterator = (node, depth, maxDepth) => {
       this.visitCache[node.id] = true;
 
-      node.edges.forEach((e) => {
+      node.adjacents().forEach((e) => {
         const target = e.target;
         if (target.id !== this.head.id) {
           if (!this.visitCache[target.id] && depth <= maxDepth) {
@@ -83,32 +85,65 @@ class Iterator {
     iterator(this.head, 1, this.traversalDepth);
   }
 
-  forEachBFS (callback) {
-    let queue = [];
+  postOrder () {
+    const order = [];
 
     if (!this.head) {
-      this.head = Object.values(this.graph.nodes)[0]; // pick an arbitrary node in the graph to start at
+      return null;
     }
 
-    queue.push(this.head);
+    this.visitCache[this.head.id] = true;
 
-    if (!this.visitCache[this.head.id]) {
-      callback(this.head);
-      this.visitCache[this.head.id] = true;
-    }
-
-    while (queue.length > 0) {
-      const node = queue.pop();
-      node.edges.forEach((e) => {
+    const iterator = (node, depth, maxDepth) => {
+      this.visitCache[node.id] = true;
+      const flippedEdges = node.edges.map((e) => new Edge(e.target, e.source, e.weight, e.attributes));
+      flippedEdges.forEach((e) => {
         const target = e.target;
-        if (!this.visitCache[target.id]) {
-          callback(target);
-          this.visitCache[target.id] = true;
-          queue = [node].concat(queue);
+        if (target.id !== this.head.id) {
+          if (!this.visitCache[target.id] && depth <= maxDepth) {
+            iterator(target, depth + 1, maxDepth);
+          }
         }
       });
-    }
+
+      order.push(node);
+    };
+
+    iterator(this.head, 1, this.traversalDepth);
+
+    return order;
   }
+
+  // forEachBFS (callback) {
+  //   let queue = [];
+  //   let distance = 0;
+  //
+  //   if (!this.head) {
+  //     this.head = Object.values(this.graph.nodes)[0]; // pick an arbitrary node in the graph to start at
+  //   }
+  //
+  //   queue.push(this.head);
+  //
+  //   // visit head first
+  //   callback(this.head, distance);
+  //   this.visitCache[this.head.id] = true;
+  //
+  //   while (queue.length > 0) {
+  //     const node = queue.pop();
+  //
+  //     node.edges.forEach((e) => {
+  //       const n = e.target;
+  //
+  //       if (!this.visitCache[n.id]) {
+  //         this.visitCache[n.id] = true;
+  //         queue = [n].concat(queue);
+  //         callback(n, distance);
+  //       }
+  //     });
+  //
+  //     ++distance;
+  //   }
+  // }
 }
 
 module.exports = Graph;

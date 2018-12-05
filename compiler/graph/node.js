@@ -9,6 +9,12 @@ class Node {
   addEdge (edge) {
     this.edges.push(edge);
   }
+
+  adjacents () {
+    return this.edges.filter((edge) => {
+      return edge.target.id !== this.id;
+    });
+  }
 }
 
 module.exports = Node;
