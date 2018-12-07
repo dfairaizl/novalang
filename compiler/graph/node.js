@@ -10,9 +10,15 @@ class Node {
     this.edges.push(edge);
   }
 
-  adjacents () {
+  outEdges () {
     return this.edges.filter((edge) => {
       return edge.target.id !== this.id;
+    });
+  }
+
+  inEdges () {
+    return this.edges.filter((edge) => {
+      return edge.source.id !== this.id;
     });
   }
 }

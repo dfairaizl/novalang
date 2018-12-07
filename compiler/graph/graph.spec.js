@@ -102,7 +102,7 @@ describe('Directed Graph', () => {
   });
 
   describe('depth-first search traversal', () => {
-    it('visits all nodes', () => {
+    it.only('visits all nodes', () => {
       const graph = new Graph();
       const nodes = [];
 
@@ -114,7 +114,7 @@ describe('Directed Graph', () => {
       graph.addEdge(node1, node3);
 
       const iterator = graph.traverse(null);
-      iterator.forEach((n) => {
+      iterator.forEach(false, (n) => {
         nodes.push(n);
       });
 

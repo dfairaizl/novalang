@@ -2,7 +2,6 @@ const uuid = require('uuid/v4');
 
 const Node = require('./node');
 const Edge = require('./edge');
-// const dfs = require('./utils/dfs');
 
 class Graph {
   constructor () {
@@ -27,14 +26,8 @@ class Graph {
     }
 
     if (sourceNode && targetNode) {
-      const edge = new Edge(sourceNode, targetNode, weight, attributes);
-
-      sourceNode.addEdge(edge);
-      targetNode.addEdge(edge);
-
-      this.edges.push(edge);
-
-      return edge;
+      sourceNode.addEdge(new Edge(sourceNode, targetNode, weight, attributes));
+      targetNode.addEdge(new Edge(sourceNode, targetNode, weight, attributes));
     }
 
     return null;
@@ -60,90 +53,46 @@ class Iterator {
     this.visitCache = {};
   }
 
-  forEach (callback) {
-    if (!this.head) {
-      this.head = Object.values(this.graph.nodes)[0]; // pick an arbitrary node in the graph to start at
-      callback(this.head); // visit the start node and mark it
-    }
-
-    this.visitCache[this.head.id] = true;
-
-    const iterator = (node, depth, maxDepth) => {
-      this.visitCache[node.id] = true;
-
-      node.adjacents().forEach((e) => {
-        const target = e.target;
-        if (target.id !== this.head.id) {
-          if (!this.visitCache[target.id] && depth <= maxDepth) {
-            callback(target);
-            iterator(target, depth + 1, maxDepth);
-          }
-        }
-      });
-    };
-
-    iterator(this.head, 1, this.traversalDepth);
-  }
-
-  postOrder () {
+  forEach (postOrder = false, callback) {
     const order = [];
 
     if (!this.head) {
-      return null;
+      this.head = Object.values(this.graph.nodes)[0]; // pick an arbitrary node in the graph to start at
+      if (callback) callback(this.head); // visit the start node and mark it
     }
 
     this.visitCache[this.head.id] = true;
 
     const iterator = (node, depth, maxDepth) => {
+      const edges = postOrder ? node.inEdges() : node.outEdges();
       this.visitCache[node.id] = true;
-      const flippedEdges = node.edges.map((e) => new Edge(e.target, e.source, e.weight, e.attributes));
-      flippedEdges.forEach((e) => {
-        const target = e.target;
-        if (target.id !== this.head.id) {
-          if (!this.visitCache[target.id] && depth <= maxDepth) {
-            iterator(target, depth + 1, maxDepth);
+
+      edges.forEach((e) => {
+        const source = postOrder ? e.source : e.target;
+        if (source.id !== this.head.id) {
+          if (!this.visitCache[source.id] && depth <= maxDepth) {
+            if (callback) callback(source);
+            iterator(source, depth + 1, maxDepth);
           }
         }
       });
 
-      order.push(node);
+      if (!callback) {
+        order.push(node);
+      }
     };
 
     iterator(this.head, 1, this.traversalDepth);
-
     return order;
   }
 
-  // forEachBFS (callback) {
-  //   let queue = [];
-  //   let distance = 0;
-  //
-  //   if (!this.head) {
-  //     this.head = Object.values(this.graph.nodes)[0]; // pick an arbitrary node in the graph to start at
-  //   }
-  //
-  //   queue.push(this.head);
-  //
-  //   // visit head first
-  //   callback(this.head, distance);
-  //   this.visitCache[this.head.id] = true;
-  //
-  //   while (queue.length > 0) {
-  //     const node = queue.pop();
-  //
-  //     node.edges.forEach((e) => {
-  //       const n = e.target;
-  //
-  //       if (!this.visitCache[n.id]) {
-  //         this.visitCache[n.id] = true;
-  //         queue = [n].concat(queue);
-  //         callback(n, distance);
-  //       }
-  //     });
-  //
-  //     ++distance;
-  //   }
-  // }
+  iterate (callback) {
+    this.forEach(false, callback);
+  }
+
+  sorted () {
+    return this.forEach(true);
+  }
 }
 
 module.exports = Graph;
