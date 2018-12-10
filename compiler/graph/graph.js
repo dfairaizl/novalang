@@ -58,9 +58,9 @@ class Iterator {
 
     if (!this.head) {
       this.head = Object.values(this.graph.nodes)[0]; // pick an arbitrary node in the graph to start at
-      if (callback) callback(this.head); // visit the start node and mark it
     }
 
+    if (callback) callback(this.head); // visit the start node and mark it
     this.visitCache[this.head.id] = true;
 
     const iterator = (node, depth, maxDepth) => {

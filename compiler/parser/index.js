@@ -8,22 +8,25 @@ const {
 } = require('../lexer/tokens');
 
 const {
-  ClosureNode,
   FunctionNode,
   InvocationNode,
   NumberNode,
   VariableNode
 } = require('../graph/nodes');
 
+const Graph = require('../graph/graph');
+
 class Parser {
   constructor (input, options) {
     this.options = options || {};
 
     this.lexer = new Lexer(input);
-    this.moduleScope = new ClosureNode();
+    this.sourceGraph = new Graph();
 
     this.readTokens();
   }
+
+  // Decent Parsing Methods
 
   parse () {
     return this.parsePrimaryExpression();
@@ -43,38 +46,6 @@ class Parser {
     }
 
     return this.parseExpression();
-  }
-
-  parseExpression () {
-    const left = this.parseAtomic();
-    let right = null;
-
-    const operator = this.peekNextToken();
-    if (operator instanceof OperatorToken) {
-      this.getNextToken(); // consume operator
-
-      right = this.parseExpression();
-
-      const terminator = this.peekNextToken();
-
-      if (terminator instanceof PunctuatorToken && terminator.value === ';') {
-        this.validateNextToken(';');
-      }
-
-      return {
-        left,
-        operator,
-        right
-      };
-    }
-
-    const terminator = this.peekNextToken();
-
-    if (terminator instanceof PunctuatorToken && terminator.value === ';') {
-      this.validateNextToken(';');
-    }
-
-    return left; // base case
   }
 
   parseAtomic () {
@@ -108,6 +79,40 @@ class Parser {
     return this.parseExpression();
   }
 
+  // Parsing methods
+
+  parseExpression () {
+    const left = this.parseAtomic();
+    let right = null;
+
+    const operator = this.peekNextToken();
+    if (operator instanceof OperatorToken) {
+      this.getNextToken(); // consume operator
+
+      right = this.parseExpression();
+
+      const terminator = this.peekNextToken();
+
+      if (terminator instanceof PunctuatorToken && terminator.value === ';') {
+        this.validateNextToken(';');
+      }
+
+      const binOp = this.sourceGraph.addNode({ type: 'bin_op', operator });
+      this.sourceGraph.addEdge(binOp, left, 0, 'left');
+      this.sourceGraph.addEdge(binOp, right, 0, 'right');
+
+      return binOp;
+    }
+
+    const terminator = this.peekNextToken();
+
+    if (terminator instanceof PunctuatorToken && terminator.value === ';') {
+      this.validateNextToken(';');
+    }
+
+    return left; // base case
+  }
+
   // functions
   parseFunctionDeclaration () {
     this.validateNextToken('function');
@@ -137,11 +142,14 @@ class Parser {
 
     this.validateNextToken('{');
 
-    const body = this.parsePrimaryExpression();
+    const bodyNode = this.parsePrimaryExpression();
 
     this.validateNextToken('}');
 
-    return new FunctionNode(funcIdentifier.value, args, body);
+    const funcNode = this.sourceGraph.addNode({ type: 'function', args });
+    this.sourceGraph.addEdge(funcNode, bodyNode, 0, 'body');
+
+    return funcNode;
   }
 
   parseFunctionInvocation (funcIdentifier) {
@@ -163,7 +171,7 @@ class Parser {
       }
     }
 
-    return new InvocationNode(funcIdentifier, args);
+    return this.sourceGraph.addNode({ type: 'invocation', name: funcIdentifier, args });
   }
 
   // variables
@@ -176,7 +184,10 @@ class Parser {
       this.validateNextToken('=');
       const assignmentExpr = this.parseExpression();
 
-      return new VariableNode(false, identifier, assignmentExpr);
+      const declareNode = this.sourceGraph.addNode({ type: 'immutable_declaration', identifier });
+      this.sourceGraph.addEdge(declareNode, assignmentExpr, 0, 'expression');
+
+      return declareNode;
     } else if (declarationType.value === 'let') {
       let assignmentExpr = null;
       let token = this.peekNextToken();
@@ -188,7 +199,10 @@ class Parser {
         assignmentExpr = this.parseExpression();
       }
 
-      return new VariableNode(true, identifier, assignmentExpr);
+      const declareNode = this.sourceGraph.addNode({ type: 'mutable_declaration', identifier });
+      this.sourceGraph.addEdge(declareNode, assignmentExpr, 0, 'expression');
+
+      return declareNode;
     }
   }
 
@@ -207,7 +221,8 @@ class Parser {
     const literal = this.getNextToken();
 
     if (literal instanceof NumberToken) {
-      return new NumberNode(literal.value);
+      // return new NumberNode(literal.value);
+      return this.sourceGraph.addNode({ type: 'number_literal', value: literal.value });
     }
 
     return null;
@@ -223,10 +238,11 @@ class Parser {
       return this.parseFunctionInvocation(identifier);
     }
 
-    return identifier;
+    return this.sourceGraph.addNode({ type: 'identifier', identifier });
   }
 
-  // helper methods
+  // Helper methods
+
   validateNextToken (tokenValue) {
     // interput parsing execution if we find a syntax error
     if (this.getNextToken().value !== tokenValue) {

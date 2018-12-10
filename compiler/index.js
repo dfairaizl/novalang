@@ -12,15 +12,17 @@ class Compiler {
 
   compile (source) {
     const parser = new Parser(source);
-    const sourceModule = this.sourceGraph.addNode({ type: 'module' });
+
+    let mod = parser.parse();
+    const t = parser.sourceGraph.traverse(mod);
+    t.iterate((n) => {
+      console.log(n.attributes);
+    });
 
     debugger;
-    const expression = parser.parse();
-    this.assembleGraphNode(sourceModule, expression);
-
-    const t = this.sourceGraph.traverse();
-
-    t.iterate((n) => {
+    mod = parser.parse();
+    const r = parser.sourceGraph.traverse(mod);
+    r.iterate((n) => {
       console.log(n.attributes);
     });
   }
