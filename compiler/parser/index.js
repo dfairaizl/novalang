@@ -26,12 +26,7 @@ class Parser {
   }
 
   parse () {
-    return this.connect(this.parsePrimaryExpression());
-  }
-
-  connect (edge) {
-    this.moduleScope.addOutgoing(edge);
-    return edge;
+    return this.parsePrimaryExpression();
   }
 
   // top level parser to handle main blocks in a source file
