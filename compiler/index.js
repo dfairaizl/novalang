@@ -21,6 +21,8 @@ class Compiler {
     r.iterate((n) => {
       console.log(n.attributes);
     });
+
+    parser.sourceGraph.debug();
   }
 }
 

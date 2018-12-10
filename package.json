@@ -8,7 +8,8 @@
   },
   "description": "The Nova Programming Language",
   "devDependencies": {
-    "jest": "^23.6.0"
+    "jest": "^23.6.0",
+    "vis": "^4.21.0"
   },
   "jest": {
     "collectCoverage": true,

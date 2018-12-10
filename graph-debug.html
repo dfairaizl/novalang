@@ -1,0 +1,42 @@
+<html>
+<head>
+    <script type="text/javascript" src="./node_modules/vis/dist/vis.js"></script>
+    <link href="./node_modules/vis/dist/vis.css" rel="stylesheet" type="text/css" />
+
+    <style type="text/css">
+        #mynetwork {
+            width: 600px;
+            height: 400px;
+            border: 1px solid lightgray;
+        }
+    </style>
+</head>
+<body>
+<div id="mynetwork"></div>
+
+<script type="text/javascript">
+    // create an array with nodes
+    var nodes = new vis.DataSet(
+      [{"id":"77710c63-edb9-4cd6-8b3c-18e9a77f4a40","label":"identifier"},{"id":"c5b188d6-2354-45f3-862c-53e26cca05f1","label":"number_literal"},{"id":"a6f53ede-af55-48c1-b8f7-2ee3562ce710","label":"bin_op"},{"id":"e69ef7b5-8bf5-4748-84d0-5d6350db2810","label":"function"},{"id":"d02f18c2-914d-4f3f-abb6-b0b62620ad35","label":"invocation"},{"id":"e0f00aee-2944-42de-8554-1f9d113ebef1","label":"immutable_declaration"}]
+    );
+
+    // create an array with edges
+    var edges = new vis.DataSet(
+      [{"from":"a6f53ede-af55-48c1-b8f7-2ee3562ce710","to":"77710c63-edb9-4cd6-8b3c-18e9a77f4a40"},{"from":"a6f53ede-af55-48c1-b8f7-2ee3562ce710","to":"c5b188d6-2354-45f3-862c-53e26cca05f1"},{"from":"e69ef7b5-8bf5-4748-84d0-5d6350db2810","to":"a6f53ede-af55-48c1-b8f7-2ee3562ce710"},{"from":"e0f00aee-2944-42de-8554-1f9d113ebef1","to":"d02f18c2-914d-4f3f-abb6-b0b62620ad35"}]
+    );
+
+    // create a network
+    var container = document.getElementById('mynetwork');
+
+    // provide the data in the vis format
+    var data = {
+        nodes: nodes,
+        edges: edges
+    };
+    var options = {};
+
+    // initialize your network!
+    var network = new vis.Network(container, data, options);
+</script>
+</body>
+</html>

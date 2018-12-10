@@ -43,6 +43,30 @@ class Graph {
       depth
     });
   }
+
+  debug () {
+    // nodes
+    const nodes = Object.entries(this.nodes).map(([key, val]) => {
+      return {
+        id: key,
+        label: val.attributes.type
+      };
+    });
+
+    console.log('NODES');
+    console.log(JSON.stringify(nodes));
+
+    // edges
+    const edges = [];
+    Object.values(this.nodes).map((node) => {
+      node.outEdges().forEach((e) => {
+        edges.push({ from: e.source.id, to: e.target.id });
+      });
+    });
+
+    console.log('EDGES');
+    console.log(JSON.stringify(edges));
+  }
 }
 
 class Iterator {
