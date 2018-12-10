@@ -7,13 +7,6 @@ const {
   PunctuatorToken
 } = require('../lexer/tokens');
 
-const {
-  FunctionNode,
-  InvocationNode,
-  NumberNode,
-  VariableNode
-} = require('../graph/nodes');
-
 const Graph = require('../graph/graph');
 
 class Parser {
