@@ -16,12 +16,6 @@ class Compiler {
       console.log(n.attributes);
     });
 
-    mod = parser.parse();
-    const r = parser.sourceGraph.traverse(mod);
-    r.iterate((n) => {
-      console.log(n.attributes);
-    });
-
     parser.sourceGraph.debug();
   }
 }

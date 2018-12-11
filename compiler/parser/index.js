@@ -22,7 +22,12 @@ class Parser {
   // Decent Parsing Methods
 
   parse () {
-    return this.parsePrimaryExpression();
+    let mod = null;
+    while ((mod = this.parsePrimaryExpression())) {
+      console.log('Parsing next expression');
+    }
+
+    return mod;
   }
 
   // top level parser to handle main blocks in a source file

@@ -5,8 +5,8 @@
 
     <style type="text/css">
         #mynetwork {
-            width: 600px;
-            height: 400px;
+            width: 99vw;
+            height: 98vh;
             border: 1px solid lightgray;
         }
     </style>
@@ -17,12 +17,12 @@
 <script type="text/javascript">
     // create an array with nodes
     var nodes = new vis.DataSet(
-      [{"id":"77710c63-edb9-4cd6-8b3c-18e9a77f4a40","label":"identifier"},{"id":"c5b188d6-2354-45f3-862c-53e26cca05f1","label":"number_literal"},{"id":"a6f53ede-af55-48c1-b8f7-2ee3562ce710","label":"bin_op"},{"id":"e69ef7b5-8bf5-4748-84d0-5d6350db2810","label":"function"},{"id":"d02f18c2-914d-4f3f-abb6-b0b62620ad35","label":"invocation"},{"id":"e0f00aee-2944-42de-8554-1f9d113ebef1","label":"immutable_declaration"}]
+      [{"id":"ac805b30-88fd-4489-a699-99a7c975bbf3","label":"identifier"},{"id":"7f830307-3bf0-4db7-ba7d-a14a929b8260","label":"identifier"},{"id":"7cf3fc56-97a0-4971-a7db-cdfa5cac4e23","label":"bin_op"},{"id":"3ee05b7b-1dc1-47c6-b8a8-1d51b9d69e2b","label":"function"},{"id":"4a0b10d4-bb14-4c6e-a54d-2c41fdaefc6b","label":"identifier"},{"id":"40c40eba-3be9-4e7d-a8cf-b2085e1ccfc2","label":"identifier"},{"id":"ad99498c-b484-4744-9a86-0407028fa5f9","label":"bin_op"},{"id":"fe5cfd06-f6f2-47bd-bf66-d655c2a11af0","label":"function"},{"id":"4cbbc9e9-afcb-4fdb-b1a9-29e600a48eda","label":"identifier"},{"id":"73170708-1de3-4ec6-9d26-a1ac285b389d","label":"identifier"},{"id":"f2b1c859-671c-4217-b86c-b50fa1e8b06b","label":"bin_op"},{"id":"918ac5d8-4201-44df-89c3-305f37319318","label":"function"},{"id":"4550821c-f4a4-4ed9-9f93-ca25f075595c","label":"identifier"},{"id":"b4c59ebe-92ba-40f8-abb2-6911341c1bc3","label":"identifier"},{"id":"d1e3685b-a7c0-4d34-ae90-9dc9accdbfa4","label":"bin_op"},{"id":"7ccfc3ff-6648-4bb6-bbf7-be2fa07614ee","label":"function"},{"id":"ca8b2dbe-4c54-457d-a129-7371c2228b3a","label":"invocation"},{"id":"d8779e60-e8ff-43ba-bdaa-df0cee6757dd","label":"invocation"},{"id":"ddb6eba9-41cf-43dc-862a-4a61a2d651cb","label":"invocation"},{"id":"479408d2-8436-4b1d-afe5-5eb9b9080ae7","label":"invocation"}]
     );
 
     // create an array with edges
     var edges = new vis.DataSet(
-      [{"from":"a6f53ede-af55-48c1-b8f7-2ee3562ce710","to":"77710c63-edb9-4cd6-8b3c-18e9a77f4a40"},{"from":"a6f53ede-af55-48c1-b8f7-2ee3562ce710","to":"c5b188d6-2354-45f3-862c-53e26cca05f1"},{"from":"e69ef7b5-8bf5-4748-84d0-5d6350db2810","to":"a6f53ede-af55-48c1-b8f7-2ee3562ce710"},{"from":"e0f00aee-2944-42de-8554-1f9d113ebef1","to":"d02f18c2-914d-4f3f-abb6-b0b62620ad35"}]
+      [{"from":"7cf3fc56-97a0-4971-a7db-cdfa5cac4e23","to":"ac805b30-88fd-4489-a699-99a7c975bbf3"},{"from":"7cf3fc56-97a0-4971-a7db-cdfa5cac4e23","to":"7f830307-3bf0-4db7-ba7d-a14a929b8260"},{"from":"3ee05b7b-1dc1-47c6-b8a8-1d51b9d69e2b","to":"7cf3fc56-97a0-4971-a7db-cdfa5cac4e23"},{"from":"ad99498c-b484-4744-9a86-0407028fa5f9","to":"4a0b10d4-bb14-4c6e-a54d-2c41fdaefc6b"},{"from":"ad99498c-b484-4744-9a86-0407028fa5f9","to":"40c40eba-3be9-4e7d-a8cf-b2085e1ccfc2"},{"from":"fe5cfd06-f6f2-47bd-bf66-d655c2a11af0","to":"ad99498c-b484-4744-9a86-0407028fa5f9"},{"from":"f2b1c859-671c-4217-b86c-b50fa1e8b06b","to":"4cbbc9e9-afcb-4fdb-b1a9-29e600a48eda"},{"from":"f2b1c859-671c-4217-b86c-b50fa1e8b06b","to":"73170708-1de3-4ec6-9d26-a1ac285b389d"},{"from":"918ac5d8-4201-44df-89c3-305f37319318","to":"f2b1c859-671c-4217-b86c-b50fa1e8b06b"},{"from":"d1e3685b-a7c0-4d34-ae90-9dc9accdbfa4","to":"4550821c-f4a4-4ed9-9f93-ca25f075595c"},{"from":"d1e3685b-a7c0-4d34-ae90-9dc9accdbfa4","to":"b4c59ebe-92ba-40f8-abb2-6911341c1bc3"},{"from":"7ccfc3ff-6648-4bb6-bbf7-be2fa07614ee","to":"d1e3685b-a7c0-4d34-ae90-9dc9accdbfa4"}]
     );
 
     // create a network

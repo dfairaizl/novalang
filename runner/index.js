@@ -4,7 +4,7 @@ const { resolve } = require('path');
 
 const Compiler = require('../compiler');
 
-const sourceFile = readFileSync(resolve(__dirname, '..', 'examples', 'function.nv'));
+const sourceFile = readFileSync(resolve(__dirname, '..', 'examples', 'calculator.nv'));
 
 console.log('compiling', sourceFile);
 
