@@ -96,8 +96,8 @@ class Parser {
       }
 
       const binOp = this.sourceGraph.addNode({ type: 'bin_op', operator });
-      this.sourceGraph.addEdge(binOp, left, 0, 'left');
-      this.sourceGraph.addEdge(binOp, right, 0, 'right');
+      this.sourceGraph.addEdge(binOp, left, 'left');
+      this.sourceGraph.addEdge(binOp, right, 'right');
 
       return binOp;
     }
@@ -145,7 +145,7 @@ class Parser {
     this.validateNextToken('}');
 
     const funcNode = this.sourceGraph.addNode({ type: 'function', args });
-    this.sourceGraph.addEdge(funcNode, bodyNode, 0, 'body');
+    this.sourceGraph.addEdge(funcNode, bodyNode, 'body');
 
     return funcNode;
   }
@@ -183,7 +183,7 @@ class Parser {
       const assignmentExpr = this.parseExpression();
 
       const declareNode = this.sourceGraph.addNode({ type: 'immutable_declaration', identifier });
-      this.sourceGraph.addEdge(declareNode, assignmentExpr, 0, 'expression');
+      this.sourceGraph.addEdge(declareNode, assignmentExpr, 'expression');
 
       return declareNode;
     } else if (declarationType.value === 'let') {
@@ -198,7 +198,7 @@ class Parser {
       }
 
       const declareNode = this.sourceGraph.addNode({ type: 'mutable_declaration', identifier });
-      this.sourceGraph.addEdge(declareNode, assignmentExpr, 0, 'expression');
+      this.sourceGraph.addEdge(declareNode, assignmentExpr, 'expression');
 
       return declareNode;
     }

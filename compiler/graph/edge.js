@@ -1,9 +1,9 @@
 class Edge {
-  constructor (source, target, weight, attributes) {
+  constructor (source, target, label, weight) {
     this.source = source;
     this.target = target;
+    this.label = label;
     this.weight = weight;
-    this.attributes = attributes;
   }
 }
 

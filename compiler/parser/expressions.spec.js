@@ -20,17 +20,17 @@ describe('Parser', () => {
   });
 
   describe('multile statements', () => {
-    it('one per line', () => {
+    it.only('one per line', () => {
       const parser = new Parser(`
         const x = 1
         const y = 2
       `);
 
-      expect(parser.parsePrimaryExpression()).toMatchObject({
+      expect(parser.parsePrimaryExpression().attributes).toMatchObject({
         varName: 'x'
       });
 
-      expect(parser.parsePrimaryExpression()).toMatchObject({
+      expect(parser.parsePrimaryExpression().attributes).toMatchObject({
         varName: 'y'
       });
     });

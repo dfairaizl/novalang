@@ -1,33 +1,59 @@
 const uuid = require('uuid/v4');
 
-const Node = require('./node');
 const Edge = require('./edge');
+const Iterator = require('./iterator');
+const Node = require('./node');
+
+class AdjacencyList {
+  constructor (node) {
+    this.node = node;
+    this.edges = [];
+  }
+}
 
 class Graph {
   constructor () {
-    this.nodes = {};
-    this.edges = [];
+    this.adjacencyList = {};
+  }
+
+  nodeFor (id) {
+    const adjList = this.adjacencyList[id] || {};
+    return adjList.node;
+  }
+
+  get nodes () {
+    return Object.values(this.adjacencyList).map((a) => a.node);
+  }
+
+  get edges () {
+    const edges = [];
+    Object.values(this.adjacencyList).forEach((list) => {
+      list.edges.forEach((e) => {
+        edges.push(e);
+      });
+    });
+
+    return edges;
   }
 
   addNode (attributes = {}, id) {
     const nodeId = id || uuid();
 
-    if (!this.hasNode(nodeId)) {
-      this.nodes[nodeId] = new Node(nodeId, attributes);
+    if (!this.nodeFor(nodeId)) {
+      const node = new Node(nodeId, attributes);
+      this.adjacencyList[nodeId] = new AdjacencyList(node);
     }
 
-    return this.nodes[nodeId];
+    return this.adjacencyList[nodeId].node;
   }
 
-  addEdge (sourceNode, targetNode, weight = 0, attributes = {}) {
-    if (weight instanceof Object) {
-      attributes = weight;
-      weight = 0;
-    }
-
+  addEdge (sourceNode, targetNode, label, weight = 0) {
     if (sourceNode && targetNode) {
-      sourceNode.addEdge(new Edge(sourceNode, targetNode, weight, attributes));
-      targetNode.addEdge(new Edge(sourceNode, targetNode, weight, attributes));
+      const sourceEdge = new Edge(sourceNode, targetNode, label, weight);
+      const targetEdge = new Edge(targetNode, sourceNode, label, weight);
+
+      this.adjacencyList[sourceNode.id].edges.push(sourceEdge);
+      this.adjacencyList[targetNode.id].edges.push(targetEdge);
     }
 
     return null;
@@ -46,10 +72,10 @@ class Graph {
 
   debug () {
     // nodes
-    const nodes = Object.entries(this.nodes).map(([key, val]) => {
+    const nodes = this.nodes.map((node) => {
       return {
-        id: key,
-        label: val.attributes.type
+        id: node.id,
+        label: node.attributes.type
       };
     });
 
@@ -58,64 +84,12 @@ class Graph {
 
     // edges
     const edges = [];
-    Object.values(this.nodes).map((node) => {
-      node.outEdges().forEach((e) => {
-        edges.push({ from: e.source.id, to: e.target.id });
-      });
+    this.edges.forEach((e) => {
+      edges.push({ from: e.source.id, to: e.target.id });
     });
 
     console.log('EDGES');
     console.log(JSON.stringify(edges));
-  }
-}
-
-class Iterator {
-  constructor (graph, options) {
-    this.graph = graph;
-    this.head = options.startNode || null;
-    this.traversalDepth = options.depth || Infinity;
-    this.visitCache = {};
-  }
-
-  forEach (postOrder = false, callback) {
-    const order = [];
-
-    if (!this.head) {
-      this.head = Object.values(this.graph.nodes)[0]; // pick an arbitrary node in the graph to start at
-    }
-
-    if (callback) callback(this.head); // visit the start node and mark it
-    this.visitCache[this.head.id] = true;
-
-    const iterator = (node, depth, maxDepth) => {
-      const edges = postOrder ? node.inEdges() : node.outEdges();
-      this.visitCache[node.id] = true;
-
-      edges.forEach((e) => {
-        const source = postOrder ? e.source : e.target;
-        if (source.id !== this.head.id) {
-          if (!this.visitCache[source.id] && depth <= maxDepth) {
-            if (callback) callback(source);
-            iterator(source, depth + 1, maxDepth);
-          }
-        }
-      });
-
-      if (!callback) {
-        order.push(node);
-      }
-    };
-
-    iterator(this.head, 1, this.traversalDepth);
-    return order;
-  }
-
-  iterate (callback) {
-    this.forEach(false, callback);
-  }
-
-  sorted () {
-    return this.forEach(true);
   }
 }
 
