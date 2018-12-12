@@ -22,12 +22,14 @@ class Parser {
   // Decent Parsing Methods
 
   parse () {
-    let mod = null;
-    while ((mod = this.parsePrimaryExpression())) {
-      console.log('Parsing next expression');
+    const codeModule = this.sourceGraph.addNode({ type: 'module' });
+    let currentExpression = null;
+
+    while ((currentExpression = this.parsePrimaryExpression())) {
+      this.sourceGraph.addEdge(codeModule, currentExpression, 'sources');
     }
 
-    return mod;
+    return codeModule;
   }
 
   // top level parser to handle main blocks in a source file
@@ -140,12 +142,19 @@ class Parser {
 
     this.validateNextToken('{');
 
-    const bodyNode = this.parsePrimaryExpression();
+    const funcNode = this.sourceGraph.addNode({ type: 'function', args });
+
+    while (true) {
+      const bodyNode = this.parsePrimaryExpression();
+
+      if (!bodyNode) {
+        break;
+      }
+
+      this.sourceGraph.addEdge(funcNode, bodyNode, 'body');
+    }
 
     this.validateNextToken('}');
-
-    const funcNode = this.sourceGraph.addNode({ type: 'function', args });
-    this.sourceGraph.addEdge(funcNode, bodyNode, 'body');
 
     return funcNode;
   }

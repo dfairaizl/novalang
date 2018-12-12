@@ -20,46 +20,50 @@ describe('Parser', () => {
   });
 
   describe('multile statements', () => {
-    it.only('one per line', () => {
+    it('one per line', () => {
       const parser = new Parser(`
         const x = 1
         const y = 2
       `);
 
       expect(parser.parsePrimaryExpression().attributes).toMatchObject({
-        varName: 'x'
+        identifier: 'x'
       });
 
       expect(parser.parsePrimaryExpression().attributes).toMatchObject({
-        varName: 'y'
+        identifier: 'y'
       });
     });
 
     it('delimits statements based on semicolons', () => {
       const parser = new Parser('const x = 1; const y = 2');
 
-      expect(parser.parsePrimaryExpression()).toMatchObject({
-        varName: 'x'
+      expect(parser.parsePrimaryExpression().attributes).toMatchObject({
+        identifier: 'x'
       });
 
-      expect(parser.parsePrimaryExpression()).toMatchObject({
-        varName: 'y'
+      expect(parser.parsePrimaryExpression().attributes).toMatchObject({
+        identifier: 'y'
       });
     });
   });
 
-  describe('variable declarations', () => {
-    it('parses immutable variables with number literal assignment', () => {
+  describe.only('variable declarations', () => {
+    it.only('parses immutable variables with number literal assignment', () => {
       const parser = new Parser('const x = 1');
 
       const parsed = parser.parsePrimaryExpression();
+      console.log(parser.sourceGraph.treeFromNode(parsed));
 
-      expect(parsed).toBeInstanceOf(VariableNode);
-      expect(parsed).toMatchObject({
-        mutable: false,
-        varName: 'x',
-        source: new NumberNode('1')
-      });
+      // expect(parsed.attributes).toMatchObject({
+      //   type: 'immutable_declaration',
+      //   identifier: 'x'
+      // });
+      //
+      // expect(parser.queryFor(parsed, 'expression').attributes).toMatchObject({
+      //   type: 'number_literal',
+      //   value: '1'
+      // });
     });
 
     it('parses immutable variables with identifier assignment', () => {
@@ -67,11 +71,14 @@ describe('Parser', () => {
 
       const parsed = parser.parsePrimaryExpression();
 
-      expect(parsed).toBeInstanceOf(VariableNode);
-      expect(parsed).toMatchObject({
-        mutable: false,
-        varName: 'x',
-        source: 'y'
+      expect(parsed.attributes).toMatchObject({
+        type: 'immutable_declaration',
+        identifier: 'x'
+      });
+
+      expect(parser.queryFor(parsed, 'expression').attributes).toMatchObject({
+        type: 'identifier',
+        identifier: 'y'
       });
     });
 
@@ -159,7 +166,7 @@ describe('Parser', () => {
       });
     });
 
-    it('parses functions with multiple arguments', () => {
+    it.only('parses functions with multiple arguments', () => {
       const parser = new Parser('function add(x, y) {}');
 
       const parsed = parser.parsePrimaryExpression();

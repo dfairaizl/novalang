@@ -47,13 +47,12 @@ class Graph {
     return this.adjacencyList[nodeId].node;
   }
 
+  // this is a directed graph
   addEdge (sourceNode, targetNode, label, weight = 0) {
     if (sourceNode && targetNode) {
       const sourceEdge = new Edge(sourceNode, targetNode, label, weight);
-      const targetEdge = new Edge(targetNode, sourceNode, label, weight);
 
       this.adjacencyList[sourceNode.id].edges.push(sourceEdge);
-      this.adjacencyList[targetNode.id].edges.push(targetEdge);
     }
 
     return null;
@@ -61,6 +60,20 @@ class Graph {
 
   hasNode (id) {
     return this.nodes[id] !== undefined;
+  }
+
+  treeFromNode (node) {
+    const adjList = this.adjacencyList[node.id];
+    let t = node.attributes;
+    adjList.edges.forEach((e) => {
+      if (!t[e.label]) {
+        t[e.label] = [];
+      }
+
+      t[e.label].push(this.treeFromNode(e.target));
+    });
+
+    return t;
   }
 
   traverse (startNode = null, depth) {

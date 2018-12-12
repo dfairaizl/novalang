@@ -10,13 +10,11 @@ class Compiler {
   compile (source) {
     const parser = new Parser(source);
 
-    let mod = parser.parse();
-    const t = parser.sourceGraph.traverse(mod);
-    t.iterate((n) => {
-      console.log(n.attributes);
-    });
+    let codeModule = parser.parse();
 
-    parser.sourceGraph.debug();
+    console.log(parser.sourceGraph.treeFromNode(codeModule));
+
+    // parser.sourceGraph.debug();
   }
 }
 
