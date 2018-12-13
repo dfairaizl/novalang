@@ -2,6 +2,7 @@
 
 const Edge = require('./edge');
 const Graph = require('./graph');
+const Iterator = require('./iterator');
 
 describe('Graph', () => {
   it('creates a graph with empty node and edge lists', () => {
@@ -21,6 +22,16 @@ describe('Graph', () => {
       expect(graph.nodeFor(node.id).attributes).toMatchObject({ name: 'node 1' });
     });
 
+    it('can add nodes with empty attributes', () => {
+      const graph = new Graph();
+
+      const node = graph.addNode();
+
+      expect(node).toBeDefined();
+      expect(graph.nodeFor(node.id)).toBeDefined();
+      expect(graph.nodeFor(node.id).attributes).toEqual({});
+    });
+
     it('can add a node twice and not duplicate it', () => {
       const graph = new Graph();
 
@@ -33,6 +44,23 @@ describe('Graph', () => {
   });
 
   describe('edges', () => {
+    it('returns empty array when there are no edges', () => {
+      const graph = new Graph();
+
+      expect(graph.edges).toEqual([]);
+    });
+
+    it('returns array of edges', () => {
+      const graph = new Graph();
+
+      const node1 = graph.addNode({ name: 'node 1' });
+      const node2 = graph.addNode({ name: 'node 2' });
+
+      graph.addEdge(node1, node2);
+
+      expect(graph.edges.length).toBe(1);
+    });
+
     it('can add edges to connect nodes', () => {
       const graph = new Graph();
 
@@ -79,6 +107,16 @@ describe('Graph', () => {
       graph.addEdge(node1, null);
 
       expect(graph.adjacencyList[node1.id].edges.length).toBe(0);
+    });
+  });
+
+  describe('traversal', () => {
+    it('an iterator can be obtained for traversals', () => {
+      const graph = new Graph();
+
+      graph.addNode({ name: 'node 1' });
+
+      expect(graph.traverse()).toBeInstanceOf(Iterator);
     });
   });
 });

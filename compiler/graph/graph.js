@@ -58,10 +58,6 @@ class Graph {
     return null;
   }
 
-  hasNode (id) {
-    return this.nodes[id] !== undefined;
-  }
-
   treeFromNode (node) {
     const adjList = this.adjacencyList[node.id];
     let t = node.attributes;

@@ -1,8 +1,6 @@
 class Iterator {
   constructor (graph, options) {
     this.graph = graph;
-    this.head = options.startNode || null;
-    this.traversalDepth = options.depth || Infinity;
     this.visitCache = {};
   }
 

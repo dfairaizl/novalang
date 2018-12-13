@@ -96,12 +96,6 @@ class Parser {
 
       right = this.parseExpression();
 
-      const terminator = this.peekNextToken();
-
-      if (terminator instanceof PunctuatorToken && terminator.value === ';') {
-        this.validateNextToken(';');
-      }
-
       const binOp = this.sourceGraph.addNode({ type: 'bin_op', operator: operator.value });
       this.sourceGraph.addEdge(binOp, left, 'left');
       this.sourceGraph.addEdge(binOp, right, 'right');
@@ -200,7 +194,7 @@ class Parser {
       this.sourceGraph.addEdge(declareNode, assignmentExpr, 'expression');
 
       return declareNode;
-    } else if (declarationType.value === 'let') {
+    } else {
       let assignmentExpr = null;
       let token = this.peekNextToken();
 
@@ -226,13 +220,7 @@ class Parser {
 
   parseNumberLiteral () {
     const literal = this.getNextToken();
-
-    if (literal instanceof NumberToken) {
-      // return new NumberNode(literal.value);
-      return this.sourceGraph.addNode({ type: 'number_literal', value: literal.value });
-    }
-
-    return null;
+    return this.sourceGraph.addNode({ type: 'number_literal', value: literal.value });
   }
 
   parseIdentifierExpression () {
