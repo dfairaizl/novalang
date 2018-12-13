@@ -3,7 +3,7 @@
 const Edge = require('./edge');
 const Graph = require('./graph');
 
-describe('Directed Graph', () => {
+describe('Graph', () => {
   it('creates a graph with empty node and edge lists', () => {
     const graph = new Graph();
 

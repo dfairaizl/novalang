@@ -1,18 +1,11 @@
 /* global describe, it, expect */
 
 const Parser = require('.');
-const {
-  FunctionNode,
-  InvocationNode,
-  NumberNode,
-  VariableNode
-} = require('../graph/nodes');
 
 describe('Parser', () => {
   describe('end of input', () => {
     it('does not parse after EOF', () => {
       const parser = new Parser('const x = 1');
-      // parser.parse();
 
       expect(parser.parsePrimaryExpression()).toBeTruthy();
       expect(parser.parsePrimaryExpression()).not.toBeDefined();
@@ -48,22 +41,16 @@ describe('Parser', () => {
     });
   });
 
-  describe.only('variable declarations', () => {
-    it.only('parses immutable variables with number literal assignment', () => {
+  describe('variable declarations', () => {
+    it('parses immutable variables with number literal assignment', () => {
       const parser = new Parser('const x = 1');
 
       const parsed = parser.parsePrimaryExpression();
-      console.log(parser.sourceGraph.treeFromNode(parsed));
 
-      // expect(parsed.attributes).toMatchObject({
-      //   type: 'immutable_declaration',
-      //   identifier: 'x'
-      // });
-      //
-      // expect(parser.queryFor(parsed, 'expression').attributes).toMatchObject({
-      //   type: 'number_literal',
-      //   value: '1'
-      // });
+      expect(parsed.attributes).toEqual({
+        type: 'immutable_declaration',
+        identifier: 'x'
+      });
     });
 
     it('parses immutable variables with identifier assignment', () => {
@@ -71,14 +58,9 @@ describe('Parser', () => {
 
       const parsed = parser.parsePrimaryExpression();
 
-      expect(parsed.attributes).toMatchObject({
+      expect(parsed.attributes).toEqual({
         type: 'immutable_declaration',
         identifier: 'x'
-      });
-
-      expect(parser.queryFor(parsed, 'expression').attributes).toMatchObject({
-        type: 'identifier',
-        identifier: 'y'
       });
     });
 
@@ -87,11 +69,10 @@ describe('Parser', () => {
 
       const parsed = parser.parsePrimaryExpression();
 
-      expect(parsed).toBeInstanceOf(VariableNode);
-      expect(parsed).toMatchObject({
-        mutable: false,
-        varName: 'x',
-        source: { name: 'sqrt', args: ['9'] }
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'immutable_declaration',
+        identifier: 'x',
+        expression: [{ type: 'invocation', name: 'sqrt', args: ['9'] }]
       });
     });
 
@@ -100,28 +81,21 @@ describe('Parser', () => {
 
       const parsed = parser.parsePrimaryExpression();
 
-      expect(parsed).toBeInstanceOf(VariableNode);
-      expect(parsed).toMatchObject({
-        mutable: false,
-        varName: 'x',
-        source: {
-          left: new NumberNode('1'),
-          operator: { value: '+' },
-          right: new NumberNode('2')
-        }
-      });
-    });
-
-    it('parses mutable variable delcarations', () => {
-      const parser = new Parser('let x = 1');
-
-      const parsed = parser.parsePrimaryExpression();
-
-      expect(parsed).toBeInstanceOf(VariableNode);
-      expect(parsed).toMatchObject({
-        mutable: true,
-        varName: 'x',
-        source: new NumberNode('1')
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'immutable_declaration',
+        identifier: 'x',
+        expression: [{
+          type: 'bin_op',
+          operator: '+',
+          left: [{
+            type: 'number_literal',
+            value: '1'
+          }],
+          right: [{
+            type: 'number_literal',
+            value: '2'
+          }]
+        }]
       });
     });
 
@@ -130,11 +104,21 @@ describe('Parser', () => {
 
       const parsed = parser.parsePrimaryExpression();
 
-      expect(parsed).toBeInstanceOf(VariableNode);
-      expect(parsed).toMatchObject({
-        mutable: true,
-        varName: 'x',
-        source: null
+      expect(parsed.attributes).toEqual({
+        type: 'mutable_declaration',
+        identifier: 'x'
+      });
+    });
+
+    it('parses mutable variable delcarations', () => {
+      const parser = new Parser('let x = 1');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'mutable_declaration',
+        identifier: 'x',
+        expression: [{ type: 'number_literal', value: '1' }]
       });
     });
   });
@@ -145,11 +129,10 @@ describe('Parser', () => {
 
       const parsed = parser.parsePrimaryExpression();
 
-      expect(parsed).toBeInstanceOf(FunctionNode);
-      expect(parsed).toMatchObject({
+      expect(parsed.attributes).toEqual({
+        type: 'function',
         name: 'sayHello',
-        args: [],
-        body: null
+        args: []
       });
     });
 
@@ -158,24 +141,83 @@ describe('Parser', () => {
 
       const parsed = parser.parsePrimaryExpression();
 
-      expect(parsed).toBeInstanceOf(FunctionNode);
-      expect(parsed).toMatchObject({
+      expect(parsed.attributes).toEqual({
+        type: 'function',
         name: 'incr',
-        args: ['x'],
-        body: null
+        args: ['x']
       });
     });
 
-    it.only('parses functions with multiple arguments', () => {
+    it('parses functions with multiple arguments', () => {
       const parser = new Parser('function add(x, y) {}');
 
       const parsed = parser.parsePrimaryExpression();
 
-      expect(parsed).toBeInstanceOf(FunctionNode);
-      expect(parsed).toMatchObject({
+      expect(parsed.attributes).toEqual({
+        type: 'function',
+        name: 'add',
+        args: ['x', 'y']
+      });
+    });
+
+    it('parses functions with a single body expression', () => {
+      const parser = new Parser('function add(x, y) { return x + y }');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'function',
         name: 'add',
         args: ['x', 'y'],
-        body: null
+        body: [{
+          type: 'return_statement',
+          expression: [{
+            type: 'bin_op',
+            operator: '+',
+            left: [{
+              type: 'identifier',
+              identifier: 'x'
+            }],
+            right: [{
+              type: 'identifier',
+              identifier: 'y'
+            }]
+          }]
+        }]
+      });
+    });
+
+    it('parses functions with a multiple body expression', () => {
+      const parser = new Parser(`
+        function add(x, y) {
+          const a = 1;
+          return a;
+        }
+      `);
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'function',
+        name: 'add',
+        args: ['x', 'y'],
+        body: [
+          {
+            type: 'immutable_declaration',
+            identifier: 'a',
+            expression: [{
+              type: 'number_literal',
+              value: '1'
+            }]
+          },
+          {
+            type: 'return_statement',
+            expression: [{
+              type: 'identifier',
+              identifier: 'a'
+            }]
+          }
+        ]
       });
     });
   });
@@ -186,8 +228,8 @@ describe('Parser', () => {
 
       const parsed = parser.parsePrimaryExpression();
 
-      expect(parsed).toBeInstanceOf(InvocationNode);
-      expect(parsed).toMatchObject({
+      expect(parsed.attributes).toEqual({
+        type: 'invocation',
         name: 'random',
         args: []
       });
@@ -198,8 +240,8 @@ describe('Parser', () => {
 
       const parsed = parser.parsePrimaryExpression();
 
-      expect(parsed).toBeInstanceOf(InvocationNode);
-      expect(parsed).toMatchObject({
+      expect(parsed.attributes).toEqual({
+        type: 'invocation',
         name: 'incr',
         args: ['1']
       });
@@ -210,8 +252,8 @@ describe('Parser', () => {
 
       const parsed = parser.parsePrimaryExpression();
 
-      expect(parsed).toBeInstanceOf(InvocationNode);
-      expect(parsed).toMatchObject({
+      expect(parsed.attributes).toEqual({
+        type: 'invocation',
         name: 'add',
         args: ['1', '2']
       });
@@ -224,7 +266,13 @@ describe('Parser', () => {
 
       const parsed = parser.parsePrimaryExpression();
 
-      expect(parsed).toEqual('x');
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'return_statement',
+        expression: [{
+          identifier: 'x',
+          type: 'identifier'
+        }]
+      });
     });
   });
 });

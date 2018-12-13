@@ -76,7 +76,12 @@ class Parser {
   parseReturnExpression () {
     this.validateNextToken('return');
 
-    return this.parseExpression();
+    const returnExpr = this.sourceGraph.addNode({ type: 'return_statement' });
+    const expr = this.parseExpression();
+
+    this.sourceGraph.addEdge(returnExpr, expr, 'expression');
+
+    return returnExpr;
   }
 
   // Parsing methods
@@ -97,7 +102,7 @@ class Parser {
         this.validateNextToken(';');
       }
 
-      const binOp = this.sourceGraph.addNode({ type: 'bin_op', operator });
+      const binOp = this.sourceGraph.addNode({ type: 'bin_op', operator: operator.value });
       this.sourceGraph.addEdge(binOp, left, 'left');
       this.sourceGraph.addEdge(binOp, right, 'right');
 
@@ -142,7 +147,7 @@ class Parser {
 
     this.validateNextToken('{');
 
-    const funcNode = this.sourceGraph.addNode({ type: 'function', args });
+    const funcNode = this.sourceGraph.addNode({ type: 'function', name: funcIdentifier.value, args });
 
     while (true) {
       const bodyNode = this.parsePrimaryExpression();
@@ -216,12 +221,7 @@ class Parser {
   // atomics and literals
   parseIdentifier () {
     const identifier = this.getNextToken();
-
-    if (identifier instanceof IdentifierToken) {
-      return identifier.value;
-    }
-
-    return null;
+    return identifier.value;
   }
 
   parseNumberLiteral () {
@@ -248,7 +248,11 @@ class Parser {
     return this.sourceGraph.addNode({ type: 'identifier', identifier });
   }
 
-  // Helper methods
+  // Helper
+
+  toAST (node) {
+    return this.sourceGraph.treeFromNode(node);
+  }
 
   validateNextToken (tokenValue) {
     // interput parsing execution if we find a syntax error

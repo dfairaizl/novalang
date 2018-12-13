@@ -16,11 +16,6 @@ class Graph {
     this.adjacencyList = {};
   }
 
-  nodeFor (id) {
-    const adjList = this.adjacencyList[id] || {};
-    return adjList.node;
-  }
-
   get nodes () {
     return Object.values(this.adjacencyList).map((a) => a.node);
   }
@@ -34,6 +29,11 @@ class Graph {
     });
 
     return edges;
+  }
+
+  nodeFor (id) {
+    const adjList = this.adjacencyList[id] || {};
+    return adjList.node;
   }
 
   addNode (attributes = {}, id) {
@@ -65,6 +65,7 @@ class Graph {
   treeFromNode (node) {
     const adjList = this.adjacencyList[node.id];
     let t = node.attributes;
+
     adjList.edges.forEach((e) => {
       if (!t[e.label]) {
         t[e.label] = [];
@@ -83,6 +84,7 @@ class Graph {
     });
   }
 
+  /* istanbul ignore next */
   debug () {
     // nodes
     const nodes = this.nodes.map((node) => {
