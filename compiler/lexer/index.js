@@ -13,7 +13,10 @@ const OPERATOR = new RegExp(/[+-/*><=]+/);
 const PUNCTUATOR = new RegExp(/[{},;()'"]+/);
 const DIGIT = new RegExp(/[0-9.]+/);
 const KEYWORDS = [
+  'class',
   'const',
+  'constructor',
+  'extends',
   'function',
   'let',
   'return'

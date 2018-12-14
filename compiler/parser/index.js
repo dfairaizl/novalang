@@ -70,6 +70,8 @@ class Parser {
       return this.parseFunctionDeclaration();
     } else if (keywordToken.value === 'return') {
       return this.parseReturnExpression();
+    } else if (keywordToken.value === 'class') {
+      return this.parseClassDefinition();
     }
   }
 
@@ -121,23 +123,7 @@ class Parser {
       return null;
     }
 
-    const args = [];
-
-    this.validateNextToken('(');
-
-    let paramTok = this.getNextToken();
-    while (paramTok.value !== ')') {
-      args.push(paramTok.value);
-
-      paramTok = this.getNextToken();
-
-      if (paramTok.value === ',') {
-        paramTok = this.getNextToken();
-        continue;
-      } else {
-        break;
-      }
-    }
+    const args = this.parseArgumentsList();
 
     this.validateNextToken('{');
 
@@ -159,24 +145,7 @@ class Parser {
   }
 
   parseFunctionInvocation (funcIdentifier) {
-    const args = [];
-
-    this.validateNextToken('(');
-
-    let paramTok = this.getNextToken();
-    while (paramTok.value !== ')') {
-      args.push(paramTok.value);
-
-      paramTok = this.getNextToken();
-
-      if (paramTok.value === ',') {
-        paramTok = this.getNextToken();
-        continue;
-      } else {
-        break;
-      }
-    }
-
+    const args = this.parseArgumentsList();
     return this.sourceGraph.addNode({ type: 'invocation', name: funcIdentifier, args });
   }
 
@@ -210,6 +179,91 @@ class Parser {
 
       return declareNode;
     }
+  }
+
+  // classes
+  parseClassDefinition () {
+    this.validateNextToken('class');
+    const className = this.getNextToken();
+
+    // super class
+    let superClass = null;
+    const token = this.peekNextToken();
+    if (token instanceof KeywordToken && token.value === 'extends') {
+      this.validateNextToken('extends');
+      superClass = this.getNextToken().value;
+    }
+
+    this.validateNextToken('{');
+
+    const classDef = this.sourceGraph.addNode({
+      type: 'class_definition',
+      identifier: className.value,
+      super_class: superClass
+    });
+
+    // class body (constructor and methods)
+    let classExpr = null;
+    while ((classExpr = this.parseClassMethod())) {
+      this.sourceGraph.addEdge(classDef, classExpr, 'body');
+    }
+
+    return classDef;
+  }
+
+  parseClassMethod () {
+    const methodIdentifier = this.getNextToken();
+    let methodType = null;
+
+    if (methodIdentifier instanceof KeywordToken) {
+      methodType = 'constructor';
+    } else if (methodIdentifier instanceof IdentifierToken) {
+      methodType = 'method';
+    } else {
+      return null;
+    }
+
+    const args = this.parseArgumentsList();
+
+    this.validateNextToken('{');
+
+    const methodNode = this.sourceGraph.addNode({ type: methodType, name: methodIdentifier.value, args });
+
+    while (true) {
+      const bodyNode = this.parsePrimaryExpression();
+
+      if (!bodyNode) {
+        break;
+      }
+
+      this.sourceGraph.addEdge(methodNode, bodyNode, 'body');
+    }
+
+    this.validateNextToken('}');
+
+    return methodNode;
+  }
+
+  parseArgumentsList () {
+    const args = [];
+
+    this.validateNextToken('(');
+
+    let paramTok = this.getNextToken();
+    while (paramTok.value !== ')') {
+      args.push(paramTok.value);
+
+      paramTok = this.getNextToken();
+
+      if (paramTok.value === ',') {
+        paramTok = this.getNextToken();
+        continue;
+      } else {
+        break;
+      }
+    }
+
+    return args;
   }
 
   // atomics and literals

@@ -206,6 +206,30 @@ describe('Lexer', () => {
       expect(token).toEqual(new KeywordToken('const'));
     });
 
+    it('lexes `class`', () => {
+      const lex = new Lexer('class');
+      const token = lex.nextToken();
+
+      expect(token).toBeInstanceOf(KeywordToken);
+      expect(token).toEqual(new KeywordToken('class'));
+    });
+
+    it('lexes `constructor`', () => {
+      const lex = new Lexer('constructor');
+      const token = lex.nextToken();
+
+      expect(token).toBeInstanceOf(KeywordToken);
+      expect(token).toEqual(new KeywordToken('constructor'));
+    });
+
+    it('lexes `extends`', () => {
+      const lex = new Lexer('extends');
+      const token = lex.nextToken();
+
+      expect(token).toBeInstanceOf(KeywordToken);
+      expect(token).toEqual(new KeywordToken('extends'));
+    });
+
     it('lexes `let`', () => {
       const lex = new Lexer('let');
       const token = lex.nextToken();
