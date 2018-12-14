@@ -96,7 +96,12 @@ class Graph {
     // edges
     const edges = [];
     this.edges.forEach((e) => {
-      edges.push({ from: e.source.id, to: e.target.id });
+      edges.push({
+        from: e.source.id,
+        to: e.target.id,
+        label: e.label,
+        arrows: 'to'
+      });
     });
 
     console.log('EDGES');
