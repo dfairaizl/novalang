@@ -56,7 +56,8 @@ class Parser {
         return this.parseNumberLiteral();
       case IdentifierToken:
         return this.parseIdentifierExpression();
-      // TODO: string literals
+      case PunctuatorToken:
+        return this.parseObjectLiteral();
     }
 
     return null;
@@ -112,6 +113,41 @@ class Parser {
     }
 
     return left; // base case
+  }
+
+  // objects
+  parseObjectLiteral () {
+    const objBegin = this.peekNextToken();
+
+    if (objBegin.value !== '{') {
+      return null;
+    }
+
+    this.getNextToken();
+
+    const objNode = this.sourceGraph.addNode({ type: 'object_literal' });
+
+    let objTok = this.getNextToken();
+    while (objTok.value !== '}') {
+      const keyNode = this.sourceGraph.addNode({ type: 'object_key', key: objTok.value });
+
+      this.validateNextToken(':');
+
+      const valNode = this.parsePrimaryExpression();
+
+      this.sourceGraph.addEdge(keyNode, valNode, 'value');
+      this.sourceGraph.addEdge(objNode, keyNode, 'member');
+
+      objTok = this.getNextToken();
+      if (objTok.value === ',') {
+        objTok = this.getNextToken();
+        continue;
+      } else {
+        break;
+      }
+    }
+
+    return objNode;
   }
 
   // functions

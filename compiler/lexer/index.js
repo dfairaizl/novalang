@@ -10,7 +10,7 @@ const {
 
 const WHITE_SPACE = new RegExp(/^\s+$/);
 const OPERATOR = new RegExp(/[+-/*><=]+/);
-const PUNCTUATOR = new RegExp(/[{},;()'"]+/);
+const PUNCTUATOR = new RegExp(/[{},;:()'"]+/);
 const DIGIT = new RegExp(/[0-9.]+/);
 const KEYWORDS = [
   'class',

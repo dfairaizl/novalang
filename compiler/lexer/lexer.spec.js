@@ -143,6 +143,11 @@ describe('Lexer', () => {
       expect(lex.nextToken()).toEqual(new PunctuatorToken(';'));
     });
 
+    it('lexes `:`', () => {
+      const lex = new Lexer(':');
+      expect(lex.nextToken()).toEqual(new PunctuatorToken(':'));
+    });
+
     it('lexes `(`', () => {
       const lex = new Lexer('(');
       expect(lex.nextToken()).toEqual(new PunctuatorToken('('));
