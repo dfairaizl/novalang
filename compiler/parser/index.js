@@ -327,6 +327,13 @@ class Parser {
       const keyPath = this.parseIdentifier();
 
       return this.sourceGraph.addNode({ type: 'object_reference', name: identifier, path: keyPath });
+    } else if (token instanceof OperatorToken && token.value === '[') {
+      this.validateNextToken('[');
+      const index = this.parseIdentifier();
+
+      this.validateNextToken(']');
+
+      return this.sourceGraph.addNode({ type: 'array_reference', name: identifier, index });
     }
 
     return this.sourceGraph.addNode({ type: 'identifier', identifier });

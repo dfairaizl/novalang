@@ -257,7 +257,7 @@ describe('Parser', () => {
   });
 
   describe('object accessors', () => {
-    it('parses key/val accessors', () => {
+    it('parses key/val accessors with dot notation', () => {
       const parser = new Parser('obj.key = 1');
 
       const parsed = parser.parsePrimaryExpression();
@@ -269,6 +269,28 @@ describe('Parser', () => {
           type: 'object_reference',
           name: 'obj',
           path: 'key'
+        }],
+        right: [{
+          type: 'number_literal',
+          value: '1'
+        }]
+      });
+    });
+  });
+
+  describe('array accessors', () => {
+    it('parses array indexing', () => {
+      const parser = new Parser('fib[0] = 1');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'bin_op',
+        operator: '=',
+        left: [{
+          type: 'array_reference',
+          name: 'fib',
+          index: '0'
         }],
         right: [{
           type: 'number_literal',
