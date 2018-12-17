@@ -76,17 +76,6 @@ class Parser {
     }
   }
 
-  parseReturnExpression () {
-    this.validateNextToken('return');
-
-    const returnExpr = this.sourceGraph.addNode({ type: 'return_statement' });
-    const expr = this.parseExpression();
-
-    this.sourceGraph.addEdge(returnExpr, expr, 'expression');
-
-    return returnExpr;
-  }
-
   // Parsing methods
 
   parseExpression () {
@@ -302,6 +291,18 @@ class Parser {
     return args;
   }
 
+  // return expression
+  parseReturnExpression () {
+    this.validateNextToken('return');
+
+    const returnExpr = this.sourceGraph.addNode({ type: 'return_statement' });
+    const expr = this.parseExpression();
+
+    this.sourceGraph.addEdge(returnExpr, expr, 'expression');
+
+    return returnExpr;
+  }
+
   // atomics and literals
   parseIdentifier () {
     const identifier = this.getNextToken();
@@ -321,6 +322,11 @@ class Parser {
     // is an invocation
     if (token instanceof PunctuatorToken && token.value === '(') {
       return this.parseFunctionInvocation(identifier);
+    } else if (token instanceof OperatorToken && token.value === '.') {
+      this.validateNextToken('.');
+      const keyPath = this.parseIdentifier();
+
+      return this.sourceGraph.addNode({ type: 'object_reference', name: identifier, path: keyPath });
     }
 
     return this.sourceGraph.addNode({ type: 'identifier', identifier });

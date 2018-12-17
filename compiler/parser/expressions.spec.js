@@ -256,6 +256,28 @@ describe('Parser', () => {
     });
   });
 
+  describe('object accessors', () => {
+    it('parses key/val accessors', () => {
+      const parser = new Parser('obj.key = 1');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'bin_op',
+        operator: '=',
+        left: [{
+          type: 'object_reference',
+          name: 'obj',
+          path: 'key'
+        }],
+        right: [{
+          type: 'number_literal',
+          value: '1'
+        }]
+      });
+    });
+  });
+
   describe('function declarations', () => {
     it('returns null for invalid declarations', () => {
       const parser = new Parser('function function() {}');
