@@ -4,7 +4,8 @@ const {
   KeywordToken,
   NumberToken,
   OperatorToken,
-  PunctuatorToken
+  PunctuatorToken,
+  StringToken
 } = require('../lexer/tokens');
 
 const Graph = require('../graph/graph');
@@ -58,6 +59,8 @@ class Parser {
         return this.parseIdentifierExpression();
       case PunctuatorToken:
         return this.parseObjectLiteral();
+      case StringToken:
+        return this.parseStringLiteral();
     }
 
     return null;
@@ -312,6 +315,11 @@ class Parser {
   parseNumberLiteral () {
     const literal = this.getNextToken();
     return this.sourceGraph.addNode({ type: 'number_literal', value: literal.value });
+  }
+
+  parseStringLiteral () {
+    const literal = this.getNextToken();
+    return this.sourceGraph.addNode({ type: 'string_literal', value: literal.value });
   }
 
   parseIdentifierExpression () {

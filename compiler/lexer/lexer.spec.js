@@ -204,8 +204,13 @@ describe('Lexer', () => {
   });
 
   describe('strings', () => {
-    it('lexes string literals', () => {
+    it('lexes string literals from single quotes', () => {
       const lex = new Lexer("'hello world'");
+      expect(lex.nextToken()).toEqual(new StringToken('hello world'));
+    });
+
+    it('lexes string literals from double quotes', () => {
+      const lex = new Lexer('"hello world"');
       expect(lex.nextToken()).toEqual(new StringToken('hello world'));
     });
   });
