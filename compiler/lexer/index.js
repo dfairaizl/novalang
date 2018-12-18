@@ -5,13 +5,16 @@ const {
   KeywordToken,
   NumberToken,
   OperatorToken,
-  PunctuatorToken
+  PunctuatorToken,
+  StringToken
 } = require('./tokens');
 
-const WHITE_SPACE = new RegExp(/^\s+$/);
-const OPERATOR = new RegExp(/[[\]+-/*><=]+/);
-const PUNCTUATOR = new RegExp(/[{},;:()'"]+/);
 const DIGIT = new RegExp(/[0-9.]+/);
+const OPERATOR = new RegExp(/[[\]+-/*><=]+/);
+const PUNCTUATOR = new RegExp(/[{},;:()]+/);
+const STRING = new RegExp(/['"]+/);
+const WHITE_SPACE = new RegExp(/^\s+$/);
+
 const KEYWORDS = [
   'class',
   'const',
@@ -51,6 +54,11 @@ class Lexer {
 
   isIdentifier () {
     return !this.isNull() && !this.isOperator() && !this.isPunctuator();
+  }
+
+  isString () {
+    // denotes the begining of a string
+    return STRING.test(this.currentToken) === true;
   }
 
   // tokenization
@@ -104,6 +112,20 @@ class Lexer {
     return new IdentifierToken(token);
   }
 
+  readString () {
+    let token = '';
+    this.nextCharacter();
+
+    while (!this.isString()) {
+      token += this.currentToken;
+      this.nextCharacter();
+    }
+
+    this.nextCharacter();
+
+    return new StringToken(token);
+  }
+
   nextToken () {
     if (!this.scanner.eof()) {
       if (this.isNull()) {
@@ -126,6 +148,10 @@ class Lexer {
 
       if (this.isDigit()) {
         return this.readDigit();
+      }
+
+      if (this.isString()) {
+        return this.readString();
       }
 
       return this.readKeywordOrIdentifier();

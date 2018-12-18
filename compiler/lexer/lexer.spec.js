@@ -7,7 +7,8 @@ const {
   KeywordToken,
   NumberToken,
   OperatorToken,
-  PunctuatorToken
+  PunctuatorToken,
+  StringToken
 } = require('./tokens');
 
 describe('Lexer', () => {
@@ -158,15 +159,15 @@ describe('Lexer', () => {
       expect(lex.nextToken()).toEqual(new PunctuatorToken(')'));
     });
 
-    it('lexes `\'`', () => {
-      const lex = new Lexer('\'');
-      expect(lex.nextToken()).toEqual(new PunctuatorToken('\''));
-    });
-
-    it('lexes `"`', () => {
-      const lex = new Lexer('"');
-      expect(lex.nextToken()).toEqual(new PunctuatorToken('"'));
-    });
+    // it('lexes `\'`', () => {
+    //   const lex = new Lexer('\'');
+    //   expect(lex.nextToken()).toEqual(new PunctuatorToken('\''));
+    // });
+    //
+    // it('lexes `"`', () => {
+    //   const lex = new Lexer('"');
+    //   expect(lex.nextToken()).toEqual(new PunctuatorToken('"'));
+    // });
 
     it('lexes `()` as two seprate punctuators', () => {
       const lex = new Lexer('()');
@@ -199,6 +200,13 @@ describe('Lexer', () => {
     it('lexes `3.14159`', () => {
       const lex = new Lexer('3.14159');
       expect(lex.nextToken()).toEqual(new NumberToken('3.14159'));
+    });
+  });
+
+  describe('strings', () => {
+    it('lexes string literals', () => {
+      const lex = new Lexer("'hello world'");
+      expect(lex.nextToken()).toEqual(new StringToken('hello world'));
     });
   });
 
