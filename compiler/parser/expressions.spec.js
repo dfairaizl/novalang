@@ -289,22 +289,35 @@ describe('Parser', () => {
   });
 
   describe('object accessors', () => {
-    it('parses key/val accessors with dot notation', () => {
+    it('parses key/val expressions with dot notation', () => {
       const parser = new Parser('obj.key = 1');
 
       const parsed = parser.parsePrimaryExpression();
 
       expect(parser.toAST(parsed)).toEqual({
-        type: 'bin_op',
-        operator: '=',
-        left: [{
-          type: 'object_reference',
-          name: 'obj',
-          path: 'key'
-        }],
-        right: [{
-          type: 'number_literal',
-          value: '1'
+        type: 'object_reference',
+        name: 'obj',
+        key_expression: [{
+          type: 'bin_op',
+          operator: '=',
+          left: [{ type: 'identifier', identifier: 'key' }],
+          right: [{ type: 'number_literal', value: '1' }]
+        }]
+      });
+    });
+
+    it('parses key/val invocations with dot notation', () => {
+      const parser = new Parser('obj.key()');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'object_reference',
+        name: 'obj',
+        key_expression: [{
+          type: 'invocation',
+          name: 'key',
+          args: []
         }]
       });
     });

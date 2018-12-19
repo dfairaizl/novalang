@@ -14,9 +14,10 @@ class Compiler {
   compile (source) {
     const parser = new Parser(source);
 
-    parser.parse(); // discard result for now
+    const codeModule = parser.parse(); // discard result for now
 
     if (this.options.debugGraph) {
+      console.log(parser.toAST(codeModule));
       parser.sourceGraph.debug();
     }
   }

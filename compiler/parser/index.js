@@ -351,9 +351,12 @@ class Parser {
       return this.parseFunctionInvocation(identifier);
     } else if (token instanceof OperatorToken && token.value === '.') {
       this.validateNextToken('.');
-      const keyPath = this.parseIdentifier();
+      const keyPathExpression = this.parsePrimaryExpression();
+      const refExpr = this.sourceGraph.addNode({ type: 'object_reference', name: identifier });
 
-      return this.sourceGraph.addNode({ type: 'object_reference', name: identifier, path: keyPath });
+      this.sourceGraph.addEdge(refExpr, keyPathExpression, 'key_expression');
+
+      return refExpr;
     } else if (token instanceof OperatorToken && token.value === '[') {
       this.validateNextToken('[');
       const index = this.parseIdentifier();
