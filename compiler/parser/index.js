@@ -30,7 +30,7 @@ class Parser {
       this.sourceGraph.addEdge(codeModule, currentExpression, 'sources');
     }
 
-    return codeModule;
+    return this.sourceGraph;
   }
 
   // top level parser to handle main blocks in a source file

@@ -1,10 +1,9 @@
 /* nodejs */
-const { readFileSync } = require('fs');
 const { resolve } = require('path');
 
 const Compiler = require('../compiler');
 
-const sourceFile = readFileSync(resolve(__dirname, '..', 'examples', 'modules.nv'));
+const sourceFile = resolve(__dirname, '..', 'examples', 'modules.nv');
 
-const novaCompier = new Compiler({ debugGraph: true });
-novaCompier.compile(sourceFile);
+const novaCompier = new Compiler(sourceFile, { debugGraph: true });
+novaCompier.compile();

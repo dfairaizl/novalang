@@ -58,7 +58,34 @@ class Graph {
     return null;
   }
 
+  search (nodeAttrs) {
+    const agg = [];
+
+    this.nodes.forEach((n) => {
+      if (n.attributes.type === nodeAttrs) {
+        agg.push(n);
+      }
+    });
+
+    return agg;
+  }
+
+  relationFromNode (node, label) {
+    const adjList = this.adjacencyList[node.id];
+    const n = adjList.edges.find((e) => e.label === label);
+
+    if (n) {
+      return n.target;
+    }
+
+    return null;
+  }
+
   treeFromNode (node) {
+    if (!node) {
+      node = this.nodes.find((n) => n.attributes.type === 'module');
+    }
+
     const adjList = this.adjacencyList[node.id];
     let t = node.attributes;
 

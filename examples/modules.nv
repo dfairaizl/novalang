@@ -1,5 +1,3 @@
-const fs = require('fs');
+const calculator = require('./calculator');
 
-const file = fs.readFileSync('./a_file');
-
-print(fs);
+calculator.add(1, 2);

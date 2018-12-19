@@ -1,25 +1,49 @@
+const { resolve } = require('path');
+const { readFileSync } = require('fs');
+
 const Parser = require('./parser');
-const Graph = require('./graph/graph');
 
 class Compiler {
-  constructor (options) {
+  constructor (entrySource, options) {
+    this.baseDir = resolve(__dirname, '..', 'examples');
+    this.sources = [entrySource];
     this.options = {
       debugGraph: false,
       ...options
     };
 
-    this.sourceGraph = new Graph();
+    this.sourceModules = [];
   }
 
-  compile (source) {
-    const parser = new Parser(source);
+  compile () {
+    // parse the entry souce code
+    while (this.sources.length > 0) {
+      const currentSource = this.sources.pop();
+      const sourceGraph = this.parse(currentSource);
 
-    const codeModule = parser.parse(); // discard result for now
-
-    if (this.options.debugGraph) {
-      console.log(parser.toAST(codeModule));
-      parser.sourceGraph.debug();
+      const dependantModules = sourceGraph.search('require_statement');
+      dependantModules.forEach((m) => {
+        const source = sourceGraph.relationFromNode(m, 'module');
+        this.sources.push(`${source.attributes.value}.nv`);
+      });
     }
+  }
+
+  parse (sourceCode) {
+    return this.parseModule(sourceCode);
+  }
+
+  parseModule (moduleSource) {
+    const sourceFile = this.readSource(moduleSource);
+    const parser = new Parser(sourceFile);
+
+    return parser.parse();
+  }
+
+  readSource (sourceFile) {
+    const path = resolve(this.baseDir, sourceFile);
+    console.log('Compiling', path);
+    return readFileSync(path);
   }
 }
 
