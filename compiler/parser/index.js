@@ -35,6 +35,13 @@ class Parser {
 
   // top level parser to handle main blocks in a source file
   parsePrimaryExpression () {
+    // skip any line terminators
+    const terminator = this.peekNextToken();
+    if (terminator instanceof PunctuatorToken && terminator.value === ';') {
+      this.validateNextToken(';');
+    }
+
+    // begin to parse the next expression
     const currentToken = this.peekNextToken();
 
     if (!currentToken) {
@@ -76,6 +83,8 @@ class Parser {
       return this.parseReturnExpression();
     } else if (keywordToken.value === 'class') {
       return this.parseClassDefinition();
+    } else if (keywordToken.value === 'require') {
+      return this.parseModuleRequire();
     }
   }
 
@@ -96,12 +105,6 @@ class Parser {
       this.sourceGraph.addEdge(binOp, right, 'right');
 
       return binOp;
-    }
-
-    const terminator = this.peekNextToken();
-
-    if (terminator instanceof PunctuatorToken && terminator.value === ';') {
-      this.validateNextToken(';');
     }
 
     return left; // base case
@@ -185,7 +188,7 @@ class Parser {
     if (declarationType.value === 'const') {
       // an assignment expression is required
       this.validateNextToken('=');
-      const assignmentExpr = this.parseExpression();
+      const assignmentExpr = this.parsePrimaryExpression();
 
       const declareNode = this.sourceGraph.addNode({ type: 'immutable_declaration', identifier });
       this.sourceGraph.addEdge(declareNode, assignmentExpr, 'expression');
@@ -199,7 +202,7 @@ class Parser {
       if (token instanceof OperatorToken && token.value === '=') {
         this.validateNextToken('=');
 
-        assignmentExpr = this.parseExpression();
+        assignmentExpr = this.parsePrimaryExpression();
       }
 
       const declareNode = this.sourceGraph.addNode({ type: 'mutable_declaration', identifier });
@@ -304,6 +307,22 @@ class Parser {
     this.sourceGraph.addEdge(returnExpr, expr, 'expression');
 
     return returnExpr;
+  }
+
+  // modules
+
+  parseModuleRequire () {
+    this.validateNextToken('require');
+    this.validateNextToken('(');
+
+    const expr = this.sourceGraph.addNode({ type: 'require_statement' });
+    const mod = this.parseExpression();
+
+    this.validateNextToken(')');
+
+    this.sourceGraph.addEdge(expr, mod, 'module');
+
+    return expr;
   }
 
   // atomics and literals

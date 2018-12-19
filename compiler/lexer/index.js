@@ -22,6 +22,8 @@ const KEYWORDS = [
   'extends',
   'function',
   'let',
+  // this is baked in to the compiler as novalang is a static compiled language
+  'require',
   'return'
 ];
 

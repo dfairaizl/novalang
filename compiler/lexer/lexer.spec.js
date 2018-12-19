@@ -271,6 +271,14 @@ describe('Lexer', () => {
       expect(token).toBeInstanceOf(KeywordToken);
       expect(token).toEqual(new KeywordToken('return'));
     });
+
+    it('lexes `require`', () => {
+      const lex = new Lexer('require');
+      const token = lex.nextToken();
+
+      expect(token).toBeInstanceOf(KeywordToken);
+      expect(token).toEqual(new KeywordToken('require'));
+    });
   });
 
   describe('identifiers', () => {
