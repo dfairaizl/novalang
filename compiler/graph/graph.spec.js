@@ -119,4 +119,93 @@ describe('Graph', () => {
       expect(graph.traverse()).toBeInstanceOf(Iterator);
     });
   });
+
+  describe('search', () => {
+    it('returns nodes with the given attribute', () => {
+      const graph = new Graph();
+
+      const mod1 = graph.addNode({ type: 'module' });
+      const mod2 = graph.addNode({ type: 'module' });
+      graph.addNode({ type: 'node 2' });
+
+      expect(graph.search('module')).toEqual([mod1, mod2]);
+    });
+  });
+
+  describe('relationships', () => {
+    it('returns no nodes if no relation label found', () => {
+      const graph = new Graph();
+
+      const node1 = graph.addNode({ name: 'node 1' });
+      const node2 = graph.addNode({ name: 'node 2' });
+
+      graph.addEdge(node1, node2, 'connection');
+
+      expect(graph.relationFromNode(node1, 'blah')).toEqual([]);
+    });
+
+    it('returns the target node from the edge label', () => {
+      const graph = new Graph();
+
+      const node1 = graph.addNode({ name: 'node 1' });
+      const node2 = graph.addNode({ name: 'node 2' });
+
+      graph.addEdge(node1, node2, 'connection');
+
+      expect(graph.relationFromNode(node1, 'connection')).toEqual([node2]);
+    });
+
+    it('returns multiple target node from the edges with the same label', () => {
+      const graph = new Graph();
+
+      const node1 = graph.addNode({ name: 'module' });
+      const node2 = graph.addNode({ name: 'const' });
+      const node3 = graph.addNode({ name: 'function' });
+
+      graph.addEdge(node1, node2, 'source');
+      graph.addEdge(node1, node3, 'source');
+
+      expect(graph.relationFromNode(node1, 'source')).toEqual([node2, node3]);
+    });
+  });
+
+  describe('tree representation', () => {
+    it('returns defaults to the entry `module` node', () => {
+      const graph = new Graph();
+
+      const node1 = graph.addNode({ type: 'module' });
+      const node2 = graph.addNode({ type: 'const' });
+      const node3 = graph.addNode({ type: 'function' });
+
+      graph.addEdge(node1, node2, 'source');
+      graph.addEdge(node1, node3, 'source');
+
+      expect(graph.treeFromNode()).toEqual({
+        type: 'module',
+        source: [
+          { type: 'const' },
+          { type: 'function' }
+        ]
+      });
+    });
+
+    it('returns a serialized object of the nodes and their edges', () => {
+      const graph = new Graph();
+
+      const node1 = graph.addNode({ name: 'module' });
+      const node2 = graph.addNode({ name: 'const' });
+      const node3 = graph.addNode({ name: 'function' });
+
+      graph.addEdge(node1, node2, 'source');
+      graph.addEdge(node1, node3, 'source');
+
+      expect(graph.treeFromNode(node1)).toEqual({
+        name: 'module',
+        source: [
+          { name: 'const' },
+          { name: 'function' }
+        ]
+      });
+    });
+  });
 });

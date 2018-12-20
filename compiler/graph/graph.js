@@ -72,13 +72,8 @@ class Graph {
 
   relationFromNode (node, label) {
     const adjList = this.adjacencyList[node.id];
-    const n = adjList.edges.find((e) => e.label === label);
-
-    if (n) {
-      return n.target;
-    }
-
-    return null;
+    const n = adjList.edges.filter((e) => e.label === label);
+    return n.map((n) => n.target);
   }
 
   treeFromNode (node) {

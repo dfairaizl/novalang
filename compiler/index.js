@@ -24,7 +24,7 @@ class Compiler {
       const dependantModules = sourceGraph.search('require_statement');
       dependantModules.forEach((m) => {
         const source = sourceGraph.relationFromNode(m, 'module');
-        this.sources.push(`${source.attributes.value}.nv`);
+        this.sources.push(`${source[0].attributes.value}.nv`);
       });
     }
   }
