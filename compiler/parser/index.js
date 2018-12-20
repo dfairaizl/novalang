@@ -66,6 +66,8 @@ class Parser {
         return this.parseIdentifierExpression();
       case PunctuatorToken:
         return this.parseObjectLiteral();
+      case OperatorToken:
+        return this.parseArrayLiteral();
       case StringToken:
         return this.parseStringLiteral();
     }
@@ -143,6 +145,31 @@ class Parser {
     }
 
     return objNode;
+  }
+
+  // arrays
+  parseArrayLiteral () {
+    const operator = this.getNextToken();
+    const arrayNode = this.sourceGraph.addNode({ type: 'array_literal' });
+
+    if (operator.value === '[]') {
+      // empty array literal
+      return arrayNode;
+    }
+
+    // array with members
+    let tok = null;
+
+    do {
+      const expr = this.parseAtomic();
+      if (expr) {
+        this.sourceGraph.addEdge(arrayNode, expr, 'members');
+      }
+
+      tok = this.getNextToken();
+    } while (tok.value !== ']');
+
+    return arrayNode;
   }
 
   // functions
