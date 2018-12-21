@@ -352,25 +352,14 @@ class Parser {
 
     this.validateNextToken('(');
 
-    // array with members
     let tok = null;
 
     do {
       let expr;
       tok = this.peekNextToken();
 
-      // clean up
-      switch (tok.constructor) {
-        case IdentifierToken:
-          expr = this.parseIdentifierExpression();
-          break;
-        case PunctuatorToken:
-          switch (tok.value) {
-            case '(':
-              expr = this.parseAnonymousFunction();
-              break;
-          }
-          break;
+      if (tok instanceof IdentifierToken) {
+        expr = this.parseIdentifierExpression();
       }
 
       if (expr) {
