@@ -21,11 +21,17 @@ class Compiler {
       const currentSource = this.sources.pop();
       const sourceGraph = this.parse(currentSource);
 
+      this.sourceModules.push(sourceGraph);
+
       const dependantModules = sourceGraph.search('require_statement');
       dependantModules.forEach((m) => {
         const source = sourceGraph.relationFromNode(m, 'module');
         this.sources.push(`${source[0].attributes.value}.nv`);
       });
+    }
+
+    if (this.options.debugGraph) {
+      this.sourceModules[0].debug();
     }
   }
 
