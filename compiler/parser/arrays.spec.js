@@ -101,14 +101,13 @@ describe('Parser', () => {
           type: 'array_literal',
           members: [{
             type: 'invocation',
-            name: 'random',
-            args: []
+            name: 'random'
           }]
         }]
       });
     });
 
-    it.only('parses empty array literals with multiple members', () => {
+    it('parses empty array literals with multiple members', () => {
       const parser = new Parser('let x = [1, 2]');
 
       const parsed = parser.parsePrimaryExpression();

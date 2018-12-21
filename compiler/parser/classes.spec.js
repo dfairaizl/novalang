@@ -43,8 +43,7 @@ describe('Parser', () => {
         super_class: null,
         body: [{
           type: 'method',
-          name: 'turnOn',
-          args: []
+          name: 'turnOn'
         }]
       });
     });
@@ -65,12 +64,10 @@ describe('Parser', () => {
         super_class: null,
         body: [{
           type: 'method',
-          name: 'turnOn',
-          args: []
+          name: 'turnOn'
         }, {
           type: 'method',
-          name: 'turnOff',
-          args: []
+          name: 'turnOff'
         }]
       });
     });
@@ -91,7 +88,13 @@ describe('Parser', () => {
         body: [{
           type: 'method',
           name: 'add',
-          args: ['x', 'y']
+          arguments: [{
+            type: 'identifier',
+            identifier: 'x'
+          }, {
+            type: 'identifier',
+            identifier: 'y'
+          }]
         }]
       });
     });
@@ -114,7 +117,13 @@ describe('Parser', () => {
         body: [{
           type: 'method',
           name: 'add',
-          args: ['x', 'y'],
+          arguments: [{
+            type: 'identifier',
+            identifier: 'x'
+          }, {
+            type: 'identifier',
+            identifier: 'y'
+          }],
           body: [{
             type: 'return_statement',
             expression: [{
@@ -149,8 +158,7 @@ describe('Parser', () => {
         super_class: null,
         body: [{
           type: 'constructor',
-          name: 'constructor',
-          args: []
+          name: 'constructor'
         }]
       });
     });

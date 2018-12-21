@@ -65,7 +65,13 @@ class Parser {
       case IdentifierToken:
         return this.parseIdentifierExpression();
       case PunctuatorToken:
-        return this.parseObjectLiteral();
+        switch (currentToken.value) {
+          case '{':
+            return this.parseObjectLiteral();
+          case '(':
+            return this.parseAnonymousFunction();
+        }
+        break;
       case OperatorToken:
         return this.parseArrayLiteral();
       case StringToken:
@@ -181,11 +187,14 @@ class Parser {
       return null;
     }
 
-    const args = this.parseArgumentsList();
+    const funcNode = this.sourceGraph.addNode({ type: 'function', name: funcIdentifier.value });
+
+    const args = this.parseFunctionArguments();
+    args.forEach((a) => {
+      this.sourceGraph.addEdge(funcNode, a, 'arguments');
+    });
 
     this.validateNextToken('{');
-
-    const funcNode = this.sourceGraph.addNode({ type: 'function', name: funcIdentifier.value, args });
 
     while (true) {
       const bodyNode = this.parsePrimaryExpression();
@@ -203,8 +212,41 @@ class Parser {
   }
 
   parseFunctionInvocation (funcIdentifier) {
-    const args = this.parseArgumentsList();
-    return this.sourceGraph.addNode({ type: 'invocation', name: funcIdentifier, args });
+    const invokeNode = this.sourceGraph.addNode({ type: 'invocation', name: funcIdentifier });
+    const args = this.parseInvocationArguments();
+
+    args.forEach((a) => {
+      this.sourceGraph.addEdge(invokeNode, a, 'arguments');
+    });
+
+    return invokeNode;
+  }
+
+  parseAnonymousFunction () {
+    const funcNode = this.sourceGraph.addNode({ type: 'anonymous_function' });
+    const args = this.parseFunctionArguments();
+
+    args.forEach((a) => {
+      this.sourceGraph.addEdge(funcNode, a, 'arguments');
+    });
+
+    this.validateNextToken('=>');
+
+    this.validateNextToken('{');
+
+    while (true) {
+      const bodyNode = this.parsePrimaryExpression();
+
+      if (!bodyNode) {
+        break;
+      }
+
+      this.sourceGraph.addEdge(funcNode, bodyNode, 'body');
+    }
+
+    this.validateNextToken('}');
+
+    return funcNode;
   }
 
   // variables
@@ -281,11 +323,14 @@ class Parser {
       return null;
     }
 
-    const args = this.parseArgumentsList();
+    const methodNode = this.sourceGraph.addNode({ type: methodType, name: methodIdentifier.value });
+
+    const args = this.parseFunctionArguments();
+    args.forEach((a) => {
+      this.sourceGraph.addEdge(methodNode, a, 'arguments');
+    });
 
     this.validateNextToken('{');
-
-    const methodNode = this.sourceGraph.addNode({ type: methodType, name: methodIdentifier.value, args });
 
     while (true) {
       const bodyNode = this.parsePrimaryExpression();
@@ -302,24 +347,58 @@ class Parser {
     return methodNode;
   }
 
-  parseArgumentsList () {
+  parseFunctionArguments () {
     const args = [];
 
     this.validateNextToken('(');
 
-    let paramTok = this.getNextToken();
-    while (paramTok.value !== ')') {
-      args.push(paramTok.value);
+    // array with members
+    let tok = null;
 
-      paramTok = this.getNextToken();
+    do {
+      let expr;
+      tok = this.peekNextToken();
 
-      if (paramTok.value === ',') {
-        paramTok = this.getNextToken();
-        continue;
-      } else {
-        break;
+      // clean up
+      switch (tok.constructor) {
+        case IdentifierToken:
+          expr = this.parseIdentifierExpression();
+          break;
+        case PunctuatorToken:
+          switch (tok.value) {
+            case '(':
+              expr = this.parseAnonymousFunction();
+              break;
+          }
+          break;
       }
-    }
+
+      if (expr) {
+        args.push(expr);
+      }
+
+      tok = this.getNextToken();
+    } while (tok.value !== ')');
+
+    return args;
+  }
+
+  parseInvocationArguments () {
+    const args = [];
+
+    this.validateNextToken('(');
+
+    // array with members
+    let tok = null;
+
+    do {
+      const expr = this.parseAtomic();
+      if (expr) {
+        args.push(expr);
+      }
+
+      tok = this.getNextToken();
+    } while (tok.value !== ')');
 
     return args;
   }

@@ -19,8 +19,7 @@ describe('Parser', () => {
 
       expect(parsed.attributes).toEqual({
         type: 'function',
-        name: 'sayHello',
-        args: []
+        name: 'sayHello'
       });
     });
 
@@ -29,10 +28,13 @@ describe('Parser', () => {
 
       const parsed = parser.parsePrimaryExpression();
 
-      expect(parsed.attributes).toEqual({
+      expect(parser.toAST(parsed)).toEqual({
         type: 'function',
         name: 'incr',
-        args: ['x']
+        arguments: [{
+          type: 'identifier',
+          identifier: 'x'
+        }]
       });
     });
 
@@ -41,10 +43,16 @@ describe('Parser', () => {
 
       const parsed = parser.parsePrimaryExpression();
 
-      expect(parsed.attributes).toEqual({
+      expect(parser.toAST(parsed)).toEqual({
         type: 'function',
         name: 'add',
-        args: ['x', 'y']
+        arguments: [{
+          type: 'identifier',
+          identifier: 'x'
+        }, {
+          type: 'identifier',
+          identifier: 'y'
+        }]
       });
     });
 
@@ -56,7 +64,13 @@ describe('Parser', () => {
       expect(parser.toAST(parsed)).toEqual({
         type: 'function',
         name: 'add',
-        args: ['x', 'y'],
+        arguments: [{
+          type: 'identifier',
+          identifier: 'x'
+        }, {
+          type: 'identifier',
+          identifier: 'y'
+        }],
         body: [{
           type: 'return_statement',
           expression: [{
@@ -88,7 +102,13 @@ describe('Parser', () => {
       expect(parser.toAST(parsed)).toEqual({
         type: 'function',
         name: 'add',
-        args: ['x', 'y'],
+        arguments: [{
+          type: 'identifier',
+          identifier: 'x'
+        }, {
+          type: 'identifier',
+          identifier: 'y'
+        }],
         body: [
           {
             type: 'immutable_declaration',
@@ -110,6 +130,101 @@ describe('Parser', () => {
     });
   });
 
+  describe('short-hand syntax (fat-arrow)', () => {
+    it('parsers function delcarations', () => {
+      const parser = new Parser('() => {}');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parsed.attributes).toEqual({
+        type: 'anonymous_function'
+      });
+    });
+
+    it('parsers function delcarations with arguments', () => {
+      const parser = new Parser('(x) => {}');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'anonymous_function',
+        arguments: [{
+          type: 'identifier',
+          identifier: 'x'
+        }]
+      });
+    });
+
+    it('parsers short-hand functions in assignment', () => {
+      const parser = new Parser('const f = (x) => {}');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'immutable_declaration',
+        identifier: 'f',
+        expression: [{
+          type: 'anonymous_function',
+          arguments: [{
+            type: 'identifier',
+            identifier: 'x'
+          }]
+        }]
+      });
+    });
+
+    it('parsers short-hand functions as function arguments', () => {
+      const parser = new Parser(`
+        forEach((x) => {
+
+        })
+      `);
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'invocation',
+        name: 'forEach',
+        arguments: [{
+          type: 'anonymous_function',
+          arguments: [{
+            type: 'identifier',
+            identifier: 'x'
+          }]
+        }]
+      });
+    });
+
+    it('parsers function delcarations with body', () => {
+      const parser = new Parser('(x) => { return x + 1 }');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'anonymous_function',
+        arguments: [{
+          type: 'identifier',
+          identifier: 'x'
+        }],
+        body: [{
+          type: 'return_statement',
+          expression: [{
+            type: 'bin_op',
+            operator: '+',
+            left: [{
+              type: 'identifier',
+              identifier: 'x'
+            }],
+            right: [{
+              type: 'number_literal',
+              value: '1'
+            }]
+          }]
+        }]
+      });
+    });
+  });
+
   describe('function invocations', () => {
     it('parses invocations with no arguments', () => {
       const parser = new Parser('random()');
@@ -118,8 +233,7 @@ describe('Parser', () => {
 
       expect(parsed.attributes).toEqual({
         type: 'invocation',
-        name: 'random',
-        args: []
+        name: 'random'
       });
     });
 
@@ -128,10 +242,13 @@ describe('Parser', () => {
 
       const parsed = parser.parsePrimaryExpression();
 
-      expect(parsed.attributes).toEqual({
+      expect(parser.toAST(parsed)).toEqual({
         type: 'invocation',
         name: 'incr',
-        args: ['1']
+        arguments: [{
+          type: 'number_literal',
+          value: '1'
+        }]
       });
     });
 
@@ -140,10 +257,16 @@ describe('Parser', () => {
 
       const parsed = parser.parsePrimaryExpression();
 
-      expect(parsed.attributes).toEqual({
+      expect(parser.toAST(parsed)).toEqual({
         type: 'invocation',
         name: 'add',
-        args: ['1', '2']
+        arguments: [{
+          type: 'number_literal',
+          value: '1'
+        }, {
+          type: 'number_literal',
+          value: '2'
+        }]
       });
     });
   });

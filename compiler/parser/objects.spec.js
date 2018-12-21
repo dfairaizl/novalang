@@ -119,8 +119,7 @@ describe('Parser', () => {
         name: 'obj',
         key_expression: [{
           type: 'invocation',
-          name: 'key',
-          args: []
+          name: 'key'
         }]
       });
     });

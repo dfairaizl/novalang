@@ -34,7 +34,14 @@ describe('Parser', () => {
       expect(parser.toAST(parsed)).toEqual({
         type: 'immutable_declaration',
         identifier: 'x',
-        expression: [{ type: 'invocation', name: 'sqrt', args: ['9'] }]
+        expression: [{
+          type: 'invocation',
+          name: 'sqrt',
+          arguments: [{
+            type: 'number_literal',
+            value: '9'
+          }]
+        }]
       });
     });
 
