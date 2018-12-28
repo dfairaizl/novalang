@@ -1,5 +1,6 @@
 const Lexer = require('../lexer');
 const {
+  BooleanToken,
   IdentifierToken,
   KeywordToken,
   NumberToken,
@@ -60,6 +61,8 @@ class Parser {
     const currentToken = this.peekNextToken();
 
     switch (currentToken.constructor) {
+      case BooleanToken:
+        return this.parseBooleanLiteral();
       case NumberToken:
         return this.parseNumberLiteral();
       case IdentifierToken:
@@ -424,6 +427,11 @@ class Parser {
   parseIdentifier () {
     const identifier = this.getNextToken();
     return identifier.value;
+  }
+
+  parseBooleanLiteral () {
+    const literal = this.getNextToken();
+    return this.sourceGraph.addNode({ type: 'boolean_literal', value: literal.value });
   }
 
   parseNumberLiteral () {

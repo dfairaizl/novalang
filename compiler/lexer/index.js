@@ -1,6 +1,7 @@
 const Scanner = require('../util/scanner');
 
 const {
+  BooleanToken,
   IdentifierToken,
   KeywordToken,
   NumberToken,
@@ -15,12 +16,18 @@ const PUNCTUATOR = new RegExp(/[{},;:()]+/);
 const STRING = new RegExp(/['"]+/);
 const WHITE_SPACE = new RegExp(/^\s+$/);
 
+const BOOLEAN = [
+  'true',
+  'false'
+];
+
 const KEYWORDS = [
   'class',
   'const',
   'constructor',
   'extends',
   'function',
+  'if',
   'let',
   // this is baked in to the compiler as novalang is a static compiled language
   'require',
@@ -105,6 +112,10 @@ class Lexer {
     while (!this.isWhiteSpace() && this.isIdentifier() && !this.scanner.eof()) {
       token += this.currentToken;
       this.nextCharacter();
+    }
+
+    if (BOOLEAN.includes(token)) {
+      return new BooleanToken(token);
     }
 
     if (KEYWORDS.includes(token)) {

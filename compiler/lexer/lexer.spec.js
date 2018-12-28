@@ -3,6 +3,7 @@
 const Lexer = require('.');
 
 const {
+  BooleanToken,
   IdentifierToken,
   KeywordToken,
   NumberToken,
@@ -200,6 +201,18 @@ describe('Lexer', () => {
     it('lexes `3.14159`', () => {
       const lex = new Lexer('3.14159');
       expect(lex.nextToken()).toEqual(new NumberToken('3.14159'));
+    });
+  });
+
+  describe('booleans', () => {
+    it('lexes true boolean literal', () => {
+      const lex = new Lexer('true');
+      expect(lex.nextToken()).toEqual(new BooleanToken('true'));
+    });
+
+    it('lexes false boolean literal', () => {
+      const lex = new Lexer('false');
+      expect(lex.nextToken()).toEqual(new BooleanToken('false'));
     });
   });
 
