@@ -96,6 +96,8 @@ class Parser {
       return this.parseClassDefinition();
     } else if (keywordToken.value === 'require') {
       return this.parseModuleRequire();
+    } else if (keywordToken.value === 'if') {
+      return this.parseConditionalBranch();
     }
   }
 
@@ -119,6 +121,83 @@ class Parser {
     }
 
     return left; // base case
+  }
+
+  parseConditionalBranch () {
+    const branchNode = this.sourceGraph.addNode({ type: 'conditional_branch' });
+
+    const conditionNode = this.parseIfCondition();
+
+    this.sourceGraph.addEdge(branchNode, conditionNode, 'conditions');
+
+    while (true) {
+      const nextCondition = this.peekNextToken();
+      if (nextCondition && nextCondition.value === 'else') {
+        this.validateNextToken('else');
+
+        const altIf = this.peekNextToken();
+
+        if (altIf && altIf.value === 'if') {
+          const conditionNode = this.parseIfCondition();
+          this.sourceGraph.addEdge(branchNode, conditionNode, 'conditions');
+        } else {
+          const elseExpr = this.parseElseCondition();
+          this.sourceGraph.addEdge(branchNode, elseExpr, 'else');
+        }
+      } else {
+        break;
+      }
+    }
+
+    return branchNode;
+  }
+
+  parseIfCondition () {
+    this.validateNextToken('if');
+    this.validateNextToken('(');
+
+    const testExpr = this.parsePrimaryExpression();
+
+    this.validateNextToken(')');
+    this.validateNextToken('{');
+
+    const ifNode = this.sourceGraph.addNode({ type: 'if_conditional' });
+
+    this.sourceGraph.addEdge(ifNode, testExpr, 'test');
+
+    while (true) {
+      const bodyNode = this.parsePrimaryExpression();
+
+      if (!bodyNode) {
+        break;
+      }
+
+      this.sourceGraph.addEdge(ifNode, bodyNode, 'body');
+    }
+
+    this.validateNextToken('}');
+
+    return ifNode;
+  }
+
+  parseElseCondition () {
+    this.validateNextToken('{');
+
+    const elseNode = this.sourceGraph.addNode({ type: 'else_expression' });
+
+    while (true) {
+      const bodyNode = this.parsePrimaryExpression();
+
+      if (!bodyNode) {
+        break;
+      }
+
+      this.sourceGraph.addEdge(elseNode, bodyNode, 'body');
+    }
+
+    this.validateNextToken('}');
+
+    return elseNode;
   }
 
   // objects

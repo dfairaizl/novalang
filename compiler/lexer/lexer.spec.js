@@ -261,20 +261,28 @@ describe('Lexer', () => {
       expect(token).toEqual(new KeywordToken('extends'));
     });
 
-    it('lexes `let`', () => {
-      const lex = new Lexer('let');
-      const token = lex.nextToken();
-
-      expect(token).toBeInstanceOf(KeywordToken);
-      expect(token).toEqual(new KeywordToken('let'));
-    });
-
     it('lexes `function`', () => {
       const lex = new Lexer('function');
       const token = lex.nextToken();
 
       expect(token).toBeInstanceOf(KeywordToken);
       expect(token).toEqual(new KeywordToken('function'));
+    });
+
+    it('lexes `if`', () => {
+      const lex = new Lexer('if');
+      const token = lex.nextToken();
+
+      expect(token).toBeInstanceOf(KeywordToken);
+      expect(token).toEqual(new KeywordToken('if'));
+    });
+
+    it('lexes `let`', () => {
+      const lex = new Lexer('let');
+      const token = lex.nextToken();
+
+      expect(token).toBeInstanceOf(KeywordToken);
+      expect(token).toEqual(new KeywordToken('let'));
     });
 
     it('lexes `return`', () => {
