@@ -100,6 +100,8 @@ class Parser {
       return this.parseConditionalBranch();
     } else if (keywordToken.value === 'while') {
       return this.parseWhileLoop();
+    } else if (keywordToken.value === 'do') {
+      return this.parseDoWhileLoop();
     }
   }
 
@@ -152,6 +154,34 @@ class Parser {
     }
 
     return branchNode;
+  }
+
+  parseDoWhileLoop () {
+    this.validateNextToken('do');
+    this.validateNextToken('{');
+
+    const loopNode = this.sourceGraph.addNode({ type: 'do_while_loop' });
+
+    while (true) {
+      const bodyNode = this.parsePrimaryExpression();
+
+      if (!bodyNode) {
+        break;
+      }
+
+      this.sourceGraph.addEdge(loopNode, bodyNode, 'body');
+    }
+
+    this.validateNextToken('}');
+    this.validateNextToken('while');
+    this.validateNextToken('(');
+
+    const testExpr = this.parsePrimaryExpression();
+    this.sourceGraph.addEdge(loopNode, testExpr, 'test');
+
+    this.validateNextToken(')');
+
+    return loopNode;
   }
 
   parseWhileLoop () {

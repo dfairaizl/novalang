@@ -25,6 +25,7 @@ const KEYWORDS = [
   'class',
   'const',
   'constructor',
+  'do',
   'extends',
   'function',
   'if',
