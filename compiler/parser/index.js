@@ -98,6 +98,8 @@ class Parser {
       return this.parseModuleRequire();
     } else if (keywordToken.value === 'if') {
       return this.parseConditionalBranch();
+    } else if (keywordToken.value === 'while') {
+      return this.parseWhileLoop();
     }
   }
 
@@ -150,6 +152,35 @@ class Parser {
     }
 
     return branchNode;
+  }
+
+  parseWhileLoop () {
+    this.validateNextToken('while');
+
+    this.validateNextToken('(');
+
+    const testExpr = this.parsePrimaryExpression();
+
+    this.validateNextToken(')');
+    this.validateNextToken('{');
+
+    const loopNode = this.sourceGraph.addNode({ type: 'while_loop' });
+
+    this.sourceGraph.addEdge(loopNode, testExpr, 'test');
+
+    while (true) {
+      const bodyNode = this.parsePrimaryExpression();
+
+      if (!bodyNode) {
+        break;
+      }
+
+      this.sourceGraph.addEdge(loopNode, bodyNode, 'body');
+    }
+
+    this.validateNextToken('}');
+
+    return loopNode;
   }
 
   parseIfCondition () {

@@ -300,6 +300,14 @@ describe('Lexer', () => {
       expect(token).toBeInstanceOf(KeywordToken);
       expect(token).toEqual(new KeywordToken('require'));
     });
+
+    it('lexes `while`', () => {
+      const lex = new Lexer('while');
+      const token = lex.nextToken();
+
+      expect(token).toBeInstanceOf(KeywordToken);
+      expect(token).toEqual(new KeywordToken('while'));
+    });
   });
 
   describe('identifiers', () => {
