@@ -202,13 +202,7 @@ class Parser {
 
   // objects
   parseObjectLiteral () {
-    const objBegin = this.peekNextToken();
-
-    if (objBegin.value !== '{') {
-      return null;
-    }
-
-    this.getNextToken();
+    this.validateNextToken('{');
 
     const objNode = this.sourceGraph.addNode({ type: 'object_literal' });
 
