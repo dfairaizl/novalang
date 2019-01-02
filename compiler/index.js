@@ -2,6 +2,7 @@ const { resolve } = require('path');
 const { readFileSync } = require('fs');
 
 const Parser = require('./parser');
+const CodeGenerator = require('./codegen');
 
 class Compiler {
   constructor (entrySource, options) {
@@ -31,7 +32,12 @@ class Compiler {
     }
 
     if (this.options.debugGraph) {
-      this.sourceModules[0].debug();
+      this.sourceModules.forEach((mod) => {
+        mod.debug();
+
+        const codeGenerator = new CodeGenerator(mod);
+        codeGenerator.codegen();
+      });
     }
   }
 
