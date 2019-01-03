@@ -87,7 +87,7 @@ class CodeGenerator {
 
     this.createMain(modRef);
 
-    return new BuildUnit(this.buildDir, this.source, this.mod);
+    return new BuildUnit(this.buildDir, this.sourceName, this.mod);
   }
 
   genModule (moduleNode) {

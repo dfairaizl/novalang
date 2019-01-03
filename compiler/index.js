@@ -1,5 +1,6 @@
 const { resolve } = require('path');
 const { readFileSync } = require('fs');
+const { spawn } = require('child_process');
 
 const Parser = require('./parser');
 const CodeGenerator = require('./codegen');
@@ -7,11 +8,12 @@ const LLVMInit = require('./codegen/llvm');
 const buildTargetMachine = require('./codegen/llvm/machine');
 
 class Compiler {
-  constructor (entrySource, options) {
+  constructor (entrySource, programName, options) {
     console.log('entry', entrySource);
     this.baseDir = resolve(__dirname, '..', 'examples');
     this.buildDir = resolve(__dirname, '..', 'build');
 
+    this.outputProgramName = resolve(__dirname, this.buildDir, programName);
     this.sources = [entrySource];
     this.options = {
       debugGraph: false,
@@ -56,8 +58,18 @@ class Compiler {
       unit.emitObjectFile(this.machine);
     });
 
+    // Link the object files into a binary
+    console.log('Creating binary');
+
+    const linkerParams = ['-o', this.outputProgramName];
+    this.compiledModules.forEach((unit) => {
+      linkerParams.push(unit.objectFile);
+    });
+
     // build resulting binary
-    // clang -o simple build/simple.o
+    spawn('clang', linkerParams);
+
+    console.log('Done - ', this.outputProgramName);
   }
 
   parse (sourceCode) {

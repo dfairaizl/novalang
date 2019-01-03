@@ -5,5 +5,5 @@ const Compiler = require('../compiler');
 
 const sourceFile = resolve(__dirname, '..', 'examples', 'simple.nv');
 
-const novaCompier = new Compiler(sourceFile, { debugGraph: true });
+const novaCompier = new Compiler(sourceFile, 'simple', { debugGraph: true });
 novaCompier.compile();
