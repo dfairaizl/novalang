@@ -1,14 +1,14 @@
 const { resolve } = require('path');
 const { readFileSync } = require('fs');
 
-const ref = require('ref');
-const { libLLVM, enums } = require('llvm-ffi');
-
 const Parser = require('./parser');
 const CodeGenerator = require('./codegen');
+const LLVMInit = require('./codegen/llvm');
+const buildTargetMachine = require('./codegen/llvm/machine');
 
 class Compiler {
   constructor (entrySource, options) {
+    console.log('entry', entrySource);
     this.baseDir = resolve(__dirname, '..', 'examples');
     this.buildDir = resolve(__dirname, '..', 'build');
 
@@ -18,14 +18,23 @@ class Compiler {
       ...options
     };
 
+    LLVMInit();
+    this.machine = buildTargetMachine();
+
     this.sourceModules = [];
+    this.compiledModules = [];
   }
 
   compile () {
     // parse the entry souce code
+    console.log('Compiling source files');
+
     while (this.sources.length > 0) {
       const currentSource = this.sources.pop();
-      const sourceGraph = this.parse(currentSource);
+
+      const sourceFile = resolve(this.baseDir, currentSource);
+      const sourceCode = this.readSource(currentSource);
+      const sourceGraph = this.parse(sourceCode);
 
       this.sourceModules.push(sourceGraph);
 
@@ -34,35 +43,21 @@ class Compiler {
         const source = sourceGraph.relationFromNode(m, 'module');
         this.sources.push(`${source[0].attributes.value}.nv`);
       });
+
+      const codeGenerator = new CodeGenerator(this.buildDir, sourceFile, sourceGraph);
+
+      const buildUnit = codeGenerator.codegen();
+
+      this.compiledModules.push(buildUnit);
     }
 
-    this.sourceModules.forEach((mod) => {
-      if (this.options.debugGraph) {
-        mod.debug();
-      }
-
-      const codeGenerator = new CodeGenerator(mod);
-      codeGenerator.codegen();
-
-      let error = ref.alloc(ref.refType(ref.types.char));
-
-      // console.log('Emitting IR...');
-      // const irFile = resolve(this.buildDir, 'simple.ll');
-      // console.log(irFile);
-      // libLLVM.LLVMPrintModuleToFile(codeGenerator.mod, irFile, error.ref());
-
-      const objectFile = resolve(this.buildDir, 'simple.o');
-      console.log('Compiled', objectFile);
-      libLLVM.LLVMTargetMachineEmitToFile(
-        codeGenerator.machine,
-        codeGenerator.mod,
-        objectFile,
-        enums.LLVMCodeGenFileType.LLVMObjectFile,
-        error.ref()
-      );
-
-      // codeGenerator.createMain();
+    console.log('Generating object files');
+    this.compiledModules.forEach((unit) => {
+      unit.emitObjectFile(this.machine);
     });
+
+    // build resulting binary
+    // clang -o simple build/simple.o
   }
 
   parse (sourceCode) {
@@ -70,16 +65,13 @@ class Compiler {
   }
 
   parseModule (moduleSource) {
-    const sourceFile = this.readSource(moduleSource);
-    const parser = new Parser(sourceFile);
+    const parser = new Parser(moduleSource);
 
     return parser.parse();
   }
 
   readSource (sourceFile) {
-    const path = resolve(this.baseDir, sourceFile);
-    console.log('Compiling', path);
-    return readFileSync(path);
+    return readFileSync(sourceFile);
   }
 }
 

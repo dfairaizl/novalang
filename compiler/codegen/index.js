@@ -1,62 +1,23 @@
-const ref = require('ref');
-const { libLLVM, types, enums } = require('llvm-ffi');
+const { basename } = require('path');
+
+const { libLLVM } = require('llvm-ffi');
+
+const createExternals = require('./externals');
+const BuildUnit = require('./build-unit');
 
 class CodeGenerator {
-  constructor (sourceGraph) {
+  constructor (buildDir, source, sourceGraph) {
+    this.buildDir = buildDir;
+    this.source = source;
     this.sourceGraph = sourceGraph;
     this.scope = {};
 
-    this.initLLVM();
-  }
+    this.sourceName = basename(this.source, '.nv');
+    this.moduleName = `_${this.sourceName}_module`;
+    this.mod = libLLVM.LLVMModuleCreateWithName(this.sourceName);
+    this.builder = libLLVM.LLVMCreateBuilder();
 
-  initLLVM () {
-    libLLVM.LLVMInitializeX86Target();
-    libLLVM.LLVMInitializeX86TargetInfo();
-    libLLVM.LLVMInitializeX86AsmPrinter();
-    libLLVM.LLVMInitializeX86AsmParser();
-    libLLVM.LLVMInitializeX86TargetMC();
-
-    const context = libLLVM.LLVMContextCreate();
-    this.mod = libLLVM.LLVMModuleCreateWithName('test');
-    this.builder = libLLVM.LLVMCreateBuilderInContext(context);
-
-    let error = ref.alloc(ref.refType(ref.types.char));
-    let target = ref.alloc(types.LLVMTargetRef);
-
-    const triple = libLLVM.LLVMGetDefaultTargetTriple();
-
-    if (libLLVM.LLVMGetTargetFromTriple(triple, target, error.ref()) > 0) {
-      console.error('Unable to get target!');
-      process.exit(1);
-    }
-
-    this.machine = libLLVM.LLVMCreateTargetMachine(
-      target.deref(),
-      triple,
-      '', // CPU
-      '', // Features
-      enums.LLVMCodeGenOptLevel.LLVMCodeGenLevelDefault,
-      enums.LLVMRelocMode.LLVMRelocDefault,
-      enums.LLVMCodeModel.LLVMCodeModelDefault
-    );
-
-    if (this.machine.isNull()) {
-      console.log('Could not create target machine');
-    } else {
-      console.log('LLVM ready');
-    }
-
-    // setup glibc calls
-    this.createExternals();
-  }
-
-  createExternals () {
-    const params = [
-      libLLVM.LLVMPointerType(libLLVM.LLVMInt8Type(), 0)
-    ];
-
-    const printfTypeRef = libLLVM.LLVMFunctionType(libLLVM.LLVMInt32Type(), params, 0, true);
-    this.printf = libLLVM.LLVMAddFunction(this.mod, 'printf', printfTypeRef);
+    this.externals = createExternals(this.mod);
   }
 
   createMain (entryModuleRef) {
@@ -92,6 +53,8 @@ class CodeGenerator {
   }
 
   codegen () {
+    console.log('Compiling', `${this.sourceName}.nv`);
+
     const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.type === 'module');
 
     let result;
@@ -117,20 +80,19 @@ class CodeGenerator {
 
     const format = libLLVM.LLVMBuildGlobalStringPtr(this.builder, 'Meaning of Life, %d!\n', 'format');
     const params = [format, result];
-    console.log('printf', format);
-    libLLVM.LLVMBuildCall(this.builder, this.printf, params, 2, 'printf');
+
+    libLLVM.LLVMBuildCall(this.builder, this.externals.printf, params, 2, 'printf');
 
     libLLVM.LLVMBuildRet(this.builder, exitCode);
 
     this.createMain(modRef);
 
-    const ir = libLLVM.LLVMPrintModuleToString(this.mod);
-    console.log('IR', ir);
+    return new BuildUnit(this.buildDir, this.source, this.mod);
   }
 
   genModule (moduleNode) {
     const funcType = libLLVM.LLVMFunctionType(libLLVM.LLVMVoidType(), [], 0, 0);
-    const moduleFunc = libLLVM.LLVMAddFunction(this.mod, '_module', funcType);
+    const moduleFunc = libLLVM.LLVMAddFunction(this.mod, this.moduleName, funcType);
 
     const entryBlock = libLLVM.LLVMAppendBasicBlock(moduleFunc, 'entry');
     libLLVM.LLVMPositionBuilderAtEnd(this.builder, entryBlock);
