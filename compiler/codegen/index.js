@@ -45,6 +45,18 @@ class CodeGenerator {
     } else {
       console.log('LLVM ready');
     }
+
+    // setup glibc calls
+    this.createExternals();
+  }
+
+  createExternals () {
+    const params = [
+      libLLVM.LLVMPointerType(libLLVM.LLVMInt8Type(), 0)
+    ];
+
+    const printfTypeRef = libLLVM.LLVMFunctionType(libLLVM.LLVMInt32Type(), params, 0, true);
+    this.printf = libLLVM.LLVMAddFunction(this.mod, 'printf', printfTypeRef);
   }
 
   createMain (entryModuleRef) {
@@ -82,6 +94,7 @@ class CodeGenerator {
   codegen () {
     const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.type === 'module');
 
+    let result;
     const modRef = this.genModule(codeModule);
 
     // iterate throught the modules adjacent nodes (direct children)
@@ -95,12 +108,17 @@ class CodeGenerator {
         if (expressionNode.attributes.type === 'number_literal') {
           this.genNumberLiteral(varName, expressionNode);
         } else if (expressionNode.attributes.type === 'bin_op') {
-          this.genBinOp(expressionNode);
+          result = this.genBinOp(expressionNode);
         }
       }
     });
 
     const exitCode = libLLVM.LLVMConstInt(libLLVM.LLVMInt32Type(), 0);
+
+    const format = libLLVM.LLVMBuildGlobalStringPtr(this.builder, 'Meaning of Life, %d!\n', 'format');
+    const params = [format, result];
+    console.log('printf', format);
+    libLLVM.LLVMBuildCall(this.builder, this.printf, params, 2, 'printf');
 
     libLLVM.LLVMBuildRet(this.builder, exitCode);
 
@@ -139,8 +157,7 @@ class CodeGenerator {
 
     switch (opNode.attributes.operator) {
       case '+':
-        libLLVM.LLVMBuildAdd(this.builder, lhs, rhs, 'addt');
-        break;
+        return libLLVM.LLVMBuildAdd(this.builder, lhs, rhs, 'addt');
     }
   }
 
