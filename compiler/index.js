@@ -1,12 +1,17 @@
 const { resolve } = require('path');
 const { readFileSync } = require('fs');
 
+const ref = require('ref');
+const { libLLVM, enums } = require('llvm-ffi');
+
 const Parser = require('./parser');
 const CodeGenerator = require('./codegen');
 
 class Compiler {
   constructor (entrySource, options) {
     this.baseDir = resolve(__dirname, '..', 'examples');
+    this.buildDir = resolve(__dirname, '..', 'build');
+
     this.sources = [entrySource];
     this.options = {
       debugGraph: false,
@@ -31,14 +36,33 @@ class Compiler {
       });
     }
 
-    if (this.options.debugGraph) {
-      this.sourceModules.forEach((mod) => {
+    this.sourceModules.forEach((mod) => {
+      if (this.options.debugGraph) {
         mod.debug();
+      }
 
-        const codeGenerator = new CodeGenerator(mod);
-        codeGenerator.codegen();
-      });
-    }
+      const codeGenerator = new CodeGenerator(mod);
+      codeGenerator.codegen();
+
+      let error = ref.alloc(ref.refType(ref.types.char));
+
+      // console.log('Emitting IR...');
+      // const irFile = resolve(this.buildDir, 'simple.ll');
+      // console.log(irFile);
+      // libLLVM.LLVMPrintModuleToFile(codeGenerator.mod, irFile, error.ref());
+
+      const objectFile = resolve(this.buildDir, 'simple.o');
+      console.log('Compiled', objectFile);
+      libLLVM.LLVMTargetMachineEmitToFile(
+        codeGenerator.machine,
+        codeGenerator.mod,
+        objectFile,
+        enums.LLVMCodeGenFileType.LLVMObjectFile,
+        error.ref()
+      );
+
+      // codeGenerator.createMain();
+    });
   }
 
   parse (sourceCode) {
