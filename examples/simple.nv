@@ -1,4 +1,6 @@
-const a = 41;
-const b = 1;
+function test () {
+  return 42;
+}
 
-const c = a + b;
+const m = test();
+printf("Answer to the life, universe, and everything is %d\n", m);

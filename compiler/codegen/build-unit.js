@@ -19,11 +19,12 @@ class BuildUnit {
   }
 
   emitObjectFile (machine) {
+    console.log(libLLVM.LLVMPrintModuleToString(this.codeModule.module));
     let error = ref.alloc(ref.refType(ref.types.char));
 
     libLLVM.LLVMTargetMachineEmitToFile(
       machine,
-      this.codeModule,
+      this.codeModule.module,
       this.objectFile,
       enums.LLVMCodeGenFileType.LLVMObjectFile,
       error.ref()
