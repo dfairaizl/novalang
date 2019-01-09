@@ -4,27 +4,31 @@ const ref = require('ref');
 const { libLLVM, enums } = require('llvm-ffi');
 
 class BuildUnit {
-  constructor (buildDir, sourceName, llvmModule) {
+  constructor (buildDir, sourceName, module) {
     this.buildDir = buildDir;
     this.sourceName = sourceName;
-    this.codeModule = llvmModule;
+    this.codeModule = module;
 
     this.objectFile = resolve(this.buildDir, `${this.sourceName}.o`);
     this.irFile = resolve(this.buildDir, `${this.sourceName}.ll`);
   }
 
+  printIR () {
+    console.log(libLLVM.LLVMPrintModuleToString(this.codeModule.ref));
+  }
+
   emitIRFile () {
     let error = ref.alloc(ref.refType(ref.types.char));
-    libLLVM.LLVMPrintModuleToFile(this.codeModule, this.irFile, error.ref());
+    libLLVM.LLVMPrintModuleToFile(this.codeModule.ref, this.irFile, error.ref());
   }
 
   emitObjectFile (machine) {
-    console.log(libLLVM.LLVMPrintModuleToString(this.codeModule.module));
+    this.printIR();
     let error = ref.alloc(ref.refType(ref.types.char));
 
     libLLVM.LLVMTargetMachineEmitToFile(
       machine,
-      this.codeModule.module,
+      this.codeModule.ref,
       this.objectFile,
       enums.LLVMCodeGenFileType.LLVMObjectFile,
       error.ref()

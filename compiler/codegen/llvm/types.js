@@ -1,5 +1,9 @@
 const { libLLVM } = require('llvm-ffi');
 
+function Constant (ofType, value) {
+  return libLLVM.LLVMConstInt(ofType, value);
+}
+
 function Pointer (ofType) {
   return libLLVM.LLVMPointerType(ofType, 0);
 }
@@ -16,14 +20,20 @@ function Int32 () {
   return libLLVM.LLVMInt32Type();
 }
 
+function String (value) {
+  return libLLVM.LLVMConstString(value, value.length, 1);
+}
+
 function Void () {
   return libLLVM.LLVMVoidType();
 }
 
 module.exports = {
+  Constant,
   Int8,
   Int32,
   Function,
   Pointer,
+  String,
   Void
 };

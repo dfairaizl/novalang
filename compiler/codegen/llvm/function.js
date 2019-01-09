@@ -8,8 +8,12 @@ class LLVMFunction {
       retType,
       params.map((p) => p.type),
       params.length,
-      0
+      variadic ? 1 : 0
     );
+  }
+
+  createEntry (funcRef) {
+    this.entryRef = libLLVM.LLVMAppendBasicBlock(funcRef, 'entry');
   }
 }
 

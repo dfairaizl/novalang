@@ -1,18 +1,17 @@
 const { basename } = require('path');
 
-const { libLLVM } = require('llvm-ffi');
-
+const Builder = require('./llvm/builder');
 const Module = require('./llvm/module');
 const Func = require('./llvm/function');
 const Parameter = require('./llvm/parameter');
 const {
+  Constant,
   Int8,
   Int32,
   Pointer,
   Void
 } = require('./llvm/types');
 
-// const createExternals = require('./externals');
 const BuildUnit = require('./build-unit');
 
 class CodeGenerator {
@@ -23,169 +22,176 @@ class CodeGenerator {
     this.scope = {};
 
     this.sourceName = basename(this.source, '.nv');
-    this.moduleName = `_${this.sourceName}_module`;
-    this.mod = new Module(this.sourceName);
-    this.builder = libLLVM.LLVMCreateBuilder();
+    this.moduleuleName = `${this.sourceName}_module`;
+    this.module = new Module(this.sourceName);
+    this.builder = new Builder();
+    this.namedVars = [];
 
     this.builderPos = [];
   }
 
-  createMain (entryModuleRef) {
+  createMain () {
     const params = [
       new Parameter('argc', Int32()),
       new Parameter('argv', Pointer(Pointer(Int8())))
     ];
 
     const mainFunc = new Func('main', Int32(), params, false);
-    const main = this.mod.addFunction(mainFunc);
+    this.module.defineFunction(mainFunc);
 
-    const entryBlock = libLLVM.LLVMAppendBasicBlock(main, 'entry');
-    libLLVM.LLVMPositionBuilderAtEnd(this.builder, entryBlock);
+    this.builder.enter(mainFunc);
 
-    libLLVM.LLVMBuildCall(this.builder, entryModuleRef, [], 0, ''); // last param is the variable to store call retval in
+    const entryModuleRef = this.module.getNamedFunction(this.moduleuleName);
+    this.builder.buildCall(entryModuleRef, [], '');
+    // libLLVM.LLVMBuildCall(this.builder, entryModuleRef, [], 0, ''); // last param is the variable to store call retval in
 
-    const exitCode = libLLVM.LLVMConstInt(libLLVM.LLVMInt32Type(), 0);
-    //
-    libLLVM.LLVMBuildRet(this.builder, exitCode);
+    const exitCode = Constant(Int32(), 0);
 
-    this.mainFunc = mainFunc;
+    this.builder.buildRet(exitCode);
   }
 
   codegen () {
     console.log('Compiling', `${this.sourceName}.nv`);
 
+    // externals
     const params = [
-      libLLVM.LLVMPointerType(libLLVM.LLVMInt8Type(), 0)
+      new Parameter('format', Pointer(Int8()))
     ];
 
-    const printfTypeRef = libLLVM.LLVMFunctionType(libLLVM.LLVMInt32Type(), params, 0, true);
-    libLLVM.LLVMAddFunction(this.mod.module, 'printf', printfTypeRef);
+    const printf = new Func('printf', Int32(), params, true);
+    this.module.declareFunction(printf);
 
     const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.type === 'module');
-    const modRef = this.genModule(codeModule);
+    this.codegenModule(codeModule);
 
-    // // iterate throught the modules adjacent nodes (direct children)
+    // iterate throught the modules adjacent nodes (direct children)
     const adj = this.sourceGraph.adjacencyList[codeModule.id];
     adj.edges.forEach((e) => {
       const node = e.target;
-      this.generate(node);
+      this.codegenNode(node);
     });
 
-    libLLVM.LLVMBuildRetVoid(this.builder);
+    this.builder.buildVoidRet();
 
-    this.createMain(modRef);
+    this.createMain();
 
-    return new BuildUnit(this.buildDir, this.sourceName, this.mod);
+    return new BuildUnit(this.buildDir, this.sourceName, this.module);
   }
 
-  generate (node) {
-    console.log(node.attributes);
-    if (node.attributes.type === 'function') {
-      const args = this.sourceGraph.relationFromNode(node, 'arguments');
-      const funcName = `${this.moduleName}_${node.attributes.name}`;
-      this.genFunction(funcName, Int32(), args, false);
-
-      const body = this.sourceGraph.relationFromNode(node, 'body')[0];
-      this.generate(body);
-      this.builderPos.pop();
-      const bb = this.builderPos[this.builderPos.length - 1];
-      libLLVM.LLVMPositionBuilderAtEnd(this.builder, bb);
-    } else if (node.attributes.type === 'return_statement') {
-      const expr = this.sourceGraph.relationFromNode(node, 'expression')[0];
-      const ref = this.generate(expr);
-      libLLVM.LLVMBuildRet(this.builder, ref);
-    } else if (node.attributes.type === 'number_literal') {
-      const type = libLLVM.LLVMInt32Type();
-      return libLLVM.LLVMConstInt(type, node.attributes.value);
-    } else if (node.attributes.type === 'string_literal') {
-      return libLLVM.LLVMBuildGlobalStringPtr(this.builder, node.attributes.value, 'format');
-    } else if (node.attributes.type === 'immutable_declaration') {
-      const expr = this.sourceGraph.relationFromNode(node, 'expression')[0];
-      if (expr.attributes.type === 'invocation') {
-        this.genInvocation(expr, node.attributes.identifier);
-      }
-    } else if (node.attributes.type === 'invocation') {
-      this.genExternalInvocation(node);
-    } else if (node.attributes.type === 'identifier') {
-      return this.scope[node.attributes.identifier];
+  codegenNode (node) {
+    console.log(node.attributes.type);
+    switch (node.attributes.type) {
+      case 'function':
+        return this.codeGenFunction(node);
+      case 'return_statement':
+        return this.codegenReturn(node);
+      case 'immutable_declaration':
+        return this.codegenVar(node);
+      case 'invocation':
+        return this.codegenInvocation(node);
+      case 'number_literal':
+        return this.codegenNumberLiteral(node);
+      default:
+        console.log('Unknown expression', node.attributes.type);
     }
   }
 
-  genInvocation (node, identName = '') {
-    const name = `${this.moduleName}_${node.attributes.name}`;
-    const func = libLLVM.LLVMGetNamedFunction(this.mod.module, name);
-    const call = libLLVM.LLVMBuildCall(this.builder, func, [], 0, identName);
-    this.scope[identName] = call;
-    return call;
-  }
+  // Code Generation
 
-  genExternalInvocation (node, identName = '') {
-    console.log(this.scope);
-    const name = `${node.attributes.name}`;
-    const args = this.sourceGraph.relationFromNode(node, 'arguments');
+  codegenModule (moduleNode) {
+    const moduleFunc = new Func(this.moduleuleName, Void(), [], false);
+    this.module.defineFunction(moduleFunc);
+    this.builder.enter(moduleFunc);
 
-    const argVals = args.map((a) => this.generate(a));
-    console.log(argVals);
-
-    const func = libLLVM.LLVMGetNamedFunction(this.mod.module, name);
-    const call = libLLVM.LLVMBuildCall(this.builder, func, argVals, argVals.length, identName);
-    return call;
-  }
-
-  genFunction (name, retType, params, variadic) {
-    const ref = new Func(name, retType, params, variadic);
-    const func = this.mod.addFunction(ref);
-
-    const entryBlock = libLLVM.LLVMAppendBasicBlock(func, 'entry');
-    libLLVM.LLVMPositionBuilderAtEnd(this.builder, entryBlock);
-
-    this.builderPos.push(entryBlock);
-
-    return func;
-  }
-
-  genModule (moduleNode) {
-    const moduleFunc = this.genFunction(this.moduleName, Void(), [], false);
     return moduleFunc;
   }
 
-  genNumberLiteral (varName, node) {
-    const type = libLLVM.LLVMInt32Type();
-    const val = libLLVM.LLVMConstInt(type, node.attributes.value);
+  codeGenFunction (funcNode) {
+    const funcName = funcNode.attributes.name;
+    const retType = Int32(); // this should be added by the parser via a grpah query in the type system
 
-    const alloca = libLLVM.LLVMBuildAlloca(this.builder, type, varName);
-    libLLVM.LLVMBuildStore(this.builder, val, alloca);
+    // build argument type list
+    const argTypes = this.sourceGraph.relationFromNode(funcNode, 'arguments').map((n) => {
+      return this.buildType(n.attributes.type);
+    });
 
-    this.scope[varName] = alloca;
+    const func = new Func(funcName, retType, argTypes, false);
+    this.module.defineFunction(func);
+    this.builder.enter(func);
+
+    // build function body
+    const bodyNodes = this.sourceGraph.relationFromNode(funcNode, 'body');
+    bodyNodes.forEach((n) => this.codegenNode(n));
+
+    this.builder.exit();
   }
 
-  genBinOp (opNode) {
-    const left = this.sourceGraph.relationFromNode(opNode, 'left')[0];
-    const right = this.sourceGraph.relationFromNode(opNode, 'right')[0];
+  codegenReturn (node) {
+    // get the return expression
+    const retNode = this.sourceGraph.relationFromNode(node, 'expression')[0];
 
-    const lhs = this.genExpression(left);
-    const rhs = this.genExpression(right);
+    // code gen expression
+    const expr = this.codegenNode(retNode);
+    console.log(expr);
 
-    switch (opNode.attributes.operator) {
-      case '+':
-        return libLLVM.LLVMBuildAdd(this.builder, lhs, rhs, 'addt');
+    this.builder.buildRet(expr);
+  }
+
+  codegenVar (node) {
+    const exprNode = this.sourceGraph.relationFromNode(node, 'expression')[0];
+
+    if (exprNode.attributes.type === 'invocation') {
+      this.codegenInvocation(exprNode, node.attributes.identifier);
     }
   }
 
-  genExpression (node) {
+  codegenInvocation (node, identifier = '') {
+    console.log('INVOKE', node, identifier);
+    // look up function in module
+    const funcRef = this.module.getNamedFunction(node.attributes.name);
+
+    // build argument type list
+    const argTypes = this.sourceGraph.relationFromNode(node, 'arguments').map((n) => {
+      console.log('!!!', n.attributes.type);
+      return this.buildType(n);
+    });
+
+    console.log('ARGTYPES', argTypes);
+
+    const ref = this.builder.buildCall(funcRef, argTypes, identifier);
+    if (identifier.length > 0) {
+      this.namedVars[identifier] = ref;
+    }
+  }
+
+  codegenNumberLiteral (node) {
+    const val = node.attributes.value;
+    return Constant(Int32(), val);
+  }
+
+  // Helpers
+
+  buildType (node) {
     switch (node.attributes.type) {
-      case 'identifier':
-        return this.genIdentifier(node);
+      case 'string_literal':
+        return this.builder.buildGlobalString('format', node.attributes.value);
+      default:
+        return this.namedVars[node.attributes.identifier];
     }
   }
 
-  genIdentifier (node) {
-    const name = node.attributes.identifier;
-    const ref = libLLVM.LLVMBuildAlloca(this.builder, Int32(), name);
-
-    this.scope[name] = ref;
-    return libLLVM.LLVMBuildLoad(this.builder, ref, name);
-  }
+  // genBinOp (opNode) {
+  //   const left = this.sourceGraph.relationFromNode(opNode, 'left')[0];
+  //   const right = this.sourceGraph.relationFromNode(opNode, 'right')[0];
+  //
+  //   const lhs = this.genExpression(left);
+  //   const rhs = this.genExpression(right);
+  //
+  //   switch (opNode.attributes.operator) {
+  //     case '+':
+  //       return libLLVM.LLVMBuildAdd(this.builder, lhs, rhs, 'addt');
+  //   }
+  // }
 }
 
 module.exports = CodeGenerator;
