@@ -570,7 +570,11 @@ class Parser {
 
   parseNumberLiteral () {
     const literal = this.getNextToken();
-    return this.sourceGraph.addNode({ type: 'number_literal', value: literal.value });
+    return this.sourceGraph.addNode({
+      type: 'number_literal',
+      kind: literal.options.kind,
+      value: literal.value
+    });
   }
 
   parseStringLiteral () {
