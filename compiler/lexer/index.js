@@ -11,6 +11,7 @@ const {
 } = require('./tokens');
 
 const DIGIT = new RegExp(/[0-9.]+/);
+const FLOATING_POINT_DIGIT = new RegExp(/\d+\.\d+/);
 const OPERATOR = new RegExp(/[[\]+-/*><=]+/);
 const PUNCTUATOR = new RegExp(/[{},;:()]+/);
 const STRING = new RegExp(/['"]+/);
@@ -95,13 +96,18 @@ class Lexer {
 
   readDigit () {
     let token = '';
+    let kind = 'int';
 
     while (this.isDigit() && !this.scanner.eof()) {
       token += this.currentToken;
       this.nextCharacter();
     }
 
-    return new NumberToken(token);
+    if (FLOATING_POINT_DIGIT.test(token) === true) {
+      kind = 'float';
+    }
+
+    return new NumberToken(token, { kind });
   }
 
   readKeywordOrIdentifier () {

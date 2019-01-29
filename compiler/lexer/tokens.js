@@ -1,6 +1,7 @@
 class Token {
-  constructor (value) {
+  constructor (value, options = {}) {
     this.value = value;
+    this.options = options;
   }
 }
 

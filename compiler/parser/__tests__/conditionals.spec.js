@@ -1,6 +1,6 @@
 /* global describe, it, expect */
 
-const Parser = require('.');
+const Parser = require('..');
 
 describe('Parser', () => {
   describe('if conditionals', () => {
