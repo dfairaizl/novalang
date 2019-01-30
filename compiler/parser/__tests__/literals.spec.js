@@ -63,6 +63,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'string_literal',
+        kind: 'string',
         value: ''
       });
     });
@@ -74,6 +75,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'string_literal',
+        kind: 'string',
         value: 'hello world'
       });
     });

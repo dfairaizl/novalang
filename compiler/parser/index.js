@@ -642,7 +642,11 @@ class Parser {
 
   parseStringLiteral () {
     const literal = this.getNextToken();
-    return this.sourceGraph.addNode({ type: 'string_literal', value: literal.value });
+    return this.sourceGraph.addNode({
+      type: 'string_literal',
+      kind: 'string',
+      value: literal.value
+    });
   }
 
   parseIdentifierExpression () {

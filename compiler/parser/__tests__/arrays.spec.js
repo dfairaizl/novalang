@@ -49,6 +49,7 @@ describe('Parser', () => {
           type: 'array_literal',
           members: [{
             type: 'string_literal',
+            kind: 'string',
             value: 'hello'
           }]
         }]
