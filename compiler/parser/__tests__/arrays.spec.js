@@ -30,6 +30,7 @@ describe('Parser', () => {
           type: 'array_literal',
           members: [{
             type: 'number_literal',
+            kind: 'int',
             value: '1'
           }]
         }]
@@ -119,9 +120,11 @@ describe('Parser', () => {
           type: 'array_literal',
           members: [{
             type: 'number_literal',
+            kind: 'int',
             value: '1'
           }, {
             type: 'number_literal',
+            kind: 'int',
             value: '2'
           }]
         }]
@@ -145,6 +148,7 @@ describe('Parser', () => {
         }],
         right: [{
           type: 'number_literal',
+          kind: 'int',
           value: '1'
         }]
       });

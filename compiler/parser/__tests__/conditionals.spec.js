@@ -15,6 +15,7 @@ describe('Parser', () => {
           type: 'if_conditional',
           test: [{
             type: 'number_literal',
+            kind: 'int',
             value: '1'
           }]
         }]
@@ -32,6 +33,7 @@ describe('Parser', () => {
           type: 'if_conditional',
           test: [{
             type: 'number_literal',
+            kind: 'int',
             value: '1'
           }],
           body: [{
@@ -56,12 +58,17 @@ describe('Parser', () => {
           type: 'if_conditional',
           test: [{
             type: 'number_literal',
+            kind: 'int',
             value: '1'
           }],
           body: [{
             type: 'mutable_declaration',
             identifier: 'y',
-            expression: [{ type: 'number_literal', value: '1' }]
+            expression: [{
+              type: 'number_literal',
+              kind: 'int',
+              value: '1'
+            }]
           }, {
             type: 'return_statement',
             expression: [{
@@ -86,10 +93,12 @@ describe('Parser', () => {
           type: 'if_conditional',
           test: [{
             type: 'number_literal',
+            kind: 'int',
             value: '1'
           }],
           body: [{
             type: 'number_literal',
+            kind: 'int',
             value: '1'
           }]
         }],
@@ -97,6 +106,7 @@ describe('Parser', () => {
           type: 'else_expression',
           body: [{
             type: 'number_literal',
+            kind: 'int',
             value: '2'
           }]
         }]
@@ -121,12 +131,14 @@ describe('Parser', () => {
           type: 'if_conditional',
           test: [{
             type: 'number_literal',
+            kind: 'int',
             value: '1'
           }],
           body: [{
             type: 'return_statement',
             expression: [{
               type: 'number_literal',
+              kind: 'int',
               value: '1'
             }]
           }]
@@ -136,7 +148,11 @@ describe('Parser', () => {
           body: [{
             type: 'mutable_declaration',
             identifier: 'y',
-            expression: [{ type: 'number_literal', value: '2' }]
+            expression: [{
+              type: 'number_literal',
+              kind: 'int',
+              value: '2'
+            }]
           }, {
             type: 'return_statement',
             expression: [{
@@ -167,12 +183,14 @@ describe('Parser', () => {
           type: 'if_conditional',
           test: [{
             type: 'number_literal',
+            kind: 'int',
             value: '1'
           }],
           body: [{
             type: 'return_statement',
             expression: [{
               type: 'number_literal',
+              kind: 'int',
               value: '1'
             }]
           }]
@@ -180,12 +198,14 @@ describe('Parser', () => {
           type: 'if_conditional',
           test: [{
             type: 'number_literal',
+            kind: 'int',
             value: '2'
           }],
           body: [{
             type: 'return_statement',
             expression: [{
               type: 'number_literal',
+              kind: 'int',
               value: '2'
             }]
           }]
@@ -212,12 +232,14 @@ describe('Parser', () => {
           type: 'if_conditional',
           test: [{
             type: 'number_literal',
+            kind: 'int',
             value: '1'
           }],
           body: [{
             type: 'return_statement',
             expression: [{
               type: 'number_literal',
+              kind: 'int',
               value: '1'
             }]
           }]
@@ -225,12 +247,14 @@ describe('Parser', () => {
           type: 'if_conditional',
           test: [{
             type: 'number_literal',
+            kind: 'int',
             value: '2'
           }],
           body: [{
             type: 'return_statement',
             expression: [{
               type: 'number_literal',
+              kind: 'int',
               value: '2'
             }]
           }]
@@ -238,12 +262,14 @@ describe('Parser', () => {
           type: 'if_conditional',
           test: [{
             type: 'number_literal',
+            kind: 'int',
             value: '3'
           }],
           body: [{
             type: 'return_statement',
             expression: [{
               type: 'number_literal',
+              kind: 'int',
               value: '3'
             }]
           }]
@@ -272,12 +298,14 @@ describe('Parser', () => {
           type: 'if_conditional',
           test: [{
             type: 'number_literal',
+            kind: 'int',
             value: '1'
           }],
           body: [{
             type: 'return_statement',
             expression: [{
               type: 'number_literal',
+              kind: 'int',
               value: '1'
             }]
           }]
@@ -285,12 +313,14 @@ describe('Parser', () => {
           type: 'if_conditional',
           test: [{
             type: 'number_literal',
+            kind: 'int',
             value: '2'
           }],
           body: [{
             type: 'return_statement',
             expression: [{
               type: 'number_literal',
+              kind: 'int',
               value: '2'
             }]
           }]
@@ -301,6 +331,7 @@ describe('Parser', () => {
             type: 'return_statement',
             expression: [{
               type: 'number_literal',
+              kind: 'int',
               value: '3'
             }]
           }]

@@ -14,7 +14,7 @@ describe('Parser', () => {
           sources: [{
             type: 'immutable_declaration',
             identifier: 'x',
-            expression: [{ type: 'number_literal', value: '1' }]
+            expression: [{ type: 'number_literal', kind: 'int', value: '1' }]
           }]
         });
       });
@@ -38,7 +38,7 @@ describe('Parser', () => {
       });
     });
 
-    describe('multile statements', () => {
+    describe('multiple statements', () => {
       it('one per line', () => {
         const parser = new Parser(`
           const x = 1
@@ -83,10 +83,12 @@ describe('Parser', () => {
             operator: '+',
             left: [{
               type: 'number_literal',
+              kind: 'int',
               value: '1'
             }],
             right: [{
               type: 'number_literal',
+              kind: 'int',
               value: '2'
             }]
           }]

@@ -32,7 +32,11 @@ describe('Parser', () => {
         body: [{
           type: 'mutable_declaration',
           identifier: 'x',
-          expression: [{ type: 'number_literal', value: '0' }]
+          expression: [{
+            type: 'number_literal',
+            kind: 'int',
+            value: '0'
+          }]
         }, {
           type: 'invocation',
           name: 'call',
@@ -74,7 +78,11 @@ describe('Parser', () => {
         body: [{
           type: 'mutable_declaration',
           identifier: 'x',
-          expression: [{ type: 'number_literal', value: '0' }]
+          expression: [{
+            type: 'number_literal',
+            kind: 'int',
+            value: '0'
+          }]
         }, {
           type: 'invocation',
           name: 'call',

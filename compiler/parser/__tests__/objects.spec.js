@@ -31,7 +31,7 @@ describe('Parser', () => {
           member: [{
             type: 'object_key',
             key: 'x',
-            value: [{ type: 'number_literal', value: '1' }]
+            value: [{ type: 'number_literal', kind: 'int', value: '1' }]
           }]
         }]
       });
@@ -50,11 +50,11 @@ describe('Parser', () => {
           member: [{
             type: 'object_key',
             key: 'x',
-            value: [{ type: 'number_literal', value: '1' }]
+            value: [{ type: 'number_literal', kind: 'int', value: '1' }]
           }, {
             type: 'object_key',
             key: 'y',
-            value: [{ type: 'number_literal', value: '2' }]
+            value: [{ type: 'number_literal', kind: 'int', value: '2' }]
           }]
         }]
       });
@@ -73,7 +73,7 @@ describe('Parser', () => {
           member: [{
             type: 'object_key',
             key: 'x',
-            value: [{ type: 'number_literal', value: '1' }]
+            value: [{ type: 'number_literal', kind: 'int', value: '1' }]
           }, {
             type: 'object_key',
             key: 'y',
@@ -82,7 +82,7 @@ describe('Parser', () => {
               member: [{
                 type: 'object_key',
                 key: 'z',
-                value: [{ type: 'number_literal', value: '2' }]
+                value: [{ type: 'number_literal', kind: 'int', value: '2' }]
               }]
             }]
           }]
@@ -104,7 +104,7 @@ describe('Parser', () => {
           type: 'bin_op',
           operator: '=',
           left: [{ type: 'identifier', identifier: 'key' }],
-          right: [{ type: 'number_literal', value: '1' }]
+          right: [{ type: 'number_literal', kind: 'int', value: '1' }]
         }]
       });
     });

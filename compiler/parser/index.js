@@ -389,33 +389,92 @@ class Parser {
   // variables
   parseVariableDeclaration () {
     const declarationType = this.getNextToken();
-    const identifier = this.parseIdentifier();
 
     if (declarationType.value === 'const') {
-      // an assignment expression is required
-      this.validateNextToken('=');
-      const assignmentExpr = this.parsePrimaryExpression();
-
-      const declareNode = this.sourceGraph.addNode({ type: 'immutable_declaration', identifier });
-      this.sourceGraph.addEdge(declareNode, assignmentExpr, 'expression');
-
-      return declareNode;
+      return this.parseImmutable();
     } else {
-      let assignmentExpr = null;
-      let token = this.peekNextToken();
+      return this.parseMutable();
+    }
+  }
 
-      // assignment is optional for mutable vars
-      if (token instanceof OperatorToken && token.value === '=') {
-        this.validateNextToken('=');
+  parseImmutable () {
+    let declareNode = null;
+    const nodeType = 'immutable_declaration';
+    const identifier = this.parseIdentifier();
 
-        assignmentExpr = this.parsePrimaryExpression();
-      }
+    // check for type annotation
+    const kind = this.parseType();
 
-      const declareNode = this.sourceGraph.addNode({ type: 'mutable_declaration', identifier });
+    if (kind) {
+      declareNode = this.sourceGraph.addNode({
+        type: nodeType,
+        kind,
+        identifier
+      });
+    } else {
+      declareNode = this.sourceGraph.addNode({
+        type: nodeType,
+        identifier
+      });
+    }
+
+    // const requires an assignment
+    this.validateNextToken('=');
+
+    const assignmentExpr = this.parsePrimaryExpression();
+
+    this.sourceGraph.addEdge(declareNode, assignmentExpr, 'expression');
+
+    return declareNode;
+  }
+
+  parseMutable () {
+    let declareNode = null;
+    const nodeType = 'mutable_declaration';
+    const identifier = this.parseIdentifier();
+
+    // require for type annotation, but can also be inferred
+    const kind = this.parseType();
+
+    // assignment is optional
+    const token = this.peekNextToken();
+    if (token instanceof OperatorToken && token.value === '=') {
+      this.validateNextToken('=');
+
+      declareNode = this.sourceGraph.addNode({
+        type: nodeType,
+        identifier
+      });
+
+      const assignmentExpr = this.parsePrimaryExpression();
       this.sourceGraph.addEdge(declareNode, assignmentExpr, 'expression');
 
       return declareNode;
     }
+
+    // no assignment expression, type is required
+    if (!kind) {
+      return null;
+    }
+
+    return this.sourceGraph.addNode({
+      type: nodeType,
+      kind,
+      identifier
+    });
+  }
+
+  parseType () {
+    const token = this.peekNextToken();
+
+    if (token instanceof PunctuatorToken && token.value === ':') {
+      this.validateNextToken(':');
+      const typeToken = this.getNextToken();
+
+      return typeToken.value;
+    }
+
+    return null;
   }
 
   // classes

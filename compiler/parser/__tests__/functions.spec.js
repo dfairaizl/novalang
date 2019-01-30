@@ -115,6 +115,7 @@ describe('Parser', () => {
             identifier: 'a',
             expression: [{
               type: 'number_literal',
+              kind: 'int',
               value: '1'
             }]
           },
@@ -217,6 +218,7 @@ describe('Parser', () => {
             }],
             right: [{
               type: 'number_literal',
+              kind: 'int',
               value: '1'
             }]
           }]
@@ -247,6 +249,7 @@ describe('Parser', () => {
         name: 'incr',
         arguments: [{
           type: 'number_literal',
+          kind: 'int',
           value: '1'
         }]
       });
@@ -262,9 +265,11 @@ describe('Parser', () => {
         name: 'add',
         arguments: [{
           type: 'number_literal',
+          kind: 'int',
           value: '1'
         }, {
           type: 'number_literal',
+          kind: 'int',
           value: '2'
         }]
       });

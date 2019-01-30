@@ -15,6 +15,18 @@ describe('Parser', () => {
       });
     });
 
+    it('parses immutable variables with type annotation', () => {
+      const parser = new Parser('const x: int = 1');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parsed.attributes).toEqual({
+        type: 'immutable_declaration',
+        kind: 'int',
+        identifier: 'x'
+      });
+    });
+
     it('parses immutable variables with identifier assignment', () => {
       const parser = new Parser('const x = y');
 
@@ -39,6 +51,7 @@ describe('Parser', () => {
           name: 'sqrt',
           arguments: [{
             type: 'number_literal',
+            kind: 'int',
             value: '9'
           }]
         }]
@@ -58,10 +71,12 @@ describe('Parser', () => {
           operator: '+',
           left: [{
             type: 'number_literal',
+            kind: 'int',
             value: '1'
           }],
           right: [{
             type: 'number_literal',
+            kind: 'int',
             value: '2'
           }]
         }]
@@ -69,12 +84,13 @@ describe('Parser', () => {
     });
 
     it('parses mutable variable delcarations with no assignment', () => {
-      const parser = new Parser('let x');
+      const parser = new Parser('let x: int');
 
       const parsed = parser.parsePrimaryExpression();
 
       expect(parsed.attributes).toEqual({
         type: 'mutable_declaration',
+        kind: 'int',
         identifier: 'x'
       });
     });
@@ -87,7 +103,11 @@ describe('Parser', () => {
       expect(parser.toAST(parsed)).toEqual({
         type: 'mutable_declaration',
         identifier: 'x',
-        expression: [{ type: 'number_literal', value: '1' }]
+        expression: [{
+          type: 'number_literal',
+          kind: 'int',
+          value: '1'
+        }]
       });
     });
   });
