@@ -11,6 +11,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'boolean_literal',
+        kind: 'bool',
         value: 'true'
       });
     });
@@ -22,6 +23,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'boolean_literal',
+        kind: 'bool',
         value: 'false'
       });
     });

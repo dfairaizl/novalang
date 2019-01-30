@@ -624,7 +624,11 @@ class Parser {
 
   parseBooleanLiteral () {
     const literal = this.getNextToken();
-    return this.sourceGraph.addNode({ type: 'boolean_literal', value: literal.value });
+    return this.sourceGraph.addNode({
+      type: 'boolean_literal',
+      kind: 'bool',
+      value: literal.value
+    });
   }
 
   parseNumberLiteral () {
