@@ -98,14 +98,39 @@ describe('Parser', () => {
       const parsed = parser.parsePrimaryExpression();
 
       expect(parser.toAST(parsed)).toEqual({
-        type: 'object_reference',
-        name: 'obj',
-        key_expression: [{
-          type: 'bin_op',
-          operator: '=',
-          left: [{ type: 'identifier', identifier: 'key' }],
-          right: [{ type: 'number_literal', kind: 'int', value: '1' }]
-        }]
+        type: 'bin_op',
+        operator: '=',
+        left: [{
+          type: 'object_reference',
+          identifier: 'obj',
+          key_expression: [{
+            type: 'key_reference', identifier: 'key'
+          }]
+        }],
+        right: [{ type: 'number_literal', kind: 'int', value: '1' }]
+      });
+    });
+
+    it('parses dep key/val expressions with dot notation', () => {
+      const parser = new Parser('obj.key.foo = 1');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'bin_op',
+        operator: '=',
+        left: [{
+          type: 'object_reference',
+          identifier: 'obj',
+          key_expression: [{
+            type: 'object_reference',
+            identifier: 'key',
+            key_expression: [{
+              type: 'key_reference', identifier: 'foo'
+            }]
+          }]
+        }],
+        right: [{ type: 'number_literal', kind: 'int', value: '1' }]
       });
     });
 
@@ -116,7 +141,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'object_reference',
-        name: 'obj',
+        identifier: 'obj',
         key_expression: [{
           type: 'invocation',
           name: 'key'

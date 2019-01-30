@@ -39,8 +39,8 @@ describe('Parser', () => {
           body: [{
             type: 'return_statement',
             expression: [{
-              identifier: 'x',
-              type: 'identifier'
+              type: 'variable_reference',
+              identifier: 'x'
             }]
           }]
         }]
@@ -72,8 +72,8 @@ describe('Parser', () => {
           }, {
             type: 'return_statement',
             expression: [{
-              identifier: 'y',
-              type: 'identifier'
+              type: 'variable_reference',
+              identifier: 'y'
             }]
           }]
         }]
@@ -156,8 +156,8 @@ describe('Parser', () => {
           }, {
             type: 'return_statement',
             expression: [{
-              identifier: 'y',
-              type: 'identifier'
+              type: 'variable_reference',
+              identifier: 'y'
             }]
           }]
         }]

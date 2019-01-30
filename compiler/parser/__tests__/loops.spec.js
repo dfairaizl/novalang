@@ -43,7 +43,7 @@ describe('Parser', () => {
           type: 'invocation',
           name: 'call',
           arguments: [{
-            type: 'identifier',
+            type: 'variable_reference',
             identifier: 'x'
           }]
         }]
@@ -91,7 +91,7 @@ describe('Parser', () => {
           type: 'invocation',
           name: 'call',
           arguments: [{
-            type: 'identifier',
+            type: 'variable_reference',
             identifier: 'x'
           }]
         }]

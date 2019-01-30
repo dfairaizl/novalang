@@ -555,7 +555,8 @@ class Parser {
       tok = this.peekNextToken();
 
       if (tok instanceof IdentifierToken) {
-        expr = this.parseIdentifierExpression();
+        const identifier = this.parseIdentifier();
+        expr = this.sourceGraph.addNode({ type: 'function_argument', identifier });
       }
 
       if (expr) {
@@ -659,10 +660,10 @@ class Parser {
       return this.parseFunctionInvocation(identifier);
     } else if (token instanceof OperatorToken && token.value === '.') {
       this.validateNextToken('.');
-      const keyPathExpression = this.parsePrimaryExpression();
-      const refExpr = this.sourceGraph.addNode({ type: 'object_reference', name: identifier });
+      const keyExpr = this.parseKeyPath();
+      const refExpr = this.sourceGraph.addNode({ type: 'object_reference', identifier });
 
-      this.sourceGraph.addEdge(refExpr, keyPathExpression, 'key_expression');
+      this.sourceGraph.addEdge(refExpr, keyExpr, 'key_expression');
 
       return refExpr;
     } else if (token instanceof OperatorToken && token.value === '[') {
@@ -674,7 +675,28 @@ class Parser {
       return this.sourceGraph.addNode({ type: 'array_reference', name: identifier, index });
     }
 
-    return this.sourceGraph.addNode({ type: 'identifier', identifier });
+    return this.sourceGraph.addNode({ type: 'variable_reference', identifier });
+  }
+
+  parseKeyPath () {
+    const identifier = this.parseIdentifier();
+
+    const token = this.peekNextToken();
+
+    // is an invocation of an object key val
+    if (token instanceof PunctuatorToken && token.value === '(') {
+      return this.parseFunctionInvocation(identifier);
+    } else if (token instanceof OperatorToken && token.value === '.') {
+      this.validateNextToken('.');
+      const keyExpr = this.parseKeyPath();
+      const refExpr = this.sourceGraph.addNode({ type: 'object_reference', identifier });
+
+      this.sourceGraph.addEdge(refExpr, keyExpr, 'key_expression');
+
+      return refExpr;
+    }
+
+    return this.sourceGraph.addNode({ type: 'key_reference', identifier });
   }
 
   // Helper
@@ -682,6 +704,8 @@ class Parser {
   toAST (node) {
     return this.sourceGraph.treeFromNode(node);
   }
+
+  // Tokenizer
 
   validateNextToken (tokenValue) {
     // interput parsing execution if we find a syntax error

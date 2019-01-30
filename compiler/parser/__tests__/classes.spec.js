@@ -89,10 +89,10 @@ describe('Parser', () => {
           type: 'method',
           name: 'add',
           arguments: [{
-            type: 'identifier',
+            type: 'function_argument',
             identifier: 'x'
           }, {
-            type: 'identifier',
+            type: 'function_argument',
             identifier: 'y'
           }]
         }]
@@ -118,10 +118,10 @@ describe('Parser', () => {
           type: 'method',
           name: 'add',
           arguments: [{
-            type: 'identifier',
+            type: 'function_argument',
             identifier: 'x'
           }, {
-            type: 'identifier',
+            type: 'function_argument',
             identifier: 'y'
           }],
           body: [{
@@ -130,11 +130,11 @@ describe('Parser', () => {
               type: 'bin_op',
               operator: '+',
               left: [{
-                type: 'identifier',
+                type: 'variable_reference',
                 identifier: 'x'
               }],
               right: [{
-                type: 'identifier',
+                type: 'variable_reference',
                 identifier: 'y'
               }]
             }]

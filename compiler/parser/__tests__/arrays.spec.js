@@ -84,7 +84,7 @@ describe('Parser', () => {
         expression: [{
           type: 'array_literal',
           members: [{
-            type: 'identifier',
+            type: 'variable_reference',
             identifier: 'y'
           }]
         }]

@@ -32,7 +32,7 @@ describe('Parser', () => {
         type: 'function',
         name: 'incr',
         arguments: [{
-          type: 'identifier',
+          type: 'function_argument',
           identifier: 'x'
         }]
       });
@@ -47,10 +47,10 @@ describe('Parser', () => {
         type: 'function',
         name: 'add',
         arguments: [{
-          type: 'identifier',
+          type: 'function_argument',
           identifier: 'x'
         }, {
-          type: 'identifier',
+          type: 'function_argument',
           identifier: 'y'
         }]
       });
@@ -65,10 +65,10 @@ describe('Parser', () => {
         type: 'function',
         name: 'add',
         arguments: [{
-          type: 'identifier',
+          type: 'function_argument',
           identifier: 'x'
         }, {
-          type: 'identifier',
+          type: 'function_argument',
           identifier: 'y'
         }],
         body: [{
@@ -77,11 +77,11 @@ describe('Parser', () => {
             type: 'bin_op',
             operator: '+',
             left: [{
-              type: 'identifier',
+              type: 'variable_reference',
               identifier: 'x'
             }],
             right: [{
-              type: 'identifier',
+              type: 'variable_reference',
               identifier: 'y'
             }]
           }]
@@ -103,10 +103,10 @@ describe('Parser', () => {
         type: 'function',
         name: 'add',
         arguments: [{
-          type: 'identifier',
+          type: 'function_argument',
           identifier: 'x'
         }, {
-          type: 'identifier',
+          type: 'function_argument',
           identifier: 'y'
         }],
         body: [
@@ -122,7 +122,7 @@ describe('Parser', () => {
           {
             type: 'return_statement',
             expression: [{
-              type: 'identifier',
+              type: 'variable_reference',
               identifier: 'a'
             }]
           }
@@ -150,7 +150,7 @@ describe('Parser', () => {
       expect(parser.toAST(parsed)).toEqual({
         type: 'anonymous_function',
         arguments: [{
-          type: 'identifier',
+          type: 'function_argument',
           identifier: 'x'
         }]
       });
@@ -167,7 +167,7 @@ describe('Parser', () => {
         expression: [{
           type: 'anonymous_function',
           arguments: [{
-            type: 'identifier',
+            type: 'function_argument',
             identifier: 'x'
           }]
         }]
@@ -189,7 +189,7 @@ describe('Parser', () => {
         arguments: [{
           type: 'anonymous_function',
           arguments: [{
-            type: 'identifier',
+            type: 'function_argument',
             identifier: 'x'
           }]
         }]
@@ -204,7 +204,7 @@ describe('Parser', () => {
       expect(parser.toAST(parsed)).toEqual({
         type: 'anonymous_function',
         arguments: [{
-          type: 'identifier',
+          type: 'function_argument',
           identifier: 'x'
         }],
         body: [{
@@ -213,7 +213,7 @@ describe('Parser', () => {
             type: 'bin_op',
             operator: '+',
             left: [{
-              type: 'identifier',
+              type: 'variable_reference',
               identifier: 'x'
             }],
             right: [{
@@ -285,8 +285,8 @@ describe('Parser', () => {
       expect(parser.toAST(parsed)).toEqual({
         type: 'return_statement',
         expression: [{
-          identifier: 'x',
-          type: 'identifier'
+          type: 'variable_reference',
+          identifier: 'x'
         }]
       });
     });
