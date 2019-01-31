@@ -21,7 +21,6 @@ class LLVMBuilder {
   }
 
   buildCall (funcRef, args, identifier) {
-    console.log('CALL', funcRef, args, identifier);
     return libLLVM.LLVMBuildCall(this.builderRef, funcRef, args, args.length, identifier);
   }
 

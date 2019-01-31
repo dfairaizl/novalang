@@ -79,7 +79,6 @@ class CodeGenerator {
   }
 
   codegenNode (node) {
-    console.log(node.attributes.type);
     switch (node.attributes.type) {
       case 'function':
         return this.codeGenFunction(node);
@@ -132,7 +131,6 @@ class CodeGenerator {
 
     // code gen expression
     const expr = this.codegenNode(retNode);
-    console.log(expr);
 
     this.builder.buildRet(expr);
   }
@@ -146,17 +144,13 @@ class CodeGenerator {
   }
 
   codegenInvocation (node, identifier = '') {
-    console.log('INVOKE', node, identifier);
     // look up function in module
     const funcRef = this.module.getNamedFunction(node.attributes.name);
 
     // build argument type list
     const argTypes = this.sourceGraph.relationFromNode(node, 'arguments').map((n) => {
-      console.log('!!!', n.attributes.type);
       return this.buildType(n);
     });
-
-    console.log('ARGTYPES', argTypes);
 
     const ref = this.builder.buildCall(funcRef, argTypes, identifier);
     if (identifier.length > 0) {

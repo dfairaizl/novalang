@@ -23,7 +23,7 @@ class BuildUnit {
   }
 
   emitObjectFile (machine) {
-    this.printIR();
+    // this.printIR();
     let error = ref.alloc(ref.refType(ref.types.char));
 
     libLLVM.LLVMTargetMachineEmitToFile(

@@ -9,7 +9,6 @@ const buildTargetMachine = require('./codegen/llvm/machine');
 
 class Compiler {
   constructor (entrySource, programName, options) {
-    console.log('entry', entrySource);
     this.baseDir = resolve(__dirname, '..', 'examples');
     this.buildDir = resolve(__dirname, '..', 'build');
 
