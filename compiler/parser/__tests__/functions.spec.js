@@ -274,6 +274,25 @@ describe('Parser', () => {
         }]
       });
     });
+
+    it('parses invocations with complex arguments', () => {
+      const parser = new Parser('assign({ x: 1 })');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'invocation',
+        name: 'assign',
+        arguments: [{
+          type: 'object_literal',
+          member: [{
+            type: 'object_key',
+            key: 'x',
+            value: [{ type: 'number_literal', kind: 'int', value: '1' }]
+          }]
+        }]
+      });
+    });
   });
 
   describe('return statements', () => {
