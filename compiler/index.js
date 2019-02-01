@@ -3,6 +3,7 @@ const { readFileSync } = require('fs');
 const { spawn } = require('child_process');
 
 const Parser = require('./parser');
+const Analyzer = require('./semantic/type-analyzer');
 const CodeGenerator = require('./codegen');
 const LLVMInit = require('./codegen/llvm');
 const buildTargetMachine = require('./codegen/llvm/machine');
@@ -44,6 +45,9 @@ class Compiler {
         const source = sourceGraph.relationFromNode(m, 'module');
         this.sources.push(`${source[0].attributes.value}.nv`);
       });
+
+      const typeAnalyzer = new Analyzer(sourceGraph);
+      typeAnalyzer.analyze();
 
       const codeGenerator = new CodeGenerator(this.buildDir, sourceFile, sourceGraph);
 
