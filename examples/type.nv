@@ -1,1 +1,3 @@
-const a = 1;
+function addOne (x) {
+  return x + 1
+}
