@@ -6,10 +6,18 @@ class BaseType {
 }
 
 class NumberType extends BaseType {}
+class StringType extends BaseType {}
 class BoolType extends BaseType {}
 class FunctionType extends BaseType {}
 
-class VariableType extends BaseType {}
+let varPlaceHolderIds = 0;
+class VariableType extends BaseType {
+  constructor () {
+    super('variable');
+
+    this.placeholder = ++varPlaceHolderIds;
+  }
+}
 
 class TypeAnalyzer {
   constructor (sourceGraph) {
@@ -43,8 +51,6 @@ class TypeAnalyzer {
       const node = e.target;
       this.analyzeNode(node);
     });
-
-    console.log('type analysis', require('util').inspect(this.sourceGraph.treeFromNode(codeModule), { depth: null }));
   }
 
   analyzeNode (node) {
@@ -53,8 +59,18 @@ class TypeAnalyzer {
         return this.typeGenVar(node);
       case 'number_literal':
         return this.typeGenNumber(node);
+      case 'string_literal':
+        return this.typeGenString(node);
+      case 'boolean_literal':
+        return this.typeGenBool(node);
+      case 'variable_reference':
+        return this.typeGenVariable(node);
       case 'function':
         return this.typeGenFunction(node);
+      case 'return_statement':
+        return this.typeGenReturn(node);
+      case 'bin_op':
+        return this.typeGenBinOp(node);
       default:
         console.log('Unknown expression', node.attributes.type);
     }
@@ -65,54 +81,71 @@ class TypeAnalyzer {
     let typeVal = this.analyzeNode(exprNode);
 
     // check against declared annotation if any
-    if (node.attributes.kind) {
-      // unify the types and update typeVal if constraints are solvable
-      const annotatedType = this.typeForAnnotation(node.attributes.kind);
-      this.unify(typeVal, annotatedType);
-    }
+    // if (node.attributes.kind) {
+    //   // unify the types and update typeVal if constraints are solvable
+    //   const annotatedType = this.typeForAnnotation(node.attributes.kind);
+    //   this.unify(typeVal, annotatedType);
+    // }
 
     // this node has the inferred type of its expression value
     node.attributes.kind = typeVal.kind;
   }
 
   typeGenFunction (node) {
-    const types = [];
-    const newNonGeneric = this.nonGeneric.slice();
+    // const types = [];
+    // deal with types of args
 
-    const args = this.sourceGraph.relationFromNode(node, 'arguments');
-    args.forEach((arg) => {
-      console.log('arg', arg.attributes);
-      const kind = arg.attributes.kind;
-      let type = null;
-
-      if (kind) {
-        type = this.typeForAnnotation(kind);
-      } else {
-        type = new VariableType();
-        newNonGeneric.push(type);
-      }
-
-      this.env[arg.attributes.name] = type;
-      types.push(type);
+    const nodes = this.sourceGraph.relationFromNode(node, 'body');
+    const typeCollection = nodes.map((n) => {
+      return this.analyzeNode(n);
     });
 
-    const value = this.sourceGraph.relationFromNode(node, 'body')[0];
-    const resultType = this.analyzeNode(value);
-    types.push(resultType);
+    // // check if function is annotated
+    //
+    // const funcType = new FunctionType('function', types);
+    // this.env[node.attributes.name] = funcType;
 
-    // check if function is annotated
+    const retType = typeCollection[typeCollection.length - 1];
+    node.attributes.kind = retType;
+    return retType;
+  }
 
-    const funcType = new FunctionType('function', types);
-    this.env[node.attributes.name] = funcType;
-    // node.attributes.kind = result
+  typeGenReturn (node) {
+    const expr = this.sourceGraph.relationFromNode(node, 'expression')[0];
+    return this.analyzeNode(expr);
+  }
 
-    console.log('!!!', funcType);
+  typeGenBinOp (node) {
+    const leftExpr = this.sourceGraph.relationFromNode(node, 'left')[0];
+    const rightExpr = this.sourceGraph.relationFromNode(node, 'right')[0];
 
-    return funcType;
+    const lhs = this.analyzeNode(leftExpr);
+    const rhs = this.analyzeNode(rightExpr);
+
+    // sicne we're in a binop, require the types on both sides be equal
+    if (lhs instanceof VariableType) {
+      return rhs.kind;
+    } else {
+      return lhs.kind;
+    }
+  }
+
+  typeGenVariable (node) {
+    // check for annotation?
+
+    return new VariableType();
   }
 
   typeGenNumber (node) {
     return new NumberType(node.attributes.kind);
+  }
+
+  typeGenBool (node) {
+    return new BoolType(node.attributes.kind);
+  }
+
+  typeGenString (node) {
+    return new StringType(node.attributes.kind);
   }
 
   // helpers
