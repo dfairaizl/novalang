@@ -1,3 +1,5 @@
+// https://bitbucket.org/puffnfresh/js-type-inference/src/85fd1df847cef50ca7ce5409434c136675fa61cb/typeinference.js?at=default&fileviewer=file-view-default
+
 // a typescript implement of hindley-milner type inference
 // reference http://smallshire.org.uk/sufficientlysmall/2010/04/11/a-hindley-milner-type-inference-implementation-in-python/
 

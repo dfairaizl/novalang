@@ -5,12 +5,12 @@ const Analyzer = require('./type-analyzer');
 
 describe('Parser', () => {
   describe('literal types', () => {
-    it('infers type of literal integer assignments', () => {
+    it.only('infers type of literal integer assignments', () => {
       const parser = new Parser('const x = 1');
-      const parsed = parser.parsePrimaryExpression();
+      const parsed = parser.parse();
 
-      const typeAnalyzer = new Analyzer(parser.sourceGraph);
-      typeAnalyzer.analyzeNode(parsed);
+      const typeAnalyzer = new Analyzer(parsed);
+      typeAnalyzer.analyze(parsed);
 
       expect(parsed.attributes).toEqual({
         type: 'immutable_declaration',
@@ -49,7 +49,7 @@ describe('Parser', () => {
   });
 
   describe('binop expressions', () => {
-    it.only('infers type of basic functions', () => {
+    it('infers type of basic functions', () => {
       const parser = new Parser('const y = 1 + 1 }');
       const parsed = parser.parsePrimaryExpression();
 
