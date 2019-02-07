@@ -324,9 +324,23 @@ class Parser {
       return null;
     }
 
-    const funcNode = this.sourceGraph.addNode({ type: 'function', name: funcIdentifier.value });
-
+    let funcNode;
     const args = this.parseFunctionArguments();
+    const funcKind = this.parseFunctionType();
+
+    if (funcKind) {
+      funcNode = this.sourceGraph.addNode({
+        type: 'function',
+        name: funcIdentifier.value,
+        kind: funcKind
+      });
+    } else {
+      funcNode = this.sourceGraph.addNode({
+        type: 'function',
+        name: funcIdentifier.value
+      });
+    }
+
     args.forEach((a) => {
       this.sourceGraph.addEdge(funcNode, a, 'arguments');
     });
@@ -346,6 +360,19 @@ class Parser {
     this.validateNextToken('}');
 
     return funcNode;
+  }
+
+  parseFunctionType () {
+    const token = this.peekNextToken();
+    if (token instanceof OperatorToken && token.value === '->') {
+      this.validateNextToken('->');
+
+      const typeToken = this.getNextToken();
+
+      return typeToken.value;
+    }
+
+    return null;
   }
 
   parseFunctionInvocation (funcIdentifier) {
@@ -556,7 +583,13 @@ class Parser {
 
       if (tok instanceof IdentifierToken) {
         const identifier = this.parseIdentifier();
-        expr = this.sourceGraph.addNode({ type: 'function_argument', identifier });
+        const kind = this.parseType();
+
+        if (kind) {
+          expr = this.sourceGraph.addNode({ type: 'function_argument', kind, identifier });
+        } else {
+          expr = this.sourceGraph.addNode({ type: 'function_argument', identifier });
+        }
       }
 
       if (expr) {

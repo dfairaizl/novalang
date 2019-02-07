@@ -131,6 +131,20 @@ describe('Parser', () => {
     });
   });
 
+  describe('return types', () => {
+    it('parses the kind of a function based on the annotation', () => {
+      const parser = new Parser('function incr(x) -> Int {}');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parsed.attributes).toEqual({
+        type: 'function',
+        name: 'incr',
+        kind: 'Int'
+      });
+    });
+  });
+
   describe('short-hand syntax (fat-arrow)', () => {
     it('parsers function delcarations', () => {
       const parser = new Parser('() => {}');

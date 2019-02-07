@@ -70,8 +70,13 @@ class TypeAnalyzer {
   }
 
   typeGenFunction (node) {
-    // const types = [];
-    // deal with types of args
+    const args = this.sourceGraph.relationFromNode(node, 'arguments');
+    args.forEach((arg) => {
+      console.log(arg.attributes);
+      if (!arg.attributes.kind) {
+        throw new Error(`Argument ${arg.attributes.identifier} in function ${node.attributes.name} must have a type`);
+      }
+    });
 
     const nodes = this.sourceGraph.relationFromNode(node, 'body');
     const typeCollection = nodes.map((n) => {
