@@ -1,21 +1,3 @@
-class BaseType {
-  constructor (kind, types = []) {
-    this.kind = kind;
-    this.types = types;
-  }
-}
-
-class NumberType extends BaseType {}
-class StringType extends BaseType {}
-class BoolType extends BaseType {}
-// class FunctionType extends BaseType {}
-
-class VariableType {
-  constructor (name) {
-    this.name = name;
-  }
-}
-
 class TypeAnalyzer {
   constructor (sourceGraph) {
     this.sourceGraph = sourceGraph;
@@ -25,21 +7,20 @@ class TypeAnalyzer {
     const t = this.sourceGraph.traverse();
     const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.type === 'module');
 
-    const adj = this.sourceGraph.adjacencyList[codeModule.id];
+    t.forEach(codeModule, (s) => { // dfs this expression
+      const ty = this.analyzeNode(s);
+      s.attributes.kind = ty;
+      console.log(s.attributes.type);
 
-    adj.edges.forEach((e) => {
-      const node = e.target;
-      t.iterate(node, (s) => { // dfs this expression
-        const ty = this.analyzeNode(s);
-        console.log(ty);
-      });
+      return s;
     });
   }
 
   analyzeNode (node) {
     switch (node.attributes.type) {
       case 'immutable_declaration':
-        return this.typeGenVar(node);
+        const r = this.typeGenVar(node);
+        return r;
       case 'number_literal':
         return this.typeGenNumber(node);
       case 'string_literal':
@@ -55,18 +36,16 @@ class TypeAnalyzer {
       case 'bin_op':
         return this.typeGenBinOp(node);
       default:
-        console.log('Unknown expression', node.attributes.type);
+        // console.log('Unknown expression', node.attributes.type);
     }
   }
 
   typeGenVar (node) {
-    // const exprNode = this.sourceGraph.relationFromNode(node, 'expression')[0];
-    // return this.analyzeNode(exprNode);
-
-    return new VariableType(node.attributes.identifier);
+    const exprNode = this.sourceGraph.relationFromNode(node, 'expression')[0];
+    const typeVal = this.analyzeNode(exprNode);
 
     // this node has the inferred type of its expression value
-    // node.attributes.kind = typeVal.kind;
+    return typeVal;
   }
 
   typeGenFunction (node) {
@@ -102,28 +81,29 @@ class TypeAnalyzer {
     const lhs = this.analyzeNode(leftExpr);
     const rhs = this.analyzeNode(rightExpr);
 
+    return rhs;
     // sicne we're in a binop, require the types on both sides be equal
-    if (lhs instanceof VariableType) {
-      return rhs.kind;
-    } else {
-      return lhs.kind;
-    }
+    // if (lhs instanceof VariableType) {
+    //   return rhs.kind;
+    // } else {
+    //   return lhs.kind;
+    // }
   }
 
   typeGenVariable (node) {
-    return new VariableType();
+    return node.identifier;
   }
 
   typeGenNumber (node) {
-    return new NumberType(node.attributes.kind);
+    return node.attributes.kind;
   }
 
   typeGenBool (node) {
-    return new BoolType(node.attributes.kind);
+    return node.attributes.kind;
   }
 
   typeGenString (node) {
-    return new StringType(node.attributes.kind);
+    return node.attributes.kind;
   }
 }
 

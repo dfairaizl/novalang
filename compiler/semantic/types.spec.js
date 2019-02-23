@@ -7,30 +7,22 @@ describe('Parser', () => {
   describe('literal types', () => {
     it.only('infers type of literal integer assignments', () => {
       const parser = new Parser('const x = 1');
-      const parsed = parser.parse();
+      const parsed = parser.parsePrimaryExpression();
 
-      const typeAnalyzer = new Analyzer(parsed);
-      typeAnalyzer.analyze(parsed);
+      const typeAnalyzer = new Analyzer(parser.sourceGraph);
+      const inferred = typeAnalyzer.analyzeNode(parsed);
 
-      expect(parsed.attributes).toEqual({
-        type: 'immutable_declaration',
-        kind: 'int',
-        identifier: 'x'
-      });
+      expect(inferred).toBe('int');
     });
 
-    it('infers type of literal string assignments', () => {
+    it.only('infers type of literal string assignments', () => {
       const parser = new Parser('const x = "hello world"');
       const parsed = parser.parsePrimaryExpression();
 
       const typeAnalyzer = new Analyzer(parser.sourceGraph);
-      typeAnalyzer.analyzeNode(parsed);
+      const inferred = typeAnalyzer.analyzeNode(parsed);
 
-      expect(parsed.attributes).toEqual({
-        type: 'immutable_declaration',
-        kind: 'string',
-        identifier: 'x'
-      });
+      expect(inferred).toBe('string');
     });
 
     it('infers type of literal boolean assignments', () => {

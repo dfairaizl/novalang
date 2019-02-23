@@ -32,6 +32,37 @@ class Iterator {
       this.dfs(entryNode, callback);
     }
   }
+
+  forEach (entryNode, callback) {
+    let startNode = null;
+
+    if (typeof entryNode === 'function') {
+      callback = entryNode;
+      startNode = this.graph.nodes[0];
+    } else {
+      startNode = entryNode;
+    }
+
+    let stack = [startNode];
+
+    while (stack.length > 0) {
+      let node = stack.pop();
+
+      // visit the node first
+      const ret = callback(node);
+      if (ret) {
+        this.graph.nodes[node.id] = ret;
+      }
+
+      this.visitCache[node.id] = true;
+
+      // get the adjacency list
+      const neighborsList = this.graph.adjacencyList[node.id];
+      const adjacentNodes = neighborsList.edges.map((edge) => edge.target);
+
+      stack = stack.concat(adjacentNodes.reverse());
+    }
+  }
 }
 
 module.exports = Iterator;
