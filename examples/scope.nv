@@ -1,0 +1,9 @@
+function checkArgumentBinding (argNode, refNode) {
+  if (refNode.attributes.type === 'variable_reference') {
+    if (refNode.attributes.identifier === argNode.attributes.identifier) {
+      return true;
+    }
+  }
+
+  return false;
+}

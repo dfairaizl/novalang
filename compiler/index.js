@@ -49,6 +49,10 @@ class Compiler {
       const scopeAnalyzer = new ScopeAnalyzer(sourceGraph);
       scopeAnalyzer.analyze();
 
+      if (this.options.debugGraph) {
+        sourceGraph.debug();
+      }
+
       const codeGenerator = new CodeGenerator(this.buildDir, sourceFile, sourceGraph);
 
       const buildUnit = codeGenerator.codegen();
