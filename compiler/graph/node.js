@@ -3,6 +3,10 @@ class Node {
     this.id = id;
     this.attributes = attributes;
   }
+
+  toString () {
+    return `${this.id}`;
+  }
 }
 
 module.exports = Node;

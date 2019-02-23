@@ -58,6 +58,14 @@ class Graph {
     return null;
   }
 
+  outgoing (fromNode) {
+    return this.adjacencyList[fromNode.id].edges.map((n) => n.target);
+  }
+
+  incoming (toNode) {
+    return this.edges.filter(e => e.source !== toNode.id).map(e => e.source);
+  }
+
   search (nodeAttrs) {
     const agg = [];
 

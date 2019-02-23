@@ -132,6 +132,30 @@ describe('Graph', () => {
     });
   });
 
+  describe('adjacency', () => {
+    it('returns a nodes outgoing edges', () => {
+      const graph = new Graph();
+
+      const node1 = graph.addNode({ name: 'node 1' });
+      const node2 = graph.addNode({ name: 'node 2' });
+
+      graph.addEdge(node1, node2, 'connection');
+
+      expect(graph.outgoing(node1)).toEqual([node2]);
+    });
+
+    it('returns a nodes incoming edges', () => {
+      const graph = new Graph();
+
+      const node1 = graph.addNode({ name: 'node 1' });
+      const node2 = graph.addNode({ name: 'node 2' });
+
+      graph.addEdge(node1, node2, 'connection');
+
+      expect(graph.incoming(node2)).toEqual([node1]);
+    });
+  });
+
   describe('relationships', () => {
     it('returns no nodes if no relation label found', () => {
       const graph = new Graph();
