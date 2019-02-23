@@ -32,6 +32,7 @@ describe('Scope Analyzer', () => {
         const x = 1;
         function addX() { return x + 1 };
       `);
+
       const sourceGraph = parser.parse();
 
       const scopeAnalyzer = new Analyzer(sourceGraph);
@@ -40,7 +41,9 @@ describe('Scope Analyzer', () => {
       const node = sourceGraph.search('variable_reference');
 
       expect(node[0].attributes.identifier).toBe('x');
-      expect(sourceGraph.relationFromNode(node[0], 'binding')).toBeDefined();
+      expect(sourceGraph.relationFromNode(node[0], 'binding')).toMatchObject([
+        { attributes: { type: 'immutable_declaration' } }
+      ]);
     });
 
     it('fails to use variable in a declaration expression', () => {
@@ -50,6 +53,46 @@ describe('Scope Analyzer', () => {
       const scopeAnalyzer = new Analyzer(sourceGraph);
 
       expect(() => scopeAnalyzer.analyze()).toThrow();
+    });
+  });
+
+  describe('function arguments', () => {
+    it('creates references to function arguments', () => {
+      const parser = new Parser(`
+        function addOne(z) { return z + 1 };
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const scopeAnalyzer = new Analyzer(sourceGraph);
+      scopeAnalyzer.analyze();
+
+      const node = sourceGraph.search('variable_reference');
+
+      expect(node[0].attributes.identifier).toBe('z');
+      expect(sourceGraph.relationFromNode(node[0], 'binding')).toMatchObject([
+        { attributes: { type: 'function_argument' } }
+      ]);
+    });
+  });
+
+  describe('function invocations', () => {
+    it('creates references to functions for invocations', () => {
+      const parser = new Parser(`
+        function addOne(z) { return z + 1 };
+        addOne(10);
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const scopeAnalyzer = new Analyzer(sourceGraph);
+      scopeAnalyzer.analyze();
+
+      const node = sourceGraph.search('invocation');
+
+      expect(sourceGraph.relationFromNode(node[0], 'function_binding')).toMatchObject([
+        { attributes: { type: 'function' } }
+      ]);
     });
   });
 });
