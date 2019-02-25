@@ -117,11 +117,17 @@ class Parser {
 
       right = this.parseExpression();
 
-      const binOp = this.sourceGraph.addNode({ type: 'bin_op', operator: operator.value });
-      this.sourceGraph.addEdge(binOp, left, 'left');
-      this.sourceGraph.addEdge(binOp, right, 'right');
+      let opNode = null;
+      if (operator.value === '=') {
+        opNode = this.sourceGraph.addNode({ type: 'assignment', operator: operator.value });
+      } else {
+        opNode = this.sourceGraph.addNode({ type: 'bin_op', operator: operator.value });
+      }
 
-      return binOp;
+      this.sourceGraph.addEdge(opNode, left, 'left');
+      this.sourceGraph.addEdge(opNode, right, 'right');
+
+      return opNode;
     }
 
     return left; // base case

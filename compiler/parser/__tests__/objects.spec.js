@@ -98,7 +98,7 @@ describe('Parser', () => {
       const parsed = parser.parsePrimaryExpression();
 
       expect(parser.toAST(parsed)).toEqual({
-        type: 'bin_op',
+        type: 'assignment',
         operator: '=',
         left: [{
           type: 'object_reference',
@@ -117,7 +117,7 @@ describe('Parser', () => {
       const parsed = parser.parsePrimaryExpression();
 
       expect(parser.toAST(parsed)).toEqual({
-        type: 'bin_op',
+        type: 'assignment',
         operator: '=',
         left: [{
           type: 'object_reference',
