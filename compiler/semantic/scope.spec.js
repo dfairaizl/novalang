@@ -5,8 +5,21 @@ const Analyzer = require('./scope-analyzer');
 
 describe('Scope Analyzer', () => {
   describe('variable declarations', () => {
-    it('creates bindings between declarations and references', () => {
+    it('creates bindings between immnutable declarations and references', () => {
       const parser = new Parser('const x = 1; const y = x + 1');
+      const sourceGraph = parser.parse();
+
+      const scopeAnalyzer = new Analyzer(sourceGraph);
+      scopeAnalyzer.analyze();
+
+      const node = sourceGraph.search('variable_reference');
+
+      expect(node[0].attributes.identifier).toBe('x');
+      expect(sourceGraph.relationFromNode(node[0], 'binding')).toBeDefined();
+    });
+
+    it('creates bindings between mutable declarations and references', () => {
+      const parser = new Parser('let x = 1; let y = x + 1');
       const sourceGraph = parser.parse();
 
       const scopeAnalyzer = new Analyzer(sourceGraph);

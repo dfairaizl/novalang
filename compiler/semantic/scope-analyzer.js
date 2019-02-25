@@ -15,6 +15,7 @@ class ScopeAnalyzer {
   analyzeNode (node) {
     switch (node.attributes.type) {
       case 'immutable_declaration':
+      case 'mutable_declaration':
         this.checkDeclarationUses(node);
         break;
       case 'function_argument':
