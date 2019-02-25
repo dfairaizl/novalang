@@ -1,3 +1,8 @@
+const {
+  ReassignImmutableError,
+  UndeclaredVariableError
+} = require('./errors');
+
 class ScopeAnalyzer {
   constructor (sourceGraph) {
     this.sourceGraph = sourceGraph;
@@ -26,6 +31,9 @@ class ScopeAnalyzer {
         break;
       case 'function':
         this.checkFunctionUses(node);
+        break;
+      case 'assignment':
+        this.checkAssignment(node);
         break;
       default:
     }
@@ -85,6 +93,18 @@ class ScopeAnalyzer {
     }
   }
 
+  // This check does not completely fit here - is there a better place
+  // in semantic analysis to keep checks like these?
+
+  checkAssignment (node) {
+    const left = this.sourceGraph.relationFromNode(node, 'left')[0];
+    const declNode = this.sourceGraph.relationFromNode(left, 'binding')[0];
+
+    if (declNode && declNode.attributes.type === 'immutable_declaration') {
+      throw new ReassignImmutableError(`Cannot reassign value to const \`${declNode.attributes.identifier}\``);
+    }
+  }
+
   checkDeclarationBinding (declNode, refNode) {
     if (refNode.attributes.type === 'variable_reference') {
       if (refNode.attributes.identifier === declNode.attributes.identifier) {
@@ -119,7 +139,7 @@ class ScopeAnalyzer {
     const bindingNode = this.sourceGraph.relationFromNode(node, 'binding');
 
     if (bindingNode.length === 0) {
-      throw new Error(`Use of undeclared variable \`${node.attributes.identifier}\``);
+      throw new UndeclaredVariableError(`Use of undeclared variable \`${node.attributes.identifier}\``);
     }
   }
 }

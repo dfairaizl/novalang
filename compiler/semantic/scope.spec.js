@@ -2,10 +2,27 @@
 
 const Parser = require('../parser');
 const Analyzer = require('./scope-analyzer');
+const {
+  ReassignImmutableError,
+  UndeclaredVariableError
+} = require('./errors');
 
 describe('Scope Analyzer', () => {
   describe('variable declarations', () => {
     it('creates bindings between immnutable declarations and references', () => {
+      const parser = new Parser('let x = 1; x = 2');
+      const sourceGraph = parser.parse();
+
+      const scopeAnalyzer = new Analyzer(sourceGraph);
+      scopeAnalyzer.analyze();
+
+      const node = sourceGraph.search('variable_reference');
+
+      expect(node[0].attributes.identifier).toBe('x');
+      expect(sourceGraph.relationFromNode(node[0], 'binding')).toBeDefined();
+    });
+
+    it('creates bindings between for multiple expressions', () => {
       const parser = new Parser('const x = 1; const y = x + 1');
       const sourceGraph = parser.parse();
 
@@ -37,7 +54,7 @@ describe('Scope Analyzer', () => {
 
       const scopeAnalyzer = new Analyzer(sourceGraph);
 
-      expect(() => scopeAnalyzer.analyze()).toThrow();
+      expect(() => scopeAnalyzer.analyze()).toThrowError(UndeclaredVariableError);
     });
 
     it('checks for bindings in a closure', () => {
@@ -65,7 +82,7 @@ describe('Scope Analyzer', () => {
 
       const scopeAnalyzer = new Analyzer(sourceGraph);
 
-      expect(() => scopeAnalyzer.analyze()).toThrow();
+      expect(() => scopeAnalyzer.analyze()).toThrowError(UndeclaredVariableError);
     });
   });
 
@@ -106,6 +123,18 @@ describe('Scope Analyzer', () => {
       expect(sourceGraph.relationFromNode(node[0], 'function_binding')).toMatchObject([
         { attributes: { type: 'function' } }
       ]);
+    });
+  });
+
+  describe('value assignments', () => {
+    it('checks for assignments to immnutable variables', () => {
+      const parser = new Parser(`const x = 1; x = 2;`);
+
+      const sourceGraph = parser.parse();
+
+      const scopeAnalyzer = new Analyzer(sourceGraph);
+
+      expect(() => scopeAnalyzer.analyze()).toThrowError(ReassignImmutableError);
     });
   });
 });
