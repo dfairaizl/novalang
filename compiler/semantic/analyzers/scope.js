@@ -1,7 +1,7 @@
 const {
   ReassignImmutableError,
   UndeclaredVariableError
-} = require('./errors');
+} = require('../errors');
 
 class ScopeAnalyzer {
   constructor (sourceGraph) {
