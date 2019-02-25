@@ -1,5 +1,4 @@
 const {
-  ReassignImmutableError,
   UndeclaredVariableError
 } = require('../errors');
 
@@ -31,9 +30,6 @@ class ScopeAnalyzer {
         break;
       case 'function':
         this.checkFunctionUses(node);
-        break;
-      case 'assignment':
-        this.checkAssignment(node);
         break;
       default:
     }
@@ -90,18 +86,6 @@ class ScopeAnalyzer {
     const refs = this.sourceGraph.relationFromNode(node, 'reference');
     if (refs.length === 0) {
       console.info(`WARNING: Function \`${node.attributes.name}\` has not been used`);
-    }
-  }
-
-  // This check does not completely fit here - is there a better place
-  // in semantic analysis to keep checks like these?
-
-  checkAssignment (node) {
-    const left = this.sourceGraph.relationFromNode(node, 'left')[0];
-    const declNode = this.sourceGraph.relationFromNode(left, 'binding')[0];
-
-    if (declNode && declNode.attributes.type === 'immutable_declaration') {
-      throw new ReassignImmutableError(`Cannot reassign value to const \`${declNode.attributes.identifier}\``);
     }
   }
 

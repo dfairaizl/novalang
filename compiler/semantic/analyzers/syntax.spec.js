@@ -17,5 +17,15 @@ describe('Syntax Analyzer', () => {
 
       expect(() => semanticAnalyzer.analyze()).toThrowError(ReassignImmutableError);
     });
+
+    it('checks for assignments to mutable variables', () => {
+      const parser = new Parser(`let x = 1; x = 2;`);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+
+      expect(() => semanticAnalyzer.analyze()).not.toThrowError(ReassignImmutableError);
+    });
   });
 });
