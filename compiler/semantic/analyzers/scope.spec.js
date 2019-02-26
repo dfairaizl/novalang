@@ -124,4 +124,46 @@ describe('Scope Analyzer', () => {
       ]);
     });
   });
+
+  describe('shadowing', () => {
+    it('creates bindings properly in scope with shadowed variables', () => {
+      const parser = new Parser(`
+        function addOne(z) { return z + 1 };
+        const z = addOne(1);
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const analyzer = new SemanticAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      const node = sourceGraph.search('variable_reference');
+
+      sourceGraph.debug();
+
+      expect(sourceGraph.relationFromNode(node[0], 'function_binding')).toMatchObject([
+        { attributes: { type: 'function' } }
+      ]);
+    });
+
+    it.only('creates bindings properly in scope with shadowed variables', () => {
+      const parser = new Parser(`
+        const z = 7;
+        function addOne(z) { return z + 1 };
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const analyzer = new SemanticAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      const node = sourceGraph.search('variable_reference');
+
+      sourceGraph.debug();
+
+      expect(sourceGraph.relationFromNode(node[0], 'function_binding')).toMatchObject([
+        { attributes: { type: 'function' } }
+      ]);
+    });
+  });
 });

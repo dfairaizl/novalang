@@ -63,7 +63,7 @@ class Graph {
   }
 
   incoming (toNode) {
-    return this.edges.filter(e => e.source !== toNode.id).map(e => e.source);
+    return this.edges.filter(e => e.target.id === toNode.id).map(e => e.source);
   }
 
   search (nodeAttrs) {
@@ -84,20 +84,29 @@ class Graph {
     return n.map((n) => n.target);
   }
 
-  treeFromNode (node) {
+  // refactor this to use DFS
+  treeFromNode (node, visitCache) {
     if (!node) {
       node = this.nodes.find((n) => n.attributes.type === 'module');
     }
 
+    if (!visitCache) {
+      visitCache = {};
+    }
+
     const adjList = this.adjacencyList[node.id];
     let t = node.attributes;
+
+    visitCache[node.id] = true;
 
     adjList.edges.forEach((e) => {
       if (!t[e.label]) {
         t[e.label] = [];
       }
 
-      t[e.label].push(this.treeFromNode(e.target));
+      if (!visitCache[e.target.id]) {
+        t[e.label].push(this.treeFromNode(e.target, visitCache));
+      }
     });
 
     return t;

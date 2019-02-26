@@ -38,10 +38,22 @@ class ScopeAnalyzer {
   checkDeclarationUses (node) {
     // from this node, DFS search related nodes to find variable_references
     const parent = this.sourceGraph.incoming(node);
-
     const iterator = this.sourceGraph.traverse();
+
     iterator.iterate(parent[0], (n) => {
+      if (n.attributes.type === 'function') {
+        // check to see if the args of this function will shadow the decl node
+        const args = this.sourceGraph.relationFromNode(n, 'arguments');
+
+        const shadowVars = args.filter((sn) => sn.attributes.identifier === node.attributes.identifier);
+        console.log(shadowVars);
+        // do we push shadowVars on to a scope stack...?
+        // detecting the vars here is useless because the var reference we are checking
+        // for is several iterations away still
+      }
+
       if (this.checkDeclarationBinding(node, n)) {
+        console.log('Binding', node, n);
         this.sourceGraph.addEdge(n, node, 'binding');
         this.sourceGraph.addEdge(node, n, 'reference');
       }
@@ -92,6 +104,13 @@ class ScopeAnalyzer {
   checkDeclarationBinding (declNode, refNode) {
     if (refNode.attributes.type === 'variable_reference') {
       if (refNode.attributes.identifier === declNode.attributes.identifier) {
+        const bindingNode = this.sourceGraph.relationFromNode(refNode, 'binding');
+
+        if (bindingNode.length === 1) {
+          console.log('ALREADY BOUND');
+          return false;
+        }
+
         return true;
       }
     }
