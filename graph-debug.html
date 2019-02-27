@@ -16,12 +16,12 @@
     <script type="text/javascript">
         // create an array with nodes
         var nodes = new vis.DataSet(
-          [{"id":"d83114f0-7c87-44c6-9ae1-5fe222da7bbb","label":"module"},{"id":"2f10c058-d9a8-4a09-9e59-8d8c5ced8fc1","label":"immutable_declaration"},{"id":"36d1e1f5-1346-449a-9f6f-6356b5af0fa3","label":"number_literal"},{"id":"c578ad2c-ab63-43e4-8ee6-2733b75bea83","label":"function_argument"},{"id":"40f30e48-5772-4e74-b435-9f6e1c416ce7","label":"function"},{"id":"56f109d6-6101-449c-84c8-dd4038ea185a","label":"return_statement"},{"id":"6cceed93-47aa-4a0d-af4f-6fb1db76b99b","label":"variable_reference"},{"id":"e3d3f3f8-6f68-4ba2-a0ab-0e3eb6a1c723","label":"number_literal"},{"id":"cef93eff-b4a0-4a18-bf94-2380dac610fa","label":"bin_op"}]
+            [{"id":"3b514af4-d5f9-468d-808d-dff8ead4af00","label":"module"},{"id":"26663cb0-63f2-413b-9e6c-22bf79223806","label":"immutable_declaration"},{"id":"6c46434e-dfe1-4ee9-a4b1-24ba3b12d298","label":"number_literal"},{"id":"0d0a54ad-d3ba-444e-b1c6-0a28a0754561","label":"function"},{"id":"5a8c0317-c036-4412-8ec0-810046f14b1f","label":"mutable_declaration"},{"id":"2ea965ec-fc86-42d8-82b6-547871711aeb","label":"number_literal"},{"id":"c78049e2-f686-427c-91b6-d7dbb5930bcd","label":"return_statement"},{"id":"a89dc1f7-2dd8-4e4a-b05a-9d69178aab4d","label":"variable_reference"},{"id":"8b428cca-e011-41fe-a7e3-2dff0599e695","label":"number_literal"},{"id":"8308a5cd-3a2b-4439-98d7-334441cfe2fa","label":"bin_op"}]
         );
 
         // create an array with edges
         var edges = new vis.DataSet(
-          [{"from":"d83114f0-7c87-44c6-9ae1-5fe222da7bbb","to":"2f10c058-d9a8-4a09-9e59-8d8c5ced8fc1","label":"sources","arrows":"to"},{"from":"d83114f0-7c87-44c6-9ae1-5fe222da7bbb","to":"40f30e48-5772-4e74-b435-9f6e1c416ce7","label":"sources","arrows":"to"},{"from":"2f10c058-d9a8-4a09-9e59-8d8c5ced8fc1","to":"36d1e1f5-1346-449a-9f6f-6356b5af0fa3","label":"expression","arrows":"to"},{"from":"2f10c058-d9a8-4a09-9e59-8d8c5ced8fc1","to":"6cceed93-47aa-4a0d-af4f-6fb1db76b99b","label":"reference","arrows":"to"},{"from":"c578ad2c-ab63-43e4-8ee6-2733b75bea83","to":"6cceed93-47aa-4a0d-af4f-6fb1db76b99b","label":"reference","arrows":"to"},{"from":"40f30e48-5772-4e74-b435-9f6e1c416ce7","to":"c578ad2c-ab63-43e4-8ee6-2733b75bea83","label":"arguments","arrows":"to"},{"from":"40f30e48-5772-4e74-b435-9f6e1c416ce7","to":"56f109d6-6101-449c-84c8-dd4038ea185a","label":"body","arrows":"to"},{"from":"56f109d6-6101-449c-84c8-dd4038ea185a","to":"cef93eff-b4a0-4a18-bf94-2380dac610fa","label":"expression","arrows":"to"},{"from":"6cceed93-47aa-4a0d-af4f-6fb1db76b99b","to":"2f10c058-d9a8-4a09-9e59-8d8c5ced8fc1","label":"binding","arrows":"to"},{"from":"6cceed93-47aa-4a0d-af4f-6fb1db76b99b","to":"c578ad2c-ab63-43e4-8ee6-2733b75bea83","label":"binding","arrows":"to"},{"from":"cef93eff-b4a0-4a18-bf94-2380dac610fa","to":"6cceed93-47aa-4a0d-af4f-6fb1db76b99b","label":"left","arrows":"to"},{"from":"cef93eff-b4a0-4a18-bf94-2380dac610fa","to":"e3d3f3f8-6f68-4ba2-a0ab-0e3eb6a1c723","label":"right","arrows":"to"}]
+            [{"from":"3b514af4-d5f9-468d-808d-dff8ead4af00","to":"26663cb0-63f2-413b-9e6c-22bf79223806","label":"sources","arrows":"to"},{"from":"3b514af4-d5f9-468d-808d-dff8ead4af00","to":"0d0a54ad-d3ba-444e-b1c6-0a28a0754561","label":"sources","arrows":"to"},{"from":"26663cb0-63f2-413b-9e6c-22bf79223806","to":"6c46434e-dfe1-4ee9-a4b1-24ba3b12d298","label":"expression","arrows":"to"},{"from":"0d0a54ad-d3ba-444e-b1c6-0a28a0754561","to":"5a8c0317-c036-4412-8ec0-810046f14b1f","label":"body","arrows":"to"},{"from":"0d0a54ad-d3ba-444e-b1c6-0a28a0754561","to":"c78049e2-f686-427c-91b6-d7dbb5930bcd","label":"body","arrows":"to"},{"from":"5a8c0317-c036-4412-8ec0-810046f14b1f","to":"2ea965ec-fc86-42d8-82b6-547871711aeb","label":"expression","arrows":"to"},{"from":"5a8c0317-c036-4412-8ec0-810046f14b1f","to":"a89dc1f7-2dd8-4e4a-b05a-9d69178aab4d","label":"reference","arrows":"to"},{"from":"c78049e2-f686-427c-91b6-d7dbb5930bcd","to":"8308a5cd-3a2b-4439-98d7-334441cfe2fa","label":"expression","arrows":"to"},{"from":"a89dc1f7-2dd8-4e4a-b05a-9d69178aab4d","to":"5a8c0317-c036-4412-8ec0-810046f14b1f","label":"binding","arrows":"to"},{"from":"8308a5cd-3a2b-4439-98d7-334441cfe2fa","to":"a89dc1f7-2dd8-4e4a-b05a-9d69178aab4d","label":"left","arrows":"to"},{"from":"8308a5cd-3a2b-4439-98d7-334441cfe2fa","to":"8b428cca-e011-41fe-a7e3-2dff0599e695","label":"right","arrows":"to"}]
         );
 
         // create a network
@@ -31,17 +31,6 @@
         var data = {
             nodes: nodes,
             edges: edges
-        };
-
-        var options = {
-          layout: {
-            hierarchical: {
-              enabled: true,
-              sortMethod: 'directed',
-              nodeSpacing: 300,
-              levelSeparation: 100
-            }
-          }
         };
 
         // initialize your network!

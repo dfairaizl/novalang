@@ -112,11 +112,8 @@ class Graph {
     return t;
   }
 
-  traverse (startNode = null, depth) {
-    return new Iterator(this, {
-      startNode,
-      depth
-    });
+  traverse (options) {
+    return new Iterator(this, options);
   }
 
   /* istanbul ignore next */

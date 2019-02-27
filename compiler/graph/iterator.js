@@ -1,6 +1,10 @@
 class Iterator {
   constructor (graph, options) {
     this.graph = graph;
+    this.options = {
+      ...options
+    };
+
     this.visitCache = {};
   }
 

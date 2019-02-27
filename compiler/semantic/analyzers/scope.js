@@ -1,4 +1,5 @@
 const {
+  FunctionNotFoundError,
   UndeclaredVariableError
 } = require('../errors');
 
@@ -9,141 +10,127 @@ class ScopeAnalyzer {
 
   analyze () {
     const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.type === 'module');
-    const iterator = this.sourceGraph.traverse(codeModule);
 
-    iterator.iterate((node) => {
-      this.analyzeNode(node);
+    this.analyzeReferences(codeModule);
+    this.analyzeDeclarations(codeModule);
+    this.analyzeInvocations(codeModule);
+    this.analyzeFunctions(codeModule);
+  }
+
+  analyzeReferences (node) {
+    const iterator = this.sourceGraph.traverse(node);
+    iterator.iterate((n) => {
+      if (n.attributes.type === 'variable_reference') {
+        this.checkReference(n);
+      }
     });
   }
 
-  analyzeNode (node) {
-    switch (node.attributes.type) {
-      case 'immutable_declaration':
-      case 'mutable_declaration':
-        this.checkDeclarationUses(node);
-        break;
-      case 'function_argument':
-        this.checkArgUses(node);
-        break;
-      case 'variable_reference':
-        this.checkReference(node);
-        break;
-      case 'function':
-        this.checkFunctionUses(node);
-        break;
-      default:
-    }
+  analyzeDeclarations (node) {
+    const iterator = this.sourceGraph.traverse(node);
+    iterator.iterate((n) => {
+      if (n.attributes.type === 'immutable_declaration' || n.attributes.type === 'mutable_declaration') {
+        this.checkDeclaration(n);
+      }
+    });
   }
 
-  checkDeclarationUses (node) {
-    // from this node, DFS search related nodes to find variable_references
-    const parent = this.sourceGraph.incoming(node);
-    const iterator = this.sourceGraph.traverse();
+  analyzeInvocations (node) {
+    const iterator = this.sourceGraph.traverse(node);
+    iterator.iterate((n) => {
+      if (n.attributes.type === 'invocation') {
+        this.checkInvocation(n);
+      }
+    });
+  }
 
-    iterator.iterate(parent[0], (n) => {
+  analyzeFunctions (node) {
+    const iterator = this.sourceGraph.traverse(node);
+    iterator.iterate((n) => {
       if (n.attributes.type === 'function') {
-        // check to see if the args of this function will shadow the decl node
-        const args = this.sourceGraph.relationFromNode(n, 'arguments');
-
-        const shadowVars = args.filter((sn) => sn.attributes.identifier === node.attributes.identifier);
-        console.log(shadowVars);
-        // do we push shadowVars on to a scope stack...?
-        // detecting the vars here is useless because the var reference we are checking
-        // for is several iterations away still
-      }
-
-      if (this.checkDeclarationBinding(node, n)) {
-        console.log('Binding', node, n);
-        this.sourceGraph.addEdge(n, node, 'binding');
-        this.sourceGraph.addEdge(node, n, 'reference');
+        this.checkFunction(n);
       }
     });
+  }
 
+  checkDeclaration (node) {
     const refs = this.sourceGraph.relationFromNode(node, 'reference');
     if (refs.length === 0) {
       console.info(`WARNING: Variable declaration \`${node.attributes.identifier}\` has not been used`);
     }
   }
 
-  checkArgUses (node) {
-    // from this node, DFS search related nodes to find variable_references
-    const parent = this.sourceGraph.incoming(node);
+  checkInvocation (node) {
+    // try find the closest declaration that matches
+    const scopeNodes = this.buildSymbolTable(node);
+    const declNode = scopeNodes.find((n) => n.attributes.name === node.attributes.name);
 
-    const iterator = this.sourceGraph.traverse();
-    iterator.iterate(parent[0], (n) => {
-      if (this.checkArgumentBinding(node, n)) {
-        this.sourceGraph.addEdge(n, node, 'binding');
-        this.sourceGraph.addEdge(node, n, 'reference');
-      }
-    });
-
-    const refs = this.sourceGraph.relationFromNode(node, 'reference');
-    if (refs.length === 0) {
-      console.info(`WARNING: Function argument \`${node.attributes.identifier}\` has not been used`);
+    if (!declNode) {
+      throw new FunctionNotFoundError(`Use of undeclared function \`${node.attributes.name}\``);
     }
+
+    this.sourceGraph.addEdge(node, declNode, 'binding');
+    this.sourceGraph.addEdge(declNode, node, 'reference');
   }
 
-  checkFunctionUses (node) {
-    // from this node, DFS search related nodes to find variable_references
-    const parent = this.sourceGraph.incoming(node);
+  checkReference (node) {
+    // try find the closest declaration that matches
+    const scopeNodes = this.buildSymbolTable(node);
 
-    const iterator = this.sourceGraph.traverse();
-    iterator.iterate(parent[0], (n) => {
-      if (this.checkFunctionBinding(node, n)) {
-        this.sourceGraph.addEdge(n, node, 'function_binding');
-        this.sourceGraph.addEdge(node, n, 'reference');
-      }
-    });
+    const declNode = scopeNodes.find((n) => n.attributes.identifier === node.attributes.identifier);
 
+    if (!declNode) {
+      throw new UndeclaredVariableError(`Use of undeclared variable \`${node.attributes.identifier}\``);
+    }
+
+    this.sourceGraph.addEdge(node, declNode, 'binding');
+    this.sourceGraph.addEdge(declNode, node, 'reference');
+  }
+
+  checkFunction (node) {
     const refs = this.sourceGraph.relationFromNode(node, 'reference');
     if (refs.length === 0) {
       console.info(`WARNING: Function \`${node.attributes.name}\` has not been used`);
     }
   }
 
-  checkDeclarationBinding (declNode, refNode) {
-    if (refNode.attributes.type === 'variable_reference') {
-      if (refNode.attributes.identifier === declNode.attributes.identifier) {
-        const bindingNode = this.sourceGraph.relationFromNode(refNode, 'binding');
+  buildSymbolTable (node) {
+    // basic algorithm
+    // 1. given node, collect all child nodes
+    // 2. find node's parent
+    // 3. repeat until there is no parent to a node
 
-        if (bindingNode.length === 1) {
-          console.log('ALREADY BOUND');
-          return false;
-        }
+    const scopeNodes = [];
+    const visited = {};
 
-        return true;
+    const walk = (node) => {
+      visited[node.id] = true;
+
+      const parent = this.sourceGraph.incoming(node);
+      if (parent[0]) {
+        this.sourceGraph.outgoing(parent[0]).forEach((n) => {
+          if (!visited[n.id]) {
+            if (this.scopable(n)) {
+              scopeNodes.push(n);
+            }
+          }
+        });
+
+        return walk(parent[0], scopeNodes);
       }
-    }
 
-    return false;
+      return scopeNodes;
+    };
+
+    return walk(node);
   }
 
-  checkArgumentBinding (argNode, refNode) {
-    if (refNode.attributes.type === 'variable_reference') {
-      if (refNode.attributes.identifier === argNode.attributes.identifier) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  checkFunctionBinding (argNode, refNode) {
-    if (refNode.attributes.type === 'invocation') {
-      if (refNode.attributes.identifier === argNode.attributes.identifier) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  checkReference (node) {
-    const bindingNode = this.sourceGraph.relationFromNode(node, 'binding');
-
-    if (bindingNode.length === 0) {
-      throw new UndeclaredVariableError(`Use of undeclared variable \`${node.attributes.identifier}\``);
-    }
+  scopable (node) {
+    return node.attributes.type === 'immutable_declaration' ||
+      node.attributes.type === 'function_argument' ||
+      node.attributes.type === 'mutable_declaration' ||
+      node.attributes.type === 'immutable_declaration' ||
+      node.attributes.type === 'function';
   }
 }
 

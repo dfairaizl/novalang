@@ -3,63 +3,71 @@
 const Parser = require('../../parser');
 const SemanticAnalyzer = require('..');
 const {
+  FunctionNotFoundError,
   UndeclaredVariableError
 } = require('../errors');
 
 describe('Scope Analyzer', () => {
-  describe('variable declarations', () => {
-    it('creates bindings between immnutable declarations and references', () => {
-      const parser = new Parser('let x = 1; x = 2');
+  describe('variable references', () => {
+    it('throws an exception for use of undeclared variables', () => {
+      const parser = new Parser(`
+        let z = 1; y + 1;
+      `);
+
       const sourceGraph = parser.parse();
 
       const analyzer = new SemanticAnalyzer(sourceGraph);
-      analyzer.analyze();
-
-      const node = sourceGraph.search('variable_reference');
-
-      expect(node[0].attributes.identifier).toBe('x');
-      expect(sourceGraph.relationFromNode(node[0], 'binding')).toBeDefined();
-    });
-
-    it('creates bindings between for multiple expressions', () => {
-      const parser = new Parser('const x = 1; const y = x + 1');
-      const sourceGraph = parser.parse();
-
-      const analyzer = new SemanticAnalyzer(sourceGraph);
-      analyzer.analyze();
-
-      const node = sourceGraph.search('variable_reference');
-
-      expect(node[0].attributes.identifier).toBe('x');
-      expect(sourceGraph.relationFromNode(node[0], 'binding')).toBeDefined();
-    });
-
-    it('creates bindings between mutable declarations and references', () => {
-      const parser = new Parser('let x = 1; let y = x + 1');
-      const sourceGraph = parser.parse();
-
-      const analyzer = new SemanticAnalyzer(sourceGraph);
-      analyzer.analyze();
-
-      const node = sourceGraph.search('variable_reference');
-
-      expect(node[0].attributes.identifier).toBe('x');
-      expect(sourceGraph.relationFromNode(node[0], 'binding')).toBeDefined();
-    });
-
-    it('checks for bindings before variable can be used', () => {
-      const parser = new Parser('x = 1');
-      const sourceGraph = parser.parse();
-
-      const analyzer = new SemanticAnalyzer(sourceGraph);
-
       expect(() => analyzer.analyze()).toThrowError(UndeclaredVariableError);
     });
 
-    it('checks for bindings in a closure', () => {
+    it('it binds references to a declaration', () => {
       const parser = new Parser(`
-        const x = 1;
-        function addX() { return x + 1 };
+        let z = 1; z + 1;
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const ref = sourceGraph.search('variable_reference');
+      const decl = sourceGraph.search('mutable_declaration');
+
+      const analyzer = new SemanticAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      expect(sourceGraph.relationFromNode(ref[0], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration' } }
+      ]);
+
+      expect(sourceGraph.relationFromNode(decl[0], 'reference')).toMatchObject([
+        { attributes: { type: 'variable_reference' } }
+      ]);
+    });
+
+    it('it binds references to a multiple declarations', () => {
+      const parser = new Parser(`
+        let x = 1; x + 1;
+        let y = 2; y + 2;
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const ref = sourceGraph.search('variable_reference');
+
+      const analyzer = new SemanticAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      expect(sourceGraph.relationFromNode(ref[0], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration', identifier: 'x' } }
+      ]);
+
+      expect(sourceGraph.relationFromNode(ref[1], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration', identifier: 'y' } }
+      ]);
+    });
+
+    it('it binds references to declarations in a nested scope', () => {
+      const parser = new Parser(`
+        const z = 7;
+        function addZ() { return z + 1 };
       `);
 
       const sourceGraph = parser.parse();
@@ -69,24 +77,54 @@ describe('Scope Analyzer', () => {
 
       const node = sourceGraph.search('variable_reference');
 
-      expect(node[0].attributes.identifier).toBe('x');
       expect(sourceGraph.relationFromNode(node[0], 'binding')).toMatchObject([
         { attributes: { type: 'immutable_declaration' } }
       ]);
     });
 
-    it('fails to use variable in a declaration expression', () => {
-      const parser = new Parser('x = x + 1');
+    it('it binds references to nearest declaration for shadowed variables', () => {
+      const parser = new Parser(`
+        const z = 7;
+        function addZ() {
+          let z = 2;
+          return z + 1
+        };
+      `);
+
       const sourceGraph = parser.parse();
 
       const analyzer = new SemanticAnalyzer(sourceGraph);
+      analyzer.analyze();
 
-      expect(() => analyzer.analyze()).toThrowError(UndeclaredVariableError);
+      const node = sourceGraph.search('variable_reference');
+
+      expect(sourceGraph.relationFromNode(node[0], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration' } } // inner `z` is mutable in this case
+      ]);
+    });
+  });
+
+  describe('variable declarations', () => {
+    it('binds references to function arguments', () => {
+      const parser = new Parser(`
+        let z = 1; z + 1;
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const ref = sourceGraph.search('mutable_declaration');
+
+      const analyzer = new SemanticAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      expect(sourceGraph.relationFromNode(ref[0], 'reference')).toMatchObject([
+        { attributes: { type: 'variable_reference' } }
+      ]);
     });
   });
 
   describe('function arguments', () => {
-    it('creates references to function arguments', () => {
+    it('it binds references to function arguments', () => {
       const parser = new Parser(`
         function addOne(z) { return z + 1 };
       `);
@@ -98,7 +136,6 @@ describe('Scope Analyzer', () => {
 
       const node = sourceGraph.search('variable_reference');
 
-      expect(node[0].attributes.identifier).toBe('z');
       expect(sourceGraph.relationFromNode(node[0], 'binding')).toMatchObject([
         { attributes: { type: 'function_argument' } }
       ]);
@@ -106,10 +143,21 @@ describe('Scope Analyzer', () => {
   });
 
   describe('function invocations', () => {
-    it('creates references to functions for invocations', () => {
+    it('throws an exception invoking  undeclared functions', () => {
       const parser = new Parser(`
-        function addOne(z) { return z + 1 };
-        addOne(10);
+        addOne(5);
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const analyzer = new SemanticAnalyzer(sourceGraph);
+      expect(() => analyzer.analyze()).toThrowError(FunctionNotFoundError);
+    });
+
+    it('it binds function declaration to invocations', () => {
+      const parser = new Parser(`
+        addOne(1);
+        function addOne() { };
       `);
 
       const sourceGraph = parser.parse();
@@ -119,50 +167,28 @@ describe('Scope Analyzer', () => {
 
       const node = sourceGraph.search('invocation');
 
-      expect(sourceGraph.relationFromNode(node[0], 'function_binding')).toMatchObject([
-        { attributes: { type: 'function' } }
+      expect(sourceGraph.relationFromNode(node[0], 'binding')).toMatchObject([
+        { attributes: { type: 'function', name: 'addOne' } }
       ]);
     });
   });
 
-  describe('shadowing', () => {
-    it('creates bindings properly in scope with shadowed variables', () => {
+  describe('function declarations', () => {
+    it('binds references to function declarations', () => {
       const parser = new Parser(`
-        function addOne(z) { return z + 1 };
-        const z = addOne(1);
+        addOne(1);
+        function addOne() { };
       `);
 
       const sourceGraph = parser.parse();
 
-      const analyzer = new SemanticAnalyzer(sourceGraph);
-      analyzer.analyze();
-
-      const node = sourceGraph.search('variable_reference');
-
-      sourceGraph.debug();
-
-      expect(sourceGraph.relationFromNode(node[0], 'function_binding')).toMatchObject([
-        { attributes: { type: 'function' } }
-      ]);
-    });
-
-    it.only('creates bindings properly in scope with shadowed variables', () => {
-      const parser = new Parser(`
-        const z = 7;
-        function addOne(z) { return z + 1 };
-      `);
-
-      const sourceGraph = parser.parse();
+      const ref = sourceGraph.search('function');
 
       const analyzer = new SemanticAnalyzer(sourceGraph);
       analyzer.analyze();
 
-      const node = sourceGraph.search('variable_reference');
-
-      sourceGraph.debug();
-
-      expect(sourceGraph.relationFromNode(node[0], 'function_binding')).toMatchObject([
-        { attributes: { type: 'function' } }
+      expect(sourceGraph.relationFromNode(ref[0], 'reference')).toMatchObject([
+        { attributes: { type: 'invocation' } }
       ]);
     });
   });
