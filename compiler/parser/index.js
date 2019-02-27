@@ -474,20 +474,23 @@ class Parser {
     if (token instanceof OperatorToken && token.value === '=') {
       this.validateNextToken('=');
 
-      declareNode = this.sourceGraph.addNode({
-        type: nodeType,
-        identifier
-      });
+      if (kind) {
+        declareNode = this.sourceGraph.addNode({
+          type: nodeType,
+          kind, // can be null and inferred from the expression
+          identifier
+        });
+      } else {
+        declareNode = this.sourceGraph.addNode({
+          type: nodeType,
+          identifier
+        });
+      }
 
       const assignmentExpr = this.parsePrimaryExpression();
       this.sourceGraph.addEdge(declareNode, assignmentExpr, 'expression');
 
       return declareNode;
-    }
-
-    // no assignment expression, type is required
-    if (!kind) {
-      return null;
     }
 
     return this.sourceGraph.addNode({
