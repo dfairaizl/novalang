@@ -22,6 +22,9 @@ class TypeAnalyzer {
       case 'immutable_declaration':
         this.inferType(node);
         break;
+      case 'function':
+        this.inferFunctionType(node);
+        break;
       case 'mutable_declaration':
         this.checkType(node);
         break;
@@ -43,6 +46,19 @@ class TypeAnalyzer {
 
       const typeNode = this.buildType(expr.attributes.kind);
       this.sourceGraph.addEdge(node, typeNode, 'type');
+    }
+  }
+
+  inferFunctionType (node) {
+    const bodyNode = this.sourceGraph.relationFromNode(node, 'body')[0];
+    // do we have a return type?
+
+    const ret = this.sourceGraph.relationFromNode(bodyNode, 'return_statement')[0];
+    if (!ret) {
+      const typeNode = this.buildType('void');
+      this.sourceGraph.addEdge(node, typeNode, 'type');
+    } else {
+
     }
   }
 

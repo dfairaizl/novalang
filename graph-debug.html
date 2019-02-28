@@ -16,12 +16,12 @@
     <script type="text/javascript">
         // create an array with nodes
         var nodes = new vis.DataSet(
-          [{"id":"4dc6b7f0-fda8-4c87-9bab-b5cc642c6529","label":"module"},{"id":"9197daeb-e70d-474b-af28-5cee47ddbdfd","label":"immutable_declaration"},{"id":"173d7b67-4d0e-42ad-baab-0b81d975111b","label":"number_literal"},{"id":"3957e3df-9742-48dc-8311-dadab06be520","label":"type"}]
+           [{"id":"052096eb-84d2-4f50-9ead-78a30843ac64","label":"module"},{"id":"ea9b7828-68ce-487d-a01c-3e41410b75d1","label":"function"},{"id":"7fc56856-9741-46ca-9207-80f66493ec1e","label":"return_statement"},{"id":"c5afae0d-7136-4b59-b3ef-9f0e65b9c84d","label":"number_literal"},{"id":"ec27119e-5727-4e71-862f-affafb99b341","label":"number_literal"},{"id":"b3454de3-28a3-4a7d-a59b-8528849257be","label":"bin_op"}]
         );
 
         // create an array with edges
         var edges = new vis.DataSet(
-           [{"from":"4dc6b7f0-fda8-4c87-9bab-b5cc642c6529","to":"9197daeb-e70d-474b-af28-5cee47ddbdfd","label":"sources","arrows":"to"},{"from":"9197daeb-e70d-474b-af28-5cee47ddbdfd","to":"173d7b67-4d0e-42ad-baab-0b81d975111b","label":"expression","arrows":"to"},{"from":"9197daeb-e70d-474b-af28-5cee47ddbdfd","to":"3957e3df-9742-48dc-8311-dadab06be520","label":"type","arrows":"to"}]
+           [{"from":"052096eb-84d2-4f50-9ead-78a30843ac64","to":"ea9b7828-68ce-487d-a01c-3e41410b75d1","label":"sources","arrows":"to"},{"from":"ea9b7828-68ce-487d-a01c-3e41410b75d1","to":"7fc56856-9741-46ca-9207-80f66493ec1e","label":"body","arrows":"to"},{"from":"7fc56856-9741-46ca-9207-80f66493ec1e","to":"b3454de3-28a3-4a7d-a59b-8528849257be","label":"expression","arrows":"to"},{"from":"b3454de3-28a3-4a7d-a59b-8528849257be","to":"c5afae0d-7136-4b59-b3ef-9f0e65b9c84d","label":"left","arrows":"to"},{"from":"b3454de3-28a3-4a7d-a59b-8528849257be","to":"ec27119e-5727-4e71-862f-affafb99b341","label":"right","arrows":"to"}]
         );
 
         // create a network

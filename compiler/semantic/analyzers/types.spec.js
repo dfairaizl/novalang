@@ -100,6 +100,36 @@ describe('Type Analyzer', () => {
     });
   });
 
+  describe('functions', () => {
+    it('checks type of function with no return value', () => {
+      const parser = new Parser('function doNothing() { 1 + 1 }');
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const decl = sourceGraph.search('function');
+      const type = sourceGraph.relationFromNode(decl[0], 'type');
+
+      expect(type[0].attributes).toMatchObject({ kind: 'void' });
+    });
+
+    it.only('checks type of function by inference', () => {
+      const parser = new Parser('function add() { return 1 + 1 }');
+      const sourceGraph = parser.parse();
+
+      sourceGraph.debug();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const decl = sourceGraph.search('function');
+      const type = sourceGraph.relationFromNode(decl[0], 'type');
+
+      expect(type[0].attributes).toMatchObject({ kind: 'int' });
+    });
+  });
+
   describe('type casting', () => {
     it('does not allow mismatched primitives', () => {
       const parser = new Parser('let x: int = true');
