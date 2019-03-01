@@ -2,6 +2,7 @@ class Iterator {
   constructor (graph, options) {
     this.graph = graph;
     this.options = {
+      order: 'preorder',
       ...options
     };
 
@@ -10,7 +11,10 @@ class Iterator {
 
   dfs (source, callback) {
     this.visitCache[source.id] = true;
-    callback(source);
+
+    if (this.options.order === 'preorder') {
+      callback(source);
+    }
 
     // get the adjacency list
     const neighborsList = this.graph.adjacencyList[source.id];
@@ -21,6 +25,10 @@ class Iterator {
         this.dfs(edge.target, callback);
       }
     });
+
+    if (this.options.order === 'postorder') {
+      callback(source);
+    }
   }
 
   iterate (entryNode, callback) {

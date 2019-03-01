@@ -98,9 +98,24 @@ describe('Type Analyzer', () => {
 
       expect(type[0].attributes).toMatchObject({ kind: 'int' });
     });
+
+    it.only('checks types for literal expressions by inference', () => {
+      const parser = new Parser('const a = 1; let x = a');
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      sourceGraph.debug();
+
+      const decl = sourceGraph.search('mutable_declaration');
+      const type = sourceGraph.relationFromNode(decl[0], 'type');
+
+      expect(type[0].attributes).toMatchObject({ kind: 'int' });
+    });
   });
 
-  describe('functions', () => {
+  describe.skip('functions', () => {
     it('checks type of function with no return value', () => {
       const parser = new Parser('function doNothing() { 1 + 1 }');
       const sourceGraph = parser.parse();
@@ -114,11 +129,9 @@ describe('Type Analyzer', () => {
       expect(type[0].attributes).toMatchObject({ kind: 'void' });
     });
 
-    it.only('checks type of function by inference', () => {
+    it('checks type of function by inference', () => {
       const parser = new Parser('function add() { return 1 + 1 }');
       const sourceGraph = parser.parse();
-
-      sourceGraph.debug();
 
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();

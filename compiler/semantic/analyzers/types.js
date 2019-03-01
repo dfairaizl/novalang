@@ -10,10 +10,25 @@ class TypeAnalyzer {
 
   analyze () {
     const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.type === 'module');
-    const iterator = this.sourceGraph.traverse(codeModule);
+    const iterator = this.sourceGraph.traverse({ order: 'postorder' });
 
-    iterator.iterate((node) => {
+    // run analyze to check for static type declarations first
+    iterator.iterate(codeModule, (node) => {
+      // console.log(node.attributes);
       this.analyzeNode(node);
+    });
+
+    const inferenceIterator = this.sourceGraph.traverse();
+
+    // run analyze to check for static type declarations first
+    inferenceIterator.iterate(codeModule, (node) => {
+      // console.log(node.attributes);
+      switch (node.attributes.type) {
+        case 'variable_reference':
+          this.inferVariableType(node);
+          break;
+        default:
+      }
     });
   }
 
@@ -22,43 +37,45 @@ class TypeAnalyzer {
       case 'immutable_declaration':
         this.inferType(node);
         break;
-      case 'function':
-        this.inferFunctionType(node);
-        break;
       case 'mutable_declaration':
         this.checkType(node);
         break;
+      case 'number_literal':
+        this.associateType(node);
+        break;
+      // case 'variable_reference':
+      //   this.inferVariableType(node);
+      //   break;
       default:
     }
+  }
+
+  inferVariableType (node) {
+    console.log(node.attributes);
+    const declNode = this.sourceGraph.relationFromNode(node, 'binding')[0];
+    console.log(declNode);
+    const declType = this.sourceGraph.relationFromNode(declNode, 'type')[0];
+    console.log('variable type', declType);
+
+    const typeNode = this.buildType(declType.attributes.kind);
+    this.sourceGraph.addEdge(node, typeNode, 'type');
   }
 
   inferType (node) {
     const annotation = node.attributes.kind;
     const expr = this.sourceGraph.relationFromNode(node, 'expression')[0];
 
-    if (expr.attributes.kind) {
+    if (expr) {
+      const exprType = this.sourceGraph.relationFromNode(expr, 'type')[0];
       // check and reconcile with this node's annotation if it has one
-      if (annotation && annotation !== expr.attributes.kind) {
+      if (annotation && annotation !== exprType.attributes.kind) {
         // allow cast?
 
         throw new TypeMismatchError(`Cannot convert ${expr.attributes.kind} to ${annotation}`);
       }
 
-      const typeNode = this.buildType(expr.attributes.kind);
+      const typeNode = this.buildType(exprType.attributes.kind);
       this.sourceGraph.addEdge(node, typeNode, 'type');
-    }
-  }
-
-  inferFunctionType (node) {
-    const bodyNode = this.sourceGraph.relationFromNode(node, 'body')[0];
-    // do we have a return type?
-
-    const ret = this.sourceGraph.relationFromNode(bodyNode, 'return_statement')[0];
-    if (!ret) {
-      const typeNode = this.buildType('void');
-      this.sourceGraph.addEdge(node, typeNode, 'type');
-    } else {
-
     }
   }
 
@@ -88,8 +105,23 @@ class TypeAnalyzer {
     this.sourceGraph.addEdge(node, typeNode, 'type');
   }
 
+  associateType (node) {
+    const typeNode = this.buildType(node.attributes.kind);
+    this.sourceGraph.addEdge(node, typeNode, 'type');
+  }
+
   buildType (typeClass) {
-    return this.sourceGraph.addNode({ type: 'type', kind: typeClass });
+    const types = this.sourceGraph.search('type');
+    const typeNode = types.find((n) => {
+      return n.attributes.kind === typeClass;
+    });
+
+    if (!typeNode) {
+      const buildType = this.sourceGraph.addNode({ type: 'type', kind: typeClass });
+      return buildType;
+    }
+
+    return typeNode;
   }
 }
 

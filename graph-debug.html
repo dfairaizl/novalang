@@ -16,12 +16,12 @@
     <script type="text/javascript">
         // create an array with nodes
         var nodes = new vis.DataSet(
-           [{"id":"052096eb-84d2-4f50-9ead-78a30843ac64","label":"module"},{"id":"ea9b7828-68ce-487d-a01c-3e41410b75d1","label":"function"},{"id":"7fc56856-9741-46ca-9207-80f66493ec1e","label":"return_statement"},{"id":"c5afae0d-7136-4b59-b3ef-9f0e65b9c84d","label":"number_literal"},{"id":"ec27119e-5727-4e71-862f-affafb99b341","label":"number_literal"},{"id":"b3454de3-28a3-4a7d-a59b-8528849257be","label":"bin_op"}]
+         [{"id":"bf1dc366-6fec-46ea-8e8f-1de489ab4b1f","label":"module"},{"id":"2446410e-c7f2-4864-8c70-46261d89f02e","label":"immutable_declaration"},{"id":"1bf11d93-ce8e-401e-923c-c4164a59751d","label":"number_literal"},{"id":"64bd794e-f49f-44c9-86e9-4282fac6b58e","label":"mutable_declaration"},{"id":"e49ec7b7-ddfc-4f08-901b-8fdb7f9a4608","label":"variable_reference"},{"id":"b9ea23a8-e8a0-493f-ac86-6e6a5d7ce6de","label":"type"},{"id":"4e838423-7ab2-4f20-989a-7bf684e1b643","label":"type"}]
         );
 
         // create an array with edges
         var edges = new vis.DataSet(
-           [{"from":"052096eb-84d2-4f50-9ead-78a30843ac64","to":"ea9b7828-68ce-487d-a01c-3e41410b75d1","label":"sources","arrows":"to"},{"from":"ea9b7828-68ce-487d-a01c-3e41410b75d1","to":"7fc56856-9741-46ca-9207-80f66493ec1e","label":"body","arrows":"to"},{"from":"7fc56856-9741-46ca-9207-80f66493ec1e","to":"b3454de3-28a3-4a7d-a59b-8528849257be","label":"expression","arrows":"to"},{"from":"b3454de3-28a3-4a7d-a59b-8528849257be","to":"c5afae0d-7136-4b59-b3ef-9f0e65b9c84d","label":"left","arrows":"to"},{"from":"b3454de3-28a3-4a7d-a59b-8528849257be","to":"ec27119e-5727-4e71-862f-affafb99b341","label":"right","arrows":"to"}]
+          [{"from":"bf1dc366-6fec-46ea-8e8f-1de489ab4b1f","to":"2446410e-c7f2-4864-8c70-46261d89f02e","label":"sources","arrows":"to"},{"from":"bf1dc366-6fec-46ea-8e8f-1de489ab4b1f","to":"64bd794e-f49f-44c9-86e9-4282fac6b58e","label":"sources","arrows":"to"},{"from":"2446410e-c7f2-4864-8c70-46261d89f02e","to":"1bf11d93-ce8e-401e-923c-c4164a59751d","label":"expression","arrows":"to"},{"from":"2446410e-c7f2-4864-8c70-46261d89f02e","to":"e49ec7b7-ddfc-4f08-901b-8fdb7f9a4608","label":"reference","arrows":"to"},{"from":"2446410e-c7f2-4864-8c70-46261d89f02e","to":"b9ea23a8-e8a0-493f-ac86-6e6a5d7ce6de","label":"type","arrows":"to"},{"from":"1bf11d93-ce8e-401e-923c-c4164a59751d","to":"b9ea23a8-e8a0-493f-ac86-6e6a5d7ce6de","label":"type","arrows":"to"},{"from":"64bd794e-f49f-44c9-86e9-4282fac6b58e","to":"e49ec7b7-ddfc-4f08-901b-8fdb7f9a4608","label":"expression","arrows":"to"},{"from":"64bd794e-f49f-44c9-86e9-4282fac6b58e","to":"4e838423-7ab2-4f20-989a-7bf684e1b643","label":"type","arrows":"to"},{"from":"e49ec7b7-ddfc-4f08-901b-8fdb7f9a4608","to":"2446410e-c7f2-4864-8c70-46261d89f02e","label":"binding","arrows":"to"}]
         );
 
         // create a network
