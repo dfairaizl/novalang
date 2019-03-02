@@ -100,7 +100,7 @@ describe('Type Analyzer', () => {
     });
 
     it.only('checks types for literal expressions by inference', () => {
-      const parser = new Parser('const a = 1; let x = a');
+      const parser = new Parser('const x = 1; const y = x + 2');
       const sourceGraph = parser.parse();
 
       const semanticAnalyzer = new Analyzer(sourceGraph);

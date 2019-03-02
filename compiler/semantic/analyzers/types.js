@@ -10,36 +10,28 @@ class TypeAnalyzer {
 
   analyze () {
     const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.type === 'module');
-    const iterator = this.sourceGraph.traverse({ order: 'postorder' });
+    const exprs = this.sourceGraph.outgoing(codeModule);
 
-    // run analyze to check for static type declarations first
-    iterator.iterate(codeModule, (node) => {
-      // console.log(node.attributes);
-      this.analyzeNode(node);
-    });
+    exprs.forEach((n) => {
+      const iterator = this.sourceGraph.traverse({ order: 'postorder' });
 
-    const inferenceIterator = this.sourceGraph.traverse();
-
-    // run analyze to check for static type declarations first
-    inferenceIterator.iterate(codeModule, (node) => {
-      // console.log(node.attributes);
-      switch (node.attributes.type) {
-        case 'variable_reference':
-          this.inferVariableType(node);
-          break;
-        default:
-      }
+      console.log(n);
+      // run analyze to check for static type declarations first
+      iterator.iterate(n, (node) => {
+        console.log('---', node.attributes);
+        this.analyzeNode(node);
+      });
     });
   }
 
   analyzeNode (node) {
     switch (node.attributes.type) {
-      case 'immutable_declaration':
-        this.inferType(node);
-        break;
-      case 'mutable_declaration':
-        this.checkType(node);
-        break;
+      // case 'immutable_declaration':
+      //   this.inferType(node);
+      //   break;
+      // case 'mutable_declaration':
+      //   this.checkType(node);
+      //   break;
       case 'number_literal':
         this.associateType(node);
         break;
