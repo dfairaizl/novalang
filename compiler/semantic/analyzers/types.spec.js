@@ -2,154 +2,157 @@
 
 const Parser = require('../../parser');
 const Analyzer = require('..');
-const {
-  MissingTypeAnnotationError,
-  TypeMismatchError
-} = require('../errors');
+// const {
+//   MissingTypeAnnotationError,
+//   TypeMismatchError
+// } = require('../errors');
 
 describe('Type Analyzer', () => {
-  describe('immutable literal expressions', () => {
-    it('checks types for number literals', () => {
-      const parser = new Parser('const x = 1');
+  describe('literal types', () => {
+    it('resolves type of integer literals', () => {
+      const parser = new Parser('const x = 1;');
+
       const sourceGraph = parser.parse();
 
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const decl = sourceGraph.search('immutable_declaration');
-      const type = sourceGraph.relationFromNode(decl[0], 'type');
-
-      expect(type[0].attributes).toMatchObject({ kind: 'int' });
+      expect(sourceGraph.search('type')[0].attributes).toMatchObject({
+        kind: 'int'
+      });
     });
 
-    it('checks types for string literals', () => {
-      const parser = new Parser("const x = 'hello nova'");
+    it('resolves type of float literals', () => {
+      const parser = new Parser('const x = 1.0;');
+
       const sourceGraph = parser.parse();
 
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const decl = sourceGraph.search('immutable_declaration');
-      const type = sourceGraph.relationFromNode(decl[0], 'type');
-
-      expect(type[0].attributes).toMatchObject({ kind: 'string' });
+      expect(sourceGraph.search('type')[0].attributes).toMatchObject({
+        kind: 'float'
+      });
     });
 
-    it('checks types for boolean literals', () => {
-      const parser = new Parser('const b = true');
+    it('resolves type of boolean literals', () => {
+      const parser = new Parser('const x = false;');
+
       const sourceGraph = parser.parse();
 
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const decl = sourceGraph.search('immutable_declaration');
-      const type = sourceGraph.relationFromNode(decl[0], 'type');
+      expect(sourceGraph.search('type')[0].attributes).toMatchObject({
+        kind: 'bool'
+      });
+    });
 
-      expect(type[0].attributes).toMatchObject({ kind: 'bool' });
+    it('resolves type of string literals', () => {
+      const parser = new Parser(`const x = 'hello nova';`);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      expect(sourceGraph.search('type')[0].attributes).toMatchObject({
+        kind: 'string'
+      });
     });
   });
 
-  describe('immutable expressions with annotations', () => {
-    it('checks types for number literals', () => {
-      const parser = new Parser('const x: int = 1');
+  describe('variable reference expressions', () => {
+    it('resolves types of variables in assignment', () => {
+      const parser = new Parser('const x = 1; let y = x;');
+
       const sourceGraph = parser.parse();
 
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const decl = sourceGraph.search('immutable_declaration');
-      const type = sourceGraph.relationFromNode(decl[0], 'type');
+      const yNode = sourceGraph.search('mutable_declaration')[0];
+      const type = sourceGraph.relationFromNode(yNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'int'
+      });
+    });
 
-      expect(type[0].attributes).toMatchObject({ kind: 'int' });
+    it('resolves types of variables in binary operations', () => {
+      const parser = new Parser('const x = 1; let y = x * 2;');
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const yNode = sourceGraph.search('mutable_declaration')[0];
+      const type = sourceGraph.relationFromNode(yNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'int'
+      });
+    });
+
+    it('resolves types of variable references in binary operations', () => {
+      const parser = new Parser('const x = 1; let y = x * x;');
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const yNode = sourceGraph.search('mutable_declaration')[0];
+      const type = sourceGraph.relationFromNode(yNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'int'
+      });
+    });
+
+    it('resolves types of variables in nested binary operations', () => {
+      const parser = new Parser('const x = 1; let y = x * 2 + 1;');
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const yNode = sourceGraph.search('mutable_declaration')[0];
+      const type = sourceGraph.relationFromNode(yNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'int'
+      });
     });
   });
 
-  describe('mutable expressions', () => {
-    it('declarations without an expression require a type annotation', () => {
-      const parser = new Parser('let x');
-      const sourceGraph = parser.parse();
+  describe('function types', () => {
+    it('types void functions', () => {
+      const parser = new Parser('function sayHello() {}');
 
-      const semanticAnalyzer = new Analyzer(sourceGraph);
-      expect(() => semanticAnalyzer.analyze()).toThrowError(MissingTypeAnnotationError);
-    });
-
-    it('declarations without an expression type check', () => {
-      const parser = new Parser('let x: int');
       const sourceGraph = parser.parse();
 
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const decl = sourceGraph.search('mutable_declaration');
-      const type = sourceGraph.relationFromNode(decl[0], 'type');
-
-      expect(type[0].attributes).toMatchObject({ kind: 'int' });
+      const yNode = sourceGraph.search('function')[0];
+      const type = sourceGraph.relationFromNode(yNode, 'return_type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'void'
+      });
     });
 
-    it('checks types for literal expressions by inference', () => {
-      const parser = new Parser('let x = 1');
+    it('types functions with return type', () => {
+      const parser = new Parser('function getHello() -> String {}');
+
       const sourceGraph = parser.parse();
 
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const decl = sourceGraph.search('mutable_declaration');
-      const type = sourceGraph.relationFromNode(decl[0], 'type');
-
-      expect(type[0].attributes).toMatchObject({ kind: 'int' });
-    });
-
-    it.only('checks types for literal expressions by inference', () => {
-      const parser = new Parser('const x = 1; const y = x + 2');
-      const sourceGraph = parser.parse();
-
-      const semanticAnalyzer = new Analyzer(sourceGraph);
-      semanticAnalyzer.analyze();
-
-      sourceGraph.debug();
-
-      const decl = sourceGraph.search('mutable_declaration');
-      const type = sourceGraph.relationFromNode(decl[0], 'type');
-
-      expect(type[0].attributes).toMatchObject({ kind: 'int' });
-    });
-  });
-
-  describe.skip('functions', () => {
-    it('checks type of function with no return value', () => {
-      const parser = new Parser('function doNothing() { 1 + 1 }');
-      const sourceGraph = parser.parse();
-
-      const semanticAnalyzer = new Analyzer(sourceGraph);
-      semanticAnalyzer.analyze();
-
-      const decl = sourceGraph.search('function');
-      const type = sourceGraph.relationFromNode(decl[0], 'type');
-
-      expect(type[0].attributes).toMatchObject({ kind: 'void' });
-    });
-
-    it('checks type of function by inference', () => {
-      const parser = new Parser('function add() { return 1 + 1 }');
-      const sourceGraph = parser.parse();
-
-      const semanticAnalyzer = new Analyzer(sourceGraph);
-      semanticAnalyzer.analyze();
-
-      const decl = sourceGraph.search('function');
-      const type = sourceGraph.relationFromNode(decl[0], 'type');
-
-      expect(type[0].attributes).toMatchObject({ kind: 'int' });
-    });
-  });
-
-  describe('type casting', () => {
-    it('does not allow mismatched primitives', () => {
-      const parser = new Parser('let x: int = true');
-      const sourceGraph = parser.parse();
-
-      const semanticAnalyzer = new Analyzer(sourceGraph);
-      expect(() => semanticAnalyzer.analyze()).toThrowError(TypeMismatchError);
+      const yNode = sourceGraph.search('function')[0];
+      const type = sourceGraph.relationFromNode(yNode, 'return_type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'void'
+      });
     });
   });
 });

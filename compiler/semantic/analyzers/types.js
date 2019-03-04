@@ -1,7 +1,7 @@
-const {
-  MissingTypeAnnotationError,
-  TypeMismatchError
-} = require('../errors');
+// const {
+//   MissingTypeAnnotationError,
+//   TypeMismatchError
+// } = require('../errors');
 
 class TypeAnalyzer {
   constructor (sourceGraph) {
@@ -13,93 +13,92 @@ class TypeAnalyzer {
     const exprs = this.sourceGraph.outgoing(codeModule);
 
     exprs.forEach((n) => {
-      const iterator = this.sourceGraph.traverse({ order: 'postorder' });
-
-      console.log(n);
-      // run analyze to check for static type declarations first
-      iterator.iterate(n, (node) => {
-        console.log('---', node.attributes);
-        this.analyzeNode(node);
-      });
+      this.analyzeType(n);
     });
   }
 
-  analyzeNode (node) {
+  analyzeType (node) {
     switch (node.attributes.type) {
-      // case 'immutable_declaration':
-      //   this.inferType(node);
-      //   break;
-      // case 'mutable_declaration':
-      //   this.checkType(node);
-      //   break;
+      case 'immutable_declaration':
+      case 'mutable_declaration':
+        return this.resolveDeclaration(node);
+      case 'variable_reference':
+        return this.resolveReference(node);
+      case 'boolean_literal':
       case 'number_literal':
-        this.associateType(node);
-        break;
-      // case 'variable_reference':
-      //   this.inferVariableType(node);
-      //   break;
+      case 'string_literal':
+        return this.associateType(node);
+      case 'bin_op':
+        return this.resolveBinop(node);
+      case 'function':
+        return this.resolveFunction(node);
       default:
     }
   }
 
-  inferVariableType (node) {
-    console.log(node.attributes);
+  resolveDeclaration (node) {
+    const currentType = this.sourceGraph.relationFromNode(node, 'type');
+
+    if (currentType[0]) {
+      return currentType[0];
+    }
+
+    const exprNode = this.sourceGraph.relationFromNode(node, 'expression');
+    const exprType = this.analyzeType(exprNode[0]);
+
+    this.sourceGraph.addEdge(node, exprType, 'type');
+
+    return exprType;
+  }
+
+  resolveReference (node) {
     const declNode = this.sourceGraph.relationFromNode(node, 'binding')[0];
-    console.log(declNode);
-    const declType = this.sourceGraph.relationFromNode(declNode, 'type')[0];
-    console.log('variable type', declType);
+    const typeNode = this.analyzeType(declNode);
+    if (!typeNode) {
+      throw new Error('BUG: Found a reference with no type');
+    }
 
-    const typeNode = this.buildType(declType.attributes.kind);
-    this.sourceGraph.addEdge(node, typeNode, 'type');
+    return typeNode;
   }
 
-  inferType (node) {
-    const annotation = node.attributes.kind;
-    const expr = this.sourceGraph.relationFromNode(node, 'expression')[0];
+  resolveBinop (node) {
+    const lhs = this.sourceGraph.relationFromNode(node, 'left');
+    const rhs = this.sourceGraph.relationFromNode(node, 'right');
 
-    if (expr) {
-      const exprType = this.sourceGraph.relationFromNode(expr, 'type')[0];
-      // check and reconcile with this node's annotation if it has one
-      if (annotation && annotation !== exprType.attributes.kind) {
-        // allow cast?
+    const lhsType = this.analyzeType(lhs[0]);
+    const rhsType = this.analyzeType(rhs[0]);
 
-        throw new TypeMismatchError(`Cannot convert ${expr.attributes.kind} to ${annotation}`);
-      }
-
-      const typeNode = this.buildType(exprType.attributes.kind);
-      this.sourceGraph.addEdge(node, typeNode, 'type');
+    // both sides of the binop need to have equivilant types
+    if (lhsType && rhsType) {
+      return this.reconcileTypes(lhsType, rhsType);
     }
   }
 
-  checkType (node) {
-    let typeNode = null;
-    const annotation = node.attributes.kind;
-    const expr = this.sourceGraph.relationFromNode(node, 'expression')[0];
+  resolveFunction (node) {
+    if (node.attributes.kind) {
+      const retType = this.associateType(node);
+      this.sourceGraph.addEdge(node, retType, 'return_type');
 
-    // no expression to infer in lets requires an explicit annotation
-    if (!expr && !annotation) {
-      throw new MissingTypeAnnotationError(`Declaration of variable \`${node.attributes.identifier}\` requires an explicit type`);
+      return retType;
     }
 
-    if (expr && expr.attributes.kind) {
-      // check and reconcile with this node's annotation if it has one
-      if (annotation && annotation !== expr.attributes.kind) {
-        // allow cast?
+    const retType = this.buildType('void');
+    this.sourceGraph.addEdge(node, retType, 'return_type');
 
-        throw new TypeMismatchError(`Cannot convert ${expr.attributes.kind} to ${annotation}`);
-      }
+    return retType;
+  }
 
-      typeNode = this.buildType(expr.attributes.kind);
-    } else {
-      typeNode = this.buildType(node.attributes.kind);
+  reconcileTypes (type1, type2) {
+    // check for equivilance (type precedence) or the ability to cast
+    if (type1.attributes.kind === type2.attributes.kind) {
+      return type1;
     }
 
-    this.sourceGraph.addEdge(node, typeNode, 'type');
+    return null;
   }
 
   associateType (node) {
-    const typeNode = this.buildType(node.attributes.kind);
-    this.sourceGraph.addEdge(node, typeNode, 'type');
+    return this.buildType(node.attributes.kind);
   }
 
   buildType (typeClass) {
