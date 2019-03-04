@@ -151,7 +151,7 @@ describe('Type Analyzer', () => {
       const yNode = sourceGraph.search('function')[0];
       const type = sourceGraph.relationFromNode(yNode, 'return_type');
       expect(type[0].attributes).toMatchObject({
-        kind: 'void'
+        kind: 'String'
       });
     });
   });
