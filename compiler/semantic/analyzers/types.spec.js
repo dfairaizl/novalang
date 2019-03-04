@@ -18,7 +18,7 @@ describe('Type Analyzer', () => {
       semanticAnalyzer.analyze();
 
       expect(sourceGraph.search('type')[0].attributes).toMatchObject({
-        kind: 'int'
+        kind: 'Int'
       });
     });
 
@@ -31,7 +31,7 @@ describe('Type Analyzer', () => {
       semanticAnalyzer.analyze();
 
       expect(sourceGraph.search('type')[0].attributes).toMatchObject({
-        kind: 'float'
+        kind: 'Float'
       });
     });
 
@@ -57,7 +57,7 @@ describe('Type Analyzer', () => {
       semanticAnalyzer.analyze();
 
       expect(sourceGraph.search('type')[0].attributes).toMatchObject({
-        kind: 'string'
+        kind: 'String'
       });
     });
   });
@@ -74,7 +74,7 @@ describe('Type Analyzer', () => {
       const yNode = sourceGraph.search('mutable_declaration')[0];
       const type = sourceGraph.relationFromNode(yNode, 'type');
       expect(type[0].attributes).toMatchObject({
-        kind: 'int'
+        kind: 'Int'
       });
     });
 
@@ -89,7 +89,7 @@ describe('Type Analyzer', () => {
       const yNode = sourceGraph.search('mutable_declaration')[0];
       const type = sourceGraph.relationFromNode(yNode, 'type');
       expect(type[0].attributes).toMatchObject({
-        kind: 'int'
+        kind: 'Int'
       });
     });
 
@@ -104,7 +104,7 @@ describe('Type Analyzer', () => {
       const yNode = sourceGraph.search('mutable_declaration')[0];
       const type = sourceGraph.relationFromNode(yNode, 'type');
       expect(type[0].attributes).toMatchObject({
-        kind: 'int'
+        kind: 'Int'
       });
     });
 
@@ -119,7 +119,7 @@ describe('Type Analyzer', () => {
       const yNode = sourceGraph.search('mutable_declaration')[0];
       const type = sourceGraph.relationFromNode(yNode, 'type');
       expect(type[0].attributes).toMatchObject({
-        kind: 'int'
+        kind: 'Int'
       });
     });
   });
@@ -136,7 +136,7 @@ describe('Type Analyzer', () => {
       const yNode = sourceGraph.search('function')[0];
       const type = sourceGraph.relationFromNode(yNode, 'return_type');
       expect(type[0].attributes).toMatchObject({
-        kind: 'void'
+        kind: 'Void'
       });
     });
 

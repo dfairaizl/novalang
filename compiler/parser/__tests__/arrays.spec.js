@@ -30,7 +30,7 @@ describe('Parser', () => {
           type: 'array_literal',
           members: [{
             type: 'number_literal',
-            kind: 'int',
+            kind: 'Int',
             value: '1'
           }]
         }]
@@ -49,7 +49,7 @@ describe('Parser', () => {
           type: 'array_literal',
           members: [{
             type: 'string_literal',
-            kind: 'string',
+            kind: 'String',
             value: 'hello'
           }]
         }]
@@ -121,11 +121,11 @@ describe('Parser', () => {
           type: 'array_literal',
           members: [{
             type: 'number_literal',
-            kind: 'int',
+            kind: 'Int',
             value: '1'
           }, {
             type: 'number_literal',
-            kind: 'int',
+            kind: 'Int',
             value: '2'
           }]
         }]
@@ -149,7 +149,7 @@ describe('Parser', () => {
         }],
         right: [{
           type: 'number_literal',
-          kind: 'int',
+          kind: 'Int',
           value: '1'
         }]
       });

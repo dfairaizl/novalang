@@ -37,7 +37,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'number_literal',
-        kind: 'int',
+        kind: 'Int',
         value: '42'
       });
     });
@@ -49,7 +49,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'number_literal',
-        kind: 'float',
+        kind: 'Float',
         value: '4.2'
       });
     });
@@ -63,7 +63,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'string_literal',
-        kind: 'string',
+        kind: 'String',
         value: ''
       });
     });
@@ -75,7 +75,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'string_literal',
-        kind: 'string',
+        kind: 'String',
         value: 'hello world'
       });
     });

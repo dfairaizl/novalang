@@ -687,7 +687,7 @@ class Parser {
     const literal = this.getNextToken();
     return this.sourceGraph.addNode({
       type: 'string_literal',
-      kind: 'string',
+      kind: 'String',
       value: literal.value
     });
   }

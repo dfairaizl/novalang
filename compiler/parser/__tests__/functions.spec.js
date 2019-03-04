@@ -115,7 +115,7 @@ describe('Parser', () => {
             identifier: 'a',
             expression: [{
               type: 'number_literal',
-              kind: 'int',
+              kind: 'Int',
               value: '1'
             }]
           },
@@ -232,7 +232,7 @@ describe('Parser', () => {
             }],
             right: [{
               type: 'number_literal',
-              kind: 'int',
+              kind: 'Int',
               value: '1'
             }]
           }]
@@ -263,7 +263,7 @@ describe('Parser', () => {
         name: 'incr',
         arguments: [{
           type: 'number_literal',
-          kind: 'int',
+          kind: 'Int',
           value: '1'
         }]
       });
@@ -279,11 +279,11 @@ describe('Parser', () => {
         name: 'add',
         arguments: [{
           type: 'number_literal',
-          kind: 'int',
+          kind: 'Int',
           value: '1'
         }, {
           type: 'number_literal',
-          kind: 'int',
+          kind: 'Int',
           value: '2'
         }]
       });
@@ -302,7 +302,7 @@ describe('Parser', () => {
           member: [{
             type: 'object_key',
             key: 'x',
-            value: [{ type: 'number_literal', kind: 'int', value: '1' }]
+            value: [{ type: 'number_literal', kind: 'Int', value: '1' }]
           }]
         }]
       });

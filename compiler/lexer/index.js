@@ -96,7 +96,7 @@ class Lexer {
 
   readDigit () {
     let token = '';
-    let kind = 'int';
+    let kind = 'Int';
 
     while (this.isDigit() && !this.scanner.eof()) {
       token += this.currentToken;
@@ -104,7 +104,7 @@ class Lexer {
     }
 
     if (FLOATING_POINT_DIGIT.test(token) === true) {
-      kind = 'float';
+      kind = 'Float';
     }
 
     return new NumberToken(token, { kind });

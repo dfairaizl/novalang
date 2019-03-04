@@ -36,7 +36,7 @@ describe('Parser', () => {
           identifier: 'x',
           expression: [{
             type: 'number_literal',
-            kind: 'int',
+            kind: 'Int',
             value: '0'
           }]
         }, {
@@ -84,7 +84,7 @@ describe('Parser', () => {
           identifier: 'x',
           expression: [{
             type: 'number_literal',
-            kind: 'int',
+            kind: 'Int',
             value: '0'
           }]
         }, {

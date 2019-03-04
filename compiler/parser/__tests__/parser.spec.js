@@ -14,7 +14,7 @@ describe('Parser', () => {
           sources: [{
             type: 'immutable_declaration',
             identifier: 'x',
-            expression: [{ type: 'number_literal', kind: 'int', value: '1' }]
+            expression: [{ type: 'number_literal', kind: 'Int', value: '1' }]
           }]
         });
       });
@@ -83,12 +83,12 @@ describe('Parser', () => {
             operator: '+',
             left: [{
               type: 'number_literal',
-              kind: 'int',
+              kind: 'Int',
               value: '1'
             }],
             right: [{
               type: 'number_literal',
-              kind: 'int',
+              kind: 'Int',
               value: '2'
             }]
           }]

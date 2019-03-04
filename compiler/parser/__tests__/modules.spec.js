@@ -13,7 +13,7 @@ describe('Parser', () => {
         type: 'require_statement',
         module: [{
           type: 'string_literal',
-          kind: 'string',
+          kind: 'String',
           value: 'some-module'
         }]
       });
@@ -28,7 +28,7 @@ describe('Parser', () => {
         type: 'require_statement',
         module: [{
           type: 'string_literal',
-          kind: 'string',
+          kind: 'String',
           value: './local-module'
         }]
       });

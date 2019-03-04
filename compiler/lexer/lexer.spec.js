@@ -28,9 +28,9 @@ describe('Lexer', () => {
         new IdentifierToken('const'),
         new IdentifierToken('a'),
         new OperatorToken('='),
-        new NumberToken('40', { kind: 'int' }),
+        new NumberToken('40', { kind: 'Int' }),
         new OperatorToken('+'),
-        new NumberToken('2', { kind: 'int' })
+        new NumberToken('2', { kind: 'Int' })
       ]);
     });
   });
@@ -44,9 +44,9 @@ describe('Lexer', () => {
     it('skips white space between tokens', () => {
       const lex = new Lexer('1   +   2');
 
-      expect(lex.nextToken()).toEqual(new NumberToken('1', { kind: 'int' }));
+      expect(lex.nextToken()).toEqual(new NumberToken('1', { kind: 'Int' }));
       expect(lex.nextToken()).toEqual(new OperatorToken('+'));
-      expect(lex.nextToken()).toEqual(new NumberToken('2', { kind: 'int' }));
+      expect(lex.nextToken()).toEqual(new NumberToken('2', { kind: 'Int' }));
     });
 
     it('skips white space after tokens', () => {
@@ -180,27 +180,27 @@ describe('Lexer', () => {
   describe('numbers', () => {
     it('lexes `1`', () => {
       const lex = new Lexer('1');
-      expect(lex.nextToken()).toEqual(new NumberToken('1', { kind: 'int' }));
+      expect(lex.nextToken()).toEqual(new NumberToken('1', { kind: 'Int' }));
     });
 
     it('lexes `10`', () => {
       const lex = new Lexer('10');
-      expect(lex.nextToken()).toEqual(new NumberToken('10', { kind: 'int' }));
+      expect(lex.nextToken()).toEqual(new NumberToken('10', { kind: 'Int' }));
     });
 
     it('lexes `100`', () => {
       const lex = new Lexer('100');
-      expect(lex.nextToken()).toEqual(new NumberToken('100', { kind: 'int' }));
+      expect(lex.nextToken()).toEqual(new NumberToken('100', { kind: 'Int' }));
     });
 
     it('lexes `1.0`', () => {
       const lex = new Lexer('1.0');
-      expect(lex.nextToken()).toEqual(new NumberToken('1.0', { kind: 'float' }));
+      expect(lex.nextToken()).toEqual(new NumberToken('1.0', { kind: 'Float' }));
     });
 
     it('lexes `3.14159`', () => {
       const lex = new Lexer('3.14159');
-      expect(lex.nextToken()).toEqual(new NumberToken('3.14159', { kind: 'float' }));
+      expect(lex.nextToken()).toEqual(new NumberToken('3.14159', { kind: 'Float' }));
     });
   });
 
