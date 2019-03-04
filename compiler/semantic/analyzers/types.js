@@ -2,6 +2,7 @@ const {
   MissingTypeAnnotationError,
   TypeMismatchError,
   MismatchedReturnTypeError,
+  VoidAssignmentError,
   VoidFunctionReturnError
 } = require('../errors');
 
@@ -38,6 +39,8 @@ class TypeAnalyzer {
         return this.resolveBinop(node);
       case 'function':
         return this.resolveFunction(node);
+      case 'invocation':
+        return this.resolveInvocation(node);
     }
   }
 
@@ -61,6 +64,10 @@ class TypeAnalyzer {
 
     const exprNode = this.sourceGraph.relationFromNode(node, 'expression');
     const exprType = this.analyzeType(exprNode[0]);
+
+    if (exprType.attributes.kind === 'Void') {
+      throw new VoidAssignmentError(`Variable \`${node.attributes.identifier}\` cannot have type Void`);
+    }
 
     this.sourceGraph.addEdge(node, exprType, 'type');
 
@@ -95,6 +102,10 @@ class TypeAnalyzer {
     }
 
     if (exprType) {
+      if (exprType.attributes.kind === 'Void') {
+        throw new VoidAssignmentError(`Variable \`${node.attributes.identifier}\` cannot have type Void`);
+      }
+
       // infer the type from this declarartion from the expression
       this.sourceGraph.addEdge(node, exprType, 'type');
 
@@ -108,12 +119,6 @@ class TypeAnalyzer {
   }
 
   resolveArgument (node) {
-    const currentType = this.sourceGraph.relationFromNode(node, 'type');
-
-    if (currentType[0]) {
-      return currentType[0];
-    }
-
     if (node.attributes.kind) {
       const argType = this.associateType(node);
       this.sourceGraph.addEdge(node, argType, 'type');
@@ -173,6 +178,11 @@ class TypeAnalyzer {
     this.sourceGraph.addEdge(node, retType, 'return_type');
 
     return retType;
+  }
+
+  resolveInvocation (node) {
+    const funcNode = this.sourceGraph.relationFromNode(node, 'binding')[0];
+    return this.analyzeType(funcNode);
   }
 
   reconcileTypes (type1, type2) {

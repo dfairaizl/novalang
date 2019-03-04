@@ -6,6 +6,7 @@ const {
   MissingTypeAnnotationError,
   TypeMismatchError,
   MismatchedReturnTypeError,
+  VoidAssignmentError,
   VoidFunctionReturnError
 } = require('../errors');
 
@@ -309,6 +310,50 @@ describe('Type Analyzer', () => {
       expect(type[1].attributes).toMatchObject({
         kind: 'Int'
       });
+    });
+  });
+
+  describe('function invocations', () => {
+    it('builds types for variables from function invocations', () => {
+      const parser = new Parser(`
+        function one() -> Int { return 1 }
+        const x = one();
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const yNode = sourceGraph.search('immutable_declaration')[0];
+      const type = sourceGraph.relationFromNode(yNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+    });
+
+    it('throws an errow when immutable declarations are assigned to void functions', () => {
+      const parser = new Parser(`
+        function test() {}
+        const x = test();
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      expect(() => semanticAnalyzer.analyze()).toThrowError(VoidAssignmentError);
+    });
+
+    it('throws an errow when mutable declarations are assigned to void functions', () => {
+      const parser = new Parser(`
+        function test() {}
+        let x = test();
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      expect(() => semanticAnalyzer.analyze()).toThrowError(VoidAssignmentError);
     });
   });
 });
