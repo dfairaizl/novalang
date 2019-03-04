@@ -1,7 +1,9 @@
-// const {
-//   MissingTypeAnnotationError,
-//   TypeMismatchError
-// } = require('../errors');
+const {
+  MissingTypeAnnotationError,
+  TypeMismatchError,
+  MismatchedReturnTypeError,
+  VoidFunctionReturnError
+} = require('../errors');
 
 class TypeAnalyzer {
   constructor (sourceGraph) {
@@ -21,8 +23,9 @@ class TypeAnalyzer {
   analyzeType (node) {
     switch (node.attributes.type) {
       case 'immutable_declaration':
+        return this.resolveImmutableDeclaration(node);
       case 'mutable_declaration':
-        return this.resolveDeclaration(node);
+        return this.resolveMutableDeclaration(node);
       case 'variable_reference':
         return this.resolveReference(node);
       case 'boolean_literal':
@@ -37,7 +40,18 @@ class TypeAnalyzer {
     }
   }
 
-  resolveDeclaration (node) {
+  analyzeReturnStatements (node) {
+    const retStatements = this.sourceGraph.outgoing(node).filter((n) => {
+      return n.attributes.type === 'return_statement';
+    });
+
+    return retStatements.map((n) => {
+      const expr = this.sourceGraph.relationFromNode(n, 'expression');
+      return this.analyzeType(expr[0]);
+    });
+  }
+
+  resolveImmutableDeclaration (node) {
     const currentType = this.sourceGraph.relationFromNode(node, 'type');
 
     if (currentType[0]) {
@@ -45,11 +59,55 @@ class TypeAnalyzer {
     }
 
     const exprNode = this.sourceGraph.relationFromNode(node, 'expression');
+    if (!exprNode[0]) {
+      throw new Error();
+    }
+
     const exprType = this.analyzeType(exprNode[0]);
 
     this.sourceGraph.addEdge(node, exprType, 'type');
 
     return exprType;
+  }
+
+  resolveMutableDeclaration (node) {
+    const currentType = this.sourceGraph.relationFromNode(node, 'type');
+
+    if (currentType[0]) {
+      return currentType[0];
+    }
+
+    let exprType = null;
+    const annotatedType = this.buildType(node.attributes.kind);
+
+    const exprNode = this.sourceGraph.relationFromNode(node, 'expression');
+
+    if (exprNode[0]) {
+      exprType = this.analyzeType(exprNode[0]);
+    }
+
+    if (!exprType && !annotatedType) { // no expression, annotation required
+      throw new MissingTypeAnnotationError(`Mutable variable \`${node.attributes.identifier}\` must have a type`);
+    }
+
+    if (exprType && annotatedType) { // annotation and expression type present
+      const recType = this.reconcileTypes(annotatedType, exprType);
+      if (!recType) {
+        throw new TypeMismatchError(`Mutable variable \`${node.attributes.identifier}\` must have a type`);
+      }
+    }
+
+    if (exprType) {
+      // infer the type from this declarartion from the expression
+      this.sourceGraph.addEdge(node, exprType, 'type');
+
+      return exprType;
+    } else {
+      // use the annotation type
+      this.sourceGraph.addEdge(node, annotatedType, 'type');
+
+      return exprType;
+    }
   }
 
   resolveReference (node) {
@@ -76,14 +134,25 @@ class TypeAnalyzer {
   }
 
   resolveFunction (node) {
+    let retType = null;
     if (node.attributes.kind) {
-      const retType = this.associateType(node);
-      this.sourceGraph.addEdge(node, retType, 'return_type');
+      retType = this.associateType(node);
 
-      return retType;
+      const retTypes = this.analyzeReturnStatements(node);
+      retTypes.forEach((n) => {
+        if (n.attributes.kind !== retType.attributes.kind) {
+          throw new MismatchedReturnTypeError(`Function \`${node.attributes.name}\` must return ${retType.attributes.kind}`);
+        }
+      });
+    } else {
+      retType = this.buildType('Void');
+      const retTypes = this.analyzeReturnStatements(node);
+
+      if (retTypes.length > 0) {
+        throw new VoidFunctionReturnError(`Function \`${node.attributes.name}\` cannot return a value`);
+      }
     }
 
-    const retType = this.buildType('Void');
     this.sourceGraph.addEdge(node, retType, 'return_type');
 
     return retType;
@@ -103,6 +172,10 @@ class TypeAnalyzer {
   }
 
   buildType (typeClass) {
+    if (!typeClass) {
+      return null;
+    }
+
     const types = this.sourceGraph.search('type');
     const typeNode = types.find((n) => {
       return n.attributes.kind === typeClass;
