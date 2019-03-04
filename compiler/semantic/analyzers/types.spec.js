@@ -78,6 +78,19 @@ describe('Type Analyzer', () => {
       });
     });
 
+    it('defines type when annotation and expression types are the same', () => {
+      const parser = new Parser('let x: Int = 10');
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      expect(sourceGraph.search('type')[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+    });
+
     it('throws an error for mutable expressions that do not have a type', () => {
       const parser = new Parser('let x');
 
@@ -168,6 +181,17 @@ describe('Type Analyzer', () => {
     });
   });
 
+  describe('binary expressions', () => {
+    it('throws an error if values in a binary expression do not match', () => {
+      const parser = new Parser('const x = false + 1');
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      expect(() => semanticAnalyzer.analyze()).toThrowError(TypeMismatchError);
+    });
+  });
+
   describe('function types', () => {
     it('types void functions', () => {
       const parser = new Parser('function sayHello() {}');
@@ -230,6 +254,61 @@ describe('Type Analyzer', () => {
 
       const semanticAnalyzer = new Analyzer(sourceGraph);
       expect(() => semanticAnalyzer.analyze()).toThrowError(VoidFunctionReturnError);
+    });
+  });
+
+  describe('function arguments', () => {
+    it('throws an error if arguments have no type annotation', () => {
+      const parser = new Parser('function rollDie(sides) { return 1 }');
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      expect(() => semanticAnalyzer.analyze()).toThrowError(MissingTypeAnnotationError);
+    });
+
+    it('throws an error if returned value does not match function return type', () => {
+      const parser = new Parser('function getX(x: Int) -> String { return x }');
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      expect(() => semanticAnalyzer.analyze()).toThrowError(MismatchedReturnTypeError);
+    });
+
+    it('builds types for functions with a single argument', () => {
+      const parser = new Parser('function addOne(x: Int) -> Int { return x + 1 }');
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const yNode = sourceGraph.search('function_argument')[0];
+      const type = sourceGraph.relationFromNode(yNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+    });
+
+    it('builds types for functions with multiple arguments', () => {
+      const parser = new Parser('function add(x: Int, y: Int) -> Int { return x + y }');
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const yNode = sourceGraph.search('function_argument')[0];
+      const type = sourceGraph.relationFromNode(yNode, 'type');
+
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+
+      expect(type[1].attributes).toMatchObject({
+        kind: 'Int'
+      });
     });
   });
 });

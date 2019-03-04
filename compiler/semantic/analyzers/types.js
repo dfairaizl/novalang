@@ -28,6 +28,8 @@ class TypeAnalyzer {
         return this.resolveMutableDeclaration(node);
       case 'variable_reference':
         return this.resolveReference(node);
+      case 'function_argument':
+        return this.resolveArgument(node);
       case 'boolean_literal':
       case 'number_literal':
       case 'string_literal':
@@ -36,7 +38,6 @@ class TypeAnalyzer {
         return this.resolveBinop(node);
       case 'function':
         return this.resolveFunction(node);
-      default:
     }
   }
 
@@ -59,10 +60,6 @@ class TypeAnalyzer {
     }
 
     const exprNode = this.sourceGraph.relationFromNode(node, 'expression');
-    if (!exprNode[0]) {
-      throw new Error();
-    }
-
     const exprType = this.analyzeType(exprNode[0]);
 
     this.sourceGraph.addEdge(node, exprType, 'type');
@@ -87,13 +84,14 @@ class TypeAnalyzer {
     }
 
     if (!exprType && !annotatedType) { // no expression, annotation required
+      console.log('here');
       throw new MissingTypeAnnotationError(`Mutable variable \`${node.attributes.identifier}\` must have a type`);
     }
 
     if (exprType && annotatedType) { // annotation and expression type present
       const recType = this.reconcileTypes(annotatedType, exprType);
       if (!recType) {
-        throw new TypeMismatchError(`Mutable variable \`${node.attributes.identifier}\` must have a type`);
+        throw new TypeMismatchError(`Mutable variable \`${node.attributes.identifier}\` must have a valid type`);
       }
     }
 
@@ -110,14 +108,20 @@ class TypeAnalyzer {
     }
   }
 
-  resolveReference (node) {
-    const declNode = this.sourceGraph.relationFromNode(node, 'binding')[0];
-    const typeNode = this.analyzeType(declNode);
-    if (!typeNode) {
-      throw new Error('BUG: Found a reference with no type');
+  resolveArgument (node) {
+    if (node.attributes.kind) {
+      const argType = this.associateType(node);
+      this.sourceGraph.addEdge(node, argType, 'type');
+
+      return argType;
     }
 
-    return typeNode;
+    throw new MissingTypeAnnotationError(`Function argument \`${node.attributes.identifier}\` must have a type`);
+  }
+
+  resolveReference (node) {
+    const declNode = this.sourceGraph.relationFromNode(node, 'binding')[0];
+    return this.analyzeType(declNode);
   }
 
   resolveBinop (node) {
@@ -128,13 +132,21 @@ class TypeAnalyzer {
     const rhsType = this.analyzeType(rhs[0]);
 
     // both sides of the binop need to have equivilant types
-    if (lhsType && rhsType) {
-      return this.reconcileTypes(lhsType, rhsType);
+    const recType = this.reconcileTypes(lhsType, rhsType);
+
+    if (!recType) {
+      throw new TypeMismatchError(`Operands must have the same type`);
     }
+
+    return recType;
   }
 
   resolveFunction (node) {
     let retType = null;
+
+    const argNodes = this.sourceGraph.relationFromNode(node, 'arguments');
+    argNodes.forEach((n) => this.analyzeType(n));
+
     if (node.attributes.kind) {
       retType = this.associateType(node);
 

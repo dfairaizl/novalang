@@ -67,7 +67,7 @@ describe('Scope Analyzer', () => {
     it('it binds references to declarations in a nested scope', () => {
       const parser = new Parser(`
         const z = 7;
-        function addZ() { return z + 1 };
+        function addZ() -> Int { return z + 1 };
       `);
 
       const sourceGraph = parser.parse();
@@ -85,7 +85,7 @@ describe('Scope Analyzer', () => {
     it('it binds references to nearest declaration for shadowed variables', () => {
       const parser = new Parser(`
         const z = 7;
-        function addZ() {
+        function addZ() -> Int {
           let z = 2;
           return z + 1
         };
@@ -126,7 +126,7 @@ describe('Scope Analyzer', () => {
   describe('function arguments', () => {
     it('it binds references to function arguments', () => {
       const parser = new Parser(`
-        function addOne(z) { return z + 1 };
+        function addOne(z: Int) -> Int { return z + 1 };
       `);
 
       const sourceGraph = parser.parse();
@@ -144,9 +144,7 @@ describe('Scope Analyzer', () => {
 
   describe('function invocations', () => {
     it('throws an exception invoking  undeclared functions', () => {
-      const parser = new Parser(`
-        addOne(5);
-      `);
+      const parser = new Parser(`addOne(5);`);
 
       const sourceGraph = parser.parse();
 
