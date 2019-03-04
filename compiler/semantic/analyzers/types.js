@@ -84,7 +84,6 @@ class TypeAnalyzer {
     }
 
     if (!exprType && !annotatedType) { // no expression, annotation required
-      console.log('here');
       throw new MissingTypeAnnotationError(`Mutable variable \`${node.attributes.identifier}\` must have a type`);
     }
 
@@ -109,6 +108,12 @@ class TypeAnalyzer {
   }
 
   resolveArgument (node) {
+    const currentType = this.sourceGraph.relationFromNode(node, 'type');
+
+    if (currentType[0]) {
+      return currentType[0];
+    }
+
     if (node.attributes.kind) {
       const argType = this.associateType(node);
       this.sourceGraph.addEdge(node, argType, 'type');

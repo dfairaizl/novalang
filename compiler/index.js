@@ -3,7 +3,7 @@ const { readFileSync } = require('fs');
 const { spawn } = require('child_process');
 
 const Parser = require('./parser');
-const ScopeAnalyzer = require('./semantic/scope-analyzer');
+const SemanticAnalyzer = require('./semantic');
 const CodeGenerator = require('./codegen');
 const LLVMInit = require('./codegen/llvm');
 const buildTargetMachine = require('./codegen/llvm/machine');
@@ -46,7 +46,7 @@ class Compiler {
         this.sources.push(`${source[0].attributes.value}.nv`);
       });
 
-      const scopeAnalyzer = new ScopeAnalyzer(sourceGraph);
+      const scopeAnalyzer = new SemanticAnalyzer(sourceGraph);
       scopeAnalyzer.analyze();
 
       if (this.options.debugGraph) {
