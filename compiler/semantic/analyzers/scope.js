@@ -18,8 +18,8 @@ class ScopeAnalyzer {
   }
 
   analyzeReferences (node) {
-    const iterator = this.sourceGraph.traverse(node);
-    iterator.iterate((n) => {
+    const iterator = this.sourceGraph.traverse();
+    iterator.iterate(node, (n) => {
       if (n.attributes.type === 'variable_reference') {
         this.checkReference(n);
       }
@@ -27,8 +27,8 @@ class ScopeAnalyzer {
   }
 
   analyzeDeclarations (node) {
-    const iterator = this.sourceGraph.traverse(node);
-    iterator.iterate((n) => {
+    const iterator = this.sourceGraph.traverse();
+    iterator.iterate(node, (n) => {
       if (n.attributes.type === 'immutable_declaration' || n.attributes.type === 'mutable_declaration') {
         this.checkDeclaration(n);
       }
@@ -36,8 +36,8 @@ class ScopeAnalyzer {
   }
 
   analyzeInvocations (node) {
-    const iterator = this.sourceGraph.traverse(node);
-    iterator.iterate((n) => {
+    const iterator = this.sourceGraph.traverse();
+    iterator.iterate(node, (n) => {
       if (n.attributes.type === 'invocation') {
         this.checkInvocation(n);
       }
@@ -45,8 +45,8 @@ class ScopeAnalyzer {
   }
 
   analyzeFunctions (node) {
-    const iterator = this.sourceGraph.traverse(node);
-    iterator.iterate((n) => {
+    const iterator = this.sourceGraph.traverse();
+    iterator.iterate(node, (n) => {
       if (n.attributes.type === 'function') {
         this.checkFunction(n);
       }
@@ -63,12 +63,16 @@ class ScopeAnalyzer {
   checkInvocation (node) {
     // try find the closest declaration that matches
     const scopeNodes = this.buildSymbolTable(node);
-    const declNode = scopeNodes.find((n) => n.attributes.name === node.attributes.name);
+    const declNode = scopeNodes.find((n) => {
+      return n.attributes.name === node.attributes.name ||
+        n.attributes.identifier === node.attributes.name;
+    });
 
     if (!declNode) {
       throw new FunctionNotFoundError(`Use of undeclared function \`${node.attributes.name}\``);
     }
 
+    console.log('binding', node, declNode);
     this.sourceGraph.addEdge(node, declNode, 'binding');
     this.sourceGraph.addEdge(declNode, node, 'reference');
   }
@@ -76,7 +80,6 @@ class ScopeAnalyzer {
   checkReference (node) {
     // try find the closest declaration that matches
     const scopeNodes = this.buildSymbolTable(node);
-
     const declNode = scopeNodes.find((n) => n.attributes.identifier === node.attributes.identifier);
 
     if (!declNode) {

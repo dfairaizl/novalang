@@ -47,6 +47,12 @@ class Graph {
     return this.adjacencyList[nodeId].node;
   }
 
+  merge (graph) {
+    Object.entries(graph.adjacencyList).forEach(([key, val]) => {
+      this.adjacencyList[key] = val;
+    });
+  }
+
   // this is a directed graph
   addEdge (sourceNode, targetNode, label, weight = 0) {
     if (sourceNode && targetNode) {

@@ -9,9 +9,9 @@ class ExpressionAnalyzer {
 
   analyze () {
     const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.type === 'module');
-    const iterator = this.sourceGraph.traverse(codeModule);
+    const iterator = this.sourceGraph.traverse();
 
-    iterator.iterate((node) => {
+    iterator.iterate(codeModule, (node) => {
       this.analyzeNode(node);
     });
   }
