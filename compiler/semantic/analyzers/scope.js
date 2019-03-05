@@ -72,7 +72,6 @@ class ScopeAnalyzer {
       throw new FunctionNotFoundError(`Use of undeclared function \`${node.attributes.name}\``);
     }
 
-    console.log('binding', node, declNode);
     this.sourceGraph.addEdge(node, declNode, 'binding');
     this.sourceGraph.addEdge(declNode, node, 'reference');
   }

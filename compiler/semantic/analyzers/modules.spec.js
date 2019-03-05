@@ -5,16 +5,11 @@ const { readFileSync } = require('fs');
 
 const Parser = require('../../parser');
 const Analyzer = require('..');
-const {
-  ReassignImmutableError
-} = require('../errors');
 
-
-// readFileSync in the nova IO lib
 const file = readFileSync(resolve(__dirname, '..', '..', 'library', 'io', 'io.nv'));
 const ioFile = file.toString('utf8');
 
-const parser = new Parser(ioFile);
+const parser = new Parser(ioFile, 'io');
 const libIO = parser.parse();
 
 // library IO {
@@ -24,12 +19,9 @@ const libIO = parser.parse();
 describe('Module Analyzer', () => {
   describe('value assignments', () => {
     it('allows functions from the standard library to be imported', () => {
-      // have parser run in a beforeEach or something and parse the actual stdlib code
-      // then have the semantic analyzer ensure cross module dependencies are
-      // actually defined, then we can do type checking and function checking later on
       const parser = new Parser(`
-        const io = require('io');
-        io('hello world');
+        const printf = require('io');
+        printf('hello world');
       `);
 
       const sourceGraph = parser.parse();

@@ -1,5 +1,3 @@
-const STANDARD_LIBRARY_MODULES = ['io'];
-
 class ModuleAnalyzer {
   constructor (sourceGraph) {
     this.sourceGraph = sourceGraph;
@@ -7,42 +5,55 @@ class ModuleAnalyzer {
 
   analyze () {
     const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.type === 'module');
-    console.log(codeModule);
     const iterator = this.sourceGraph.traverse(codeModule);
 
     iterator.iterate(codeModule, (node) => {
-      console.log('node', node);
-      // this.analyzeNode(node);
+      this.analyzeNode(node);
     });
   }
 
   analyzeNode (node) {
-    console.log('mod', node.attributes.type);
     switch (node.attributes.type) {
-      case 'require_statement':
-        this.checkRequire(node);
+      case 'immutable_declaration':
+        this.checkImported(node);
         break;
       default:
     }
   }
 
-  checkRequire (node) {
+  checkImported (node) {
+    // is the expression for this declaration a require statement?
+    const exprNode = this.sourceGraph.relationFromNode(node, 'expression');
+
+    if (exprNode[0].attributes.type === 'require_statement') {
+      const moduleNode = this.importModule(exprNode[0]);
+
+      this.sourceGraph.outgoing(moduleNode).forEach((n) => {
+        if (n.attributes.name === node.attributes.identifier) {
+          this.sourceGraph.addEdge(node, n, 'binding');
+          this.sourceGraph.addEdge(n, node, 'reference');
+        }
+      });
+    }
+  }
+
+  importModule (node) {
     const externalMod = this.sourceGraph.relationFromNode(node, 'module');
 
-    const mod = this.resolveModule(externalMod[0]);
+    return this.resolveModule(externalMod[0]);
   }
 
   resolveModule (node) {
-    // is this module part of the standard library?
     const name = node.attributes.value;
-    console.log('name', name);
-    if (STANDARD_LIBRARY_MODULES.includes(name)) {
-      console.log('importing stdlib', name);
+    const modules = this.sourceGraph.search('module');
+
+    const resolvedMod = modules.find((n) => n.attributes.name === name);
+
+    if (!resolvedMod) {
+      throw new Error('Unknown module');
     }
 
-    // now we need to go looking for a module with this name
-    // that is already assumed to have been parsed
-    // then we can run our checks
+    return resolvedMod;
   }
 }
 

@@ -11,7 +11,7 @@ class SemanticAnalyzer {
       new ModuleAnalyzer(sourceGraph),
       new ScopeAnalyzer(sourceGraph),
       new ExpressionAnalyzer(sourceGraph),
-      new TypeAnalyzer(sourceGraph)
+      // new TypeAnalyzer(sourceGraph)
     ];
   }
 
