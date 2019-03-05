@@ -1,7 +1,7 @@
 const ExpressionAnalyzer = require('./analyzers/expression');
 const ModuleAnalyzer = require('./analyzers/modules');
 const ScopeAnalyzer = require('./analyzers/scope');
-// const TypeAnalyzer = require('./analyzers/types');
+const TypeAnalyzer = require('./analyzers/types');
 
 class SemanticAnalyzer {
   constructor (sourceGraph) {
@@ -10,8 +10,8 @@ class SemanticAnalyzer {
     this.analyzers = [
       new ModuleAnalyzer(sourceGraph),
       new ScopeAnalyzer(sourceGraph),
-      new ExpressionAnalyzer(sourceGraph)
-      // new TypeAnalyzer(sourceGraph)
+      new ExpressionAnalyzer(sourceGraph),
+      new TypeAnalyzer(sourceGraph)
     ];
   }
 

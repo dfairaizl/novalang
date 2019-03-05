@@ -11,6 +11,22 @@ describe('Parser', () => {
         const nodeGraph = parser.parse();
         expect(nodeGraph.treeFromNode()).toEqual({
           type: 'module',
+          name: 'main_module',
+          sources: [{
+            type: 'immutable_declaration',
+            identifier: 'x',
+            expression: [{ type: 'number_literal', kind: 'Int', value: '1' }]
+          }]
+        });
+      });
+
+      it('creates a new module with name to hold parsed code', () => {
+        const parser = new Parser('const x = 1', 'calculator');
+
+        const nodeGraph = parser.parse();
+        expect(nodeGraph.treeFromNode()).toEqual({
+          type: 'module',
+          name: 'calculator',
           sources: [{
             type: 'immutable_declaration',
             identifier: 'x',

@@ -12,8 +12,14 @@ const {
 const Graph = require('../graph/graph');
 
 class Parser {
-  constructor (input, options) {
+  constructor (input, name, options) {
     this.options = options || {};
+
+    if (name) {
+      this.moduleName = name;
+    } else {
+      this.moduleName = 'main_module';
+    }
 
     this.lexer = new Lexer(input);
     this.sourceGraph = new Graph();
@@ -24,7 +30,7 @@ class Parser {
   // Decent Parsing Methods
 
   parse () {
-    const codeModule = this.sourceGraph.addNode({ type: 'module' });
+    const codeModule = this.sourceGraph.addNode({ type: 'module', name: this.moduleName });
     let currentExpression = null;
 
     while ((currentExpression = this.parsePrimaryExpression())) {
