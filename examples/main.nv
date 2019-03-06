@@ -1,0 +1,10 @@
+import printf from 'io';
+
+function add(x: Int, y: Int) -> Int {
+  const res = x + y;
+  return res;
+}
+
+const x = add(1, 1);
+
+printf("Hello %d", x);

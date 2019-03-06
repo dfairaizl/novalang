@@ -9,7 +9,7 @@ class ModuleAnalyzer {
   }
 
   analyze () {
-    const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.type === 'module');
+    const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.name === 'main_module');
     const iterator = this.sourceGraph.traverse(codeModule);
 
     iterator.iterate(codeModule, (node) => {

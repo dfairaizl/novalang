@@ -1,4 +1,4 @@
-const { resolve } = require('path');
+const { basename, resolve } = require('path');
 const { readFileSync } = require('fs');
 const { spawn } = require('child_process');
 
@@ -8,13 +8,34 @@ const CodeGenerator = require('./codegen');
 const LLVMInit = require('./codegen/llvm');
 const buildTargetMachine = require('./codegen/llvm/machine');
 
+const STANDARD_LIBRARY = ['io'];
+
+class Source {
+  constructor (name, path) {
+    this.name = name;
+    this.path = path;
+  }
+
+  readSource () {
+    return readFileSync(this.path);
+  }
+
+  fileName () {
+    return basename(this.path, '.nv');
+  }
+}
+
 class Compiler {
   constructor (entrySource, programName, options) {
+    this.libraryDir = resolve(__dirname, '..', 'compiler', 'library');
     this.baseDir = resolve(__dirname, '..', 'examples');
     this.buildDir = resolve(__dirname, '..', 'build');
-
     this.outputProgramName = resolve(__dirname, this.buildDir, programName);
-    this.sources = [entrySource];
+
+    this.sources = [
+      new Source('main_module', entrySource)
+    ];
+
     this.options = {
       debugGraph: false,
       ...options
@@ -23,7 +44,7 @@ class Compiler {
     LLVMInit();
     this.machine = buildTargetMachine();
 
-    this.sourceModules = [];
+    this.sourceGraph = null;
     this.compiledModules = [];
   }
 
@@ -33,64 +54,74 @@ class Compiler {
 
     while (this.sources.length > 0) {
       const currentSource = this.sources.pop();
+      console.log('Compiling', currentSource.fileName());
+      // const sourceFile = resolve(this.baseDir, currentSource);
+      const sourceGraph = this.parse(currentSource);
 
-      const sourceFile = resolve(this.baseDir, currentSource);
-      const sourceCode = this.readSource(currentSource);
-      const sourceGraph = this.parse(sourceCode);
-
-      this.sourceModules.push(sourceGraph);
-
-      const dependantModules = sourceGraph.search('require_statement');
-      dependantModules.forEach((m) => {
-        const source = sourceGraph.relationFromNode(m, 'module');
-        this.sources.push(`${source[0].attributes.value}.nv`);
-      });
-
-      const scopeAnalyzer = new SemanticAnalyzer(sourceGraph);
-      scopeAnalyzer.analyze();
-
-      if (this.options.debugGraph) {
-        sourceGraph.debug();
+      if (!this.sourceGraph) {
+        this.sourceGraph = sourceGraph;
+      } else {
+        this.sourceGraph.merge(sourceGraph);
       }
 
-      const codeGenerator = new CodeGenerator(this.buildDir, sourceFile, sourceGraph);
-
-      const buildUnit = codeGenerator.codegen();
-
-      this.compiledModules.push(buildUnit);
+      const dependantModules = sourceGraph.search('import_statement');
+      dependantModules.forEach((m) => {
+        const importSource = this.createSource(m);
+        this.sources.push(importSource);
+      });
     }
 
-    console.log('Generating object files');
-    this.compiledModules.forEach((unit) => {
-      unit.emitObjectFile(this.machine);
-    });
+    const scopeAnalyzer = new SemanticAnalyzer(this.sourceGraph);
+    scopeAnalyzer.analyze();
 
-    // Link the object files into a binary
-    console.log('Creating binary');
+    // if (this.options.debugGraph) {
+    //   this.sourceGraph.debug();
+    // }
 
-    const linkerParams = ['-o', this.outputProgramName];
-    this.compiledModules.forEach((unit) => {
-      linkerParams.push(unit.objectFile);
-    });
-
-    // build resulting binary
-    spawn('clang', linkerParams);
-
-    console.log('Done - ', this.outputProgramName);
+    // this.sourceModules.forEach((sourceGraph) => {
+    //
+    //   const codeGenerator = new CodeGenerator(this.buildDir, sourceFile, sourceGraph);
+    //
+    //   const buildUnit = codeGenerator.codegen();
+    //
+    //   this.compiledModules.push(buildUnit);
+    // });
+    //
+    // console.log('Generating object files');
+    // this.compiledModules.forEach((unit) => {
+    //   unit.emitObjectFile(this.machine);
+    // });
+    //
+    // // Link the object files into a binary
+    // console.log('Creating binary');
+    //
+    // const linkerParams = ['-o', this.outputProgramName];
+    // this.compiledModules.forEach((unit) => {
+    //   linkerParams.push(unit.objectFile);
+    // });
+    //
+    // // build resulting binary
+    // spawn('clang', linkerParams);
+    //
+    // console.log('Done - ', this.outputProgramName);
   }
 
-  parse (sourceCode) {
-    return this.parseModule(sourceCode);
+  parse (source) {
+    return this.parseModule(source);
   }
 
   parseModule (moduleSource) {
-    const parser = new Parser(moduleSource);
+    const parser = new Parser(moduleSource.readSource(), moduleSource.name);
 
     return parser.parse();
   }
 
-  readSource (sourceFile) {
-    return readFileSync(sourceFile);
+  createSource (node) {
+    const importName = node.attributes.name;
+
+    if (STANDARD_LIBRARY.includes(importName)) {
+      return new Source(importName, resolve(this.libraryDir, `${importName}.nv`));
+    }
   }
 }
 

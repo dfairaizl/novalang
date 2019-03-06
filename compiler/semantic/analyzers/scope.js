@@ -9,7 +9,7 @@ class ScopeAnalyzer {
   }
 
   analyze () {
-    const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.type === 'module');
+    const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.name === 'main_module');
 
     this.analyzeReferences(codeModule);
     this.analyzeDeclarations(codeModule);
