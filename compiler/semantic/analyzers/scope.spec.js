@@ -55,6 +55,8 @@ describe('Scope Analyzer', () => {
       const analyzer = new SemanticAnalyzer(sourceGraph);
       analyzer.analyze();
 
+      sourceGraph.debug();
+
       expect(sourceGraph.relationFromNode(ref[0], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration', identifier: 'x' } }
       ]);
@@ -97,6 +99,26 @@ describe('Scope Analyzer', () => {
       analyzer.analyze();
 
       const node = sourceGraph.search('variable_reference');
+
+      expect(sourceGraph.relationFromNode(node[0], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration' } } // inner `z` is mutable in this case
+      ]);
+    });
+  });
+
+  describe('function references', () => {
+    it('throws an exception for use of undeclared variables', () => {
+      const parser = new Parser(`
+        let z = function incr(x: Int) -> Int { return x + 1 };
+        z(1);
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const analyzer = new SemanticAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      const node = sourceGraph.search('invocation');
 
       expect(sourceGraph.relationFromNode(node[0], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration' } } // inner `z` is mutable in this case
