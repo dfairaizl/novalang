@@ -356,4 +356,31 @@ describe('Type Analyzer', () => {
       expect(() => semanticAnalyzer.analyze()).toThrowError(VoidAssignmentError);
     });
   });
+
+  describe('imports', () => {
+    it('binds references to imported functions', () => {
+      const libParser = new Parser(`
+        function add(x: Int, y: Int) -> Int {}
+      `, 'math');
+
+      const parser = new Parser(`
+        import add from 'math';
+        let z: Int = add(1, 1);
+      `);
+
+      const lib = libParser.parse();
+      const sourceGraph = parser.parse();
+
+      sourceGraph.merge(lib);
+
+      const analyzer = new Analyzer(sourceGraph);
+      analyzer.analyze();
+
+      const zNode = sourceGraph.search('import_declaration')[0];
+      const type = sourceGraph.relationFromNode(zNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+    });
+  });
 });

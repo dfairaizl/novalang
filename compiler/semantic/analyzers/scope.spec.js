@@ -151,7 +151,7 @@ describe('Scope Analyzer', () => {
 
       const parser = new Parser(`
         import add from 'math';
-        let z = add(1, 1);
+        let z: Int = add(1, 1);
       `);
 
       const lib = libParser.parse();
