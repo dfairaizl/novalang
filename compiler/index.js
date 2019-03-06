@@ -54,7 +54,7 @@ class Compiler {
 
     while (this.sources.length > 0) {
       const currentSource = this.sources.pop();
-      console.log('Compiling', currentSource.fileName());
+      console.log(' - ', currentSource.fileName());
       // const sourceFile = resolve(this.baseDir, currentSource);
       const sourceGraph = this.parse(currentSource);
 
@@ -74,36 +74,30 @@ class Compiler {
     const scopeAnalyzer = new SemanticAnalyzer(this.sourceGraph);
     scopeAnalyzer.analyze();
 
-    // if (this.options.debugGraph) {
-    //   this.sourceGraph.debug();
-    // }
+    const codeGenerator = new CodeGenerator(this.buildDir, this.sourceGraph);
+    const buildUnits = codeGenerator.codegen();
 
-    // this.sourceModules.forEach((sourceGraph) => {
-    //
-    //   const codeGenerator = new CodeGenerator(this.buildDir, sourceFile, sourceGraph);
-    //
-    //   const buildUnit = codeGenerator.codegen();
-    //
-    //   this.compiledModules.push(buildUnit);
-    // });
-    //
-    // console.log('Generating object files');
-    // this.compiledModules.forEach((unit) => {
-    //   unit.emitObjectFile(this.machine);
-    // });
-    //
-    // // Link the object files into a binary
-    // console.log('Creating binary');
-    //
-    // const linkerParams = ['-o', this.outputProgramName];
-    // this.compiledModules.forEach((unit) => {
-    //   linkerParams.push(unit.objectFile);
-    // });
-    //
-    // // build resulting binary
-    // spawn('clang', linkerParams);
-    //
-    // console.log('Done - ', this.outputProgramName);
+    if (this.options.debugGraph) {
+      this.sourceGraph.debug();
+    }
+
+    console.log('Generating object files');
+    buildUnits.forEach((unit) => {
+      unit.emitObjectFile(this.machine);
+    });
+
+    // Link the object files into a binary
+    console.log('Creating binary');
+
+    const linkerParams = ['-o', this.outputProgramName];
+    buildUnits.forEach((unit) => {
+      linkerParams.push(unit.objectFile);
+    });
+
+    // build resulting binary
+    spawn('clang', linkerParams);
+
+    console.log('Done - ', this.outputProgramName);
   }
 
   parse (source) {

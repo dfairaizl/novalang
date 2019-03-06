@@ -15,22 +15,18 @@ const {
 const BuildUnit = require('./build-unit');
 
 class CodeGenerator {
-  constructor (buildDir, source, sourceGraph) {
+  constructor (buildDir, sourceGraph) {
     this.buildDir = buildDir;
-    this.source = source;
     this.sourceGraph = sourceGraph;
     this.scope = {};
 
-    this.sourceName = basename(this.source, '.nv');
-    this.moduleuleName = `${this.sourceName}_module`;
-    this.module = new Module(this.sourceName);
     this.builder = new Builder();
     this.namedVars = [];
 
     this.builderPos = [];
   }
 
-  createMain () {
+  createMain (name) {
     const params = [
       new Parameter('argc', Int32()),
       new Parameter('argv', Pointer(Pointer(Int8())))
@@ -41,7 +37,7 @@ class CodeGenerator {
 
     this.builder.enter(mainFunc);
 
-    const entryModuleRef = this.module.getNamedFunction(this.moduleuleName);
+    const entryModuleRef = this.module.getNamedFunction(name);
     this.builder.buildCall(entryModuleRef, [], '');
     // libLLVM.LLVMBuildCall(this.builder, entryModuleRef, [], 0, ''); // last param is the variable to store call retval in
 
@@ -51,31 +47,31 @@ class CodeGenerator {
   }
 
   codegen () {
-    console.log('Compiling', `${this.sourceName}.nv`);
-
     // externals
-    const params = [
-      new Parameter('format', Pointer(Int8()))
-    ];
+    // const params = [
+    //   new Parameter('format', Pointer(Int8()))
+    // ];
+    //
+    // const printf = new Func('printf', Int32(), params, true);
+    // this.module.declareFunction(printf);
 
-    const printf = new Func('printf', Int32(), params, true);
-    this.module.declareFunction(printf);
+    const codeModules = this.sourceGraph.search('module');
+    const buildUnits = codeModules.map((codeModule) => {
+      this.module = this.codegenModule(codeModule);
 
-    const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.type === 'module');
-    this.codegenModule(codeModule);
+      // const sources = this.sourceGraph.outgoing(codeModule);
+      // sources.forEach((node) => this.codegenNode(node));
+      //
+      this.builder.buildVoidRet();
 
-    // iterate throught the modules adjacent nodes (direct children)
-    const adj = this.sourceGraph.adjacencyList[codeModule.id];
-    adj.edges.forEach((e) => {
-      const node = e.target;
-      this.codegenNode(node);
+      if (codeModule.attributes.name === 'main_module') {
+        this.createMain(codeModule.attributes.name);
+      }
+
+      return new BuildUnit(this.buildDir, codeModule.attributes.name, this.module);
     });
 
-    this.builder.buildVoidRet();
-
-    this.createMain();
-
-    return new BuildUnit(this.buildDir, this.sourceName, this.module);
+    return buildUnits;
   }
 
   codegenNode (node) {
@@ -98,11 +94,13 @@ class CodeGenerator {
   // Code Generation
 
   codegenModule (moduleNode) {
-    const moduleFunc = new Func(this.moduleuleName, Void(), [], false);
-    this.module.defineFunction(moduleFunc);
+    const llvmMod = new Module(moduleNode.attributes.name);
+
+    const moduleFunc = new Func(moduleNode.attributes.name, Void(), [], false);
+    llvmMod.defineFunction(moduleFunc);
     this.builder.enter(moduleFunc);
 
-    return moduleFunc;
+    return llvmMod;
   }
 
   codeGenFunction (funcNode) {
