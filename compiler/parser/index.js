@@ -688,13 +688,13 @@ class Parser {
     } while (tok.value !== 'from');
 
     const modName = this.parseIdentifier();
-    const mod = this.sourceGraph.addNode({ type: 'import_statement', name: modName });
+    const importNode = this.sourceGraph.addNode({ type: 'import_statement', name: modName });
 
     imports.forEach((i) => {
-      this.sourceGraph.addEdge(mod, i, 'import');
+      this.sourceGraph.addEdge(importNode, i, 'import');
     });
 
-    return mod;
+    return importNode;
   }
 
   // atomics and literals

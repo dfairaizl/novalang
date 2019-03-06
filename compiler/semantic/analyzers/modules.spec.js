@@ -5,6 +5,10 @@ const { readFileSync } = require('fs');
 
 const Parser = require('../../parser');
 const Analyzer = require('..');
+const {
+  ImportNotFoundError,
+  ModuleNotFound
+} = require('../errors');
 
 const file = readFileSync(resolve(__dirname, '..', '..', 'library', 'io', 'io.nv'));
 const ioFile = file.toString('utf8');
@@ -22,7 +26,19 @@ describe('Module Analyzer', () => {
   });
 
   describe('import declarations', () => {
-    it.only('checks a single function imported from other modules', () => {
+    it('throws an error if module is not found', () => {
+      const parser = new Parser(`
+        import printf from 'stdio';
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+
+      expect(() => semanticAnalyzer.analyze()).toThrowError(ModuleNotFound);
+    });
+
+    it('checks a single function imported from other modules', () => {
       const parser = new Parser(`
         import printf from 'io';
         printf('test')
@@ -63,6 +79,20 @@ describe('Module Analyzer', () => {
       expect(sourceGraph.relationFromNode(ref[1], 'binding')).toMatchObject([
         { attributes: { type: 'function', name: 'readLine' } }
       ]);
+    });
+
+    it('throws an error if import not found in module', () => {
+      const parser = new Parser(`
+        import scanf from 'io';
+      `);
+
+      const sourceGraph = parser.parse();
+
+      sourceGraph.merge(libIO);
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+
+      expect(() => semanticAnalyzer.analyze()).toThrowError(ImportNotFoundError);
     });
   });
 });

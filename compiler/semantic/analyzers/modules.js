@@ -1,3 +1,8 @@
+const {
+  ImportNotFoundError,
+  ModuleNotFound
+} = require('../errors');
+
 class ModuleAnalyzer {
   constructor (sourceGraph) {
     this.sourceGraph = sourceGraph;
@@ -33,7 +38,7 @@ class ModuleAnalyzer {
         this.sourceGraph.addEdge(importNode, matchedNode, 'binding');
         this.sourceGraph.addEdge(matchedNode, importNode, 'reference');
       } else {
-        throw new Error('import not found');
+        throw new ImportNotFoundError(`Import \`${importNode.attributes.identifier}\` was not found in module \`${module.attributes.name}\``);
       }
     });
   }
@@ -45,7 +50,7 @@ class ModuleAnalyzer {
     const resolvedMod = modules.find((n) => n.attributes.name === name);
 
     if (!resolvedMod) {
-      throw new Error('Unknown module');
+      throw new ModuleNotFound(`Module \`${node.attributes.name}\` not found`);
     }
 
     return resolvedMod;

@@ -63,7 +63,6 @@ class ScopeAnalyzer {
   checkInvocation (node) {
     // try find the closest declaration that matches
     const scopeNodes = this.buildSymbolTable(node);
-    console.log(scopeNodes);
     const declNode = scopeNodes.find((n) => {
       return n.attributes.name === node.attributes.name ||
         n.attributes.identifier === node.attributes.name;
@@ -110,9 +109,8 @@ class ScopeAnalyzer {
       visited[node.id] = true;
 
       const parent = this.sourceGraph.incoming(node);
-      console.log('parent incoming', node, parent);
       if (parent[0]) {
-        this.sourceGraph.outgoing(parent[0]).forEach((n) => {
+        this.directScope(parent[0]).forEach((n) => {
           if (!visited[n.id]) {
             if (this.scopable(n)) {
               scopeNodes.push(n);
@@ -130,13 +128,29 @@ class ScopeAnalyzer {
   }
 
   scopable (node) {
-    console.log(node);
     return node.attributes.type === 'immutable_declaration' ||
       node.attributes.type === 'function_argument' ||
       node.attributes.type === 'mutable_declaration' ||
       node.attributes.type === 'immutable_declaration' ||
-      node.attributes.type === 'import_statement' ||
+      node.attributes.type === 'import_declaration' ||
       node.attributes.type === 'function';
+  }
+
+  directScope (node) {
+    // handle the top level module as a special case
+    // so we can make sure import declarations are included in the scope
+    if (node.attributes.type === 'module') {
+      const scope = this.sourceGraph.outgoing(node);
+      // include the imports
+      const imports = this.sourceGraph.search('import_statement');
+      imports.forEach((i) => {
+        scope.push(this.sourceGraph.relationFromNode(i, 'import')[0]);
+      });
+
+      return scope;
+    } else {
+      return this.sourceGraph.outgoing(node);
+    }
   }
 }
 

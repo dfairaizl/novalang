@@ -55,8 +55,6 @@ describe('Scope Analyzer', () => {
       const analyzer = new SemanticAnalyzer(sourceGraph);
       analyzer.analyze();
 
-      sourceGraph.debug();
-
       expect(sourceGraph.relationFromNode(ref[0], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration', identifier: 'x' } }
       ]);
@@ -141,6 +139,33 @@ describe('Scope Analyzer', () => {
 
       expect(sourceGraph.relationFromNode(ref[0], 'reference')).toMatchObject([
         { attributes: { type: 'variable_reference' } }
+      ]);
+    });
+  });
+
+  describe('import declarations', () => {
+    it('binds references to imported functions', () => {
+      const libParser = new Parser(`
+        function add(x: Int, y: Int) -> Int {}
+      `, 'math');
+
+      const parser = new Parser(`
+        import add from 'math';
+        let z = add(1, 1);
+      `);
+
+      const lib = libParser.parse();
+      const sourceGraph = parser.parse();
+
+      sourceGraph.merge(lib);
+
+      const ref = sourceGraph.search('invocation');
+
+      const analyzer = new SemanticAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      expect(sourceGraph.relationFromNode(ref[0], 'binding')).toMatchObject([
+        { attributes: { type: 'import_declaration' } }
       ]);
     });
   });
