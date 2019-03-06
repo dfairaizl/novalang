@@ -277,12 +277,28 @@ describe('Lexer', () => {
       expect(token).toEqual(new KeywordToken('function'));
     });
 
+    it('lexes `from`', () => {
+      const lex = new Lexer('from');
+      const token = lex.nextToken();
+
+      expect(token).toBeInstanceOf(KeywordToken);
+      expect(token).toEqual(new KeywordToken('from'));
+    });
+
     it('lexes `if`', () => {
       const lex = new Lexer('if');
       const token = lex.nextToken();
 
       expect(token).toBeInstanceOf(KeywordToken);
       expect(token).toEqual(new KeywordToken('if'));
+    });
+
+    it('lexes `import`', () => {
+      const lex = new Lexer('import');
+      const token = lex.nextToken();
+
+      expect(token).toBeInstanceOf(KeywordToken);
+      expect(token).toEqual(new KeywordToken('import'));
     });
 
     it('lexes `let`', () => {
@@ -299,14 +315,6 @@ describe('Lexer', () => {
 
       expect(token).toBeInstanceOf(KeywordToken);
       expect(token).toEqual(new KeywordToken('return'));
-    });
-
-    it('lexes `require`', () => {
-      const lex = new Lexer('require');
-      const token = lex.nextToken();
-
-      expect(token).toBeInstanceOf(KeywordToken);
-      expect(token).toEqual(new KeywordToken('require'));
     });
 
     it('lexes `while`', () => {

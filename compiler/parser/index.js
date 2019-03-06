@@ -98,10 +98,10 @@ class Parser {
       return this.parseFunctionDeclaration();
     } else if (keywordToken.value === 'return') {
       return this.parseReturnExpression();
+    } else if (keywordToken.value === 'import') {
+      return this.parseImport();
     } else if (keywordToken.value === 'class') {
       return this.parseClassDefinition();
-    } else if (keywordToken.value === 'require') {
-      return this.parseModuleRequire();
     } else if (keywordToken.value === 'if') {
       return this.parseConditionalBranch();
     } else if (keywordToken.value === 'while') {
@@ -651,18 +651,50 @@ class Parser {
 
   // modules
 
-  parseModuleRequire () {
-    this.validateNextToken('require');
-    this.validateNextToken('(');
+  // parseModuleRequire () {
+  //   this.validateNextToken('require');
+  //   this.validateNextToken('(');
+  //
+  //   const expr = this.sourceGraph.addNode({ type: 'require_statement' });
+  //   const mod = this.parseExpression();
+  //
+  //   this.validateNextToken(')');
+  //
+  //   this.sourceGraph.addEdge(expr, mod, 'module');
+  //
+  //   return expr;
+  // }
 
-    const expr = this.sourceGraph.addNode({ type: 'require_statement' });
-    const mod = this.parseExpression();
+  parseImport () {
+    this.validateNextToken('import');
 
-    this.validateNextToken(')');
+    const imports = [];
+    let tok = null;
 
-    this.sourceGraph.addEdge(expr, mod, 'module');
+    do {
+      let expr;
+      tok = this.peekNextToken();
 
-    return expr;
+      if (tok instanceof IdentifierToken) {
+        const identifier = this.parseIdentifier();
+        expr = this.sourceGraph.addNode({ type: 'import_declaration', identifier });
+      }
+
+      if (expr) {
+        imports.push(expr);
+      }
+
+      tok = this.getNextToken();
+    } while (tok.value !== 'from');
+
+    const modName = this.parseIdentifier();
+    const mod = this.sourceGraph.addNode({ type: 'import_statement', name: modName });
+
+    imports.forEach((i) => {
+      this.sourceGraph.addEdge(mod, i, 'import');
+    });
+
+    return mod;
   }
 
   // atomics and literals
