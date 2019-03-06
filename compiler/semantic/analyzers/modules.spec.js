@@ -1,4 +1,4 @@
-/* global describe, it, expect */
+/* global describe, beforeEach, it, expect */
 
 const { resolve } = require('path');
 const { readFileSync } = require('fs');
@@ -9,19 +9,22 @@ const Analyzer = require('..');
 const file = readFileSync(resolve(__dirname, '..', '..', 'library', 'io', 'io.nv'));
 const ioFile = file.toString('utf8');
 
-const parser = new Parser(ioFile, 'io');
-const libIO = parser.parse();
+let libIO = null;
 
 // library IO {
 //   external function printf(format: char *, ...args) -> Int;
 // }
 
 describe('Module Analyzer', () => {
+  beforeEach(() => {
+    const parser = new Parser(ioFile, 'io');
+    libIO = parser.parse();
+  });
+
   describe('value assignments', () => {
-    it('allows functions from the standard library to be imported', () => {
+    it('checks a single function imported from other modules', () => {
       const parser = new Parser(`
-        const printf = require('io');
-        printf('hello world');
+        import printf from 'io';
       `);
 
       const sourceGraph = parser.parse();
@@ -31,9 +34,34 @@ describe('Module Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      sourceGraph.debug();
+      const ref = sourceGraph.search('import_declaration');
 
-      expect(() => true).toBe(false);
+      expect(sourceGraph.relationFromNode(ref[0], 'binding')).toMatchObject([
+        { attributes: { type: 'function', name: 'printf' } }
+      ]);
+    });
+
+    it('checks multiple functions imported from other modules', () => {
+      const parser = new Parser(`
+        import printf, readLine from 'io';
+      `);
+
+      const sourceGraph = parser.parse();
+
+      sourceGraph.merge(libIO);
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const ref = sourceGraph.search('import_declaration');
+
+      expect(sourceGraph.relationFromNode(ref[0], 'binding')).toMatchObject([
+        { attributes: { type: 'function', name: 'printf' } }
+      ]);
+
+      expect(sourceGraph.relationFromNode(ref[1], 'binding')).toMatchObject([
+        { attributes: { type: 'function', name: 'readLine' } }
+      ]);
     });
   });
 });

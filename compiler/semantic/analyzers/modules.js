@@ -14,37 +14,32 @@ class ModuleAnalyzer {
 
   analyzeNode (node) {
     switch (node.attributes.type) {
-      case 'immutable_declaration':
-        this.checkImported(node);
+      case 'import_statement':
+        this.analyzeImports(node);
         break;
       default:
     }
   }
 
-  checkImported (node) {
-    // is the expression for this declaration a require statement?
-    const exprNode = this.sourceGraph.relationFromNode(node, 'expression');
+  analyzeImports (node) {
+    const module = this.resolveModule(node);
+    const exported = this.sourceGraph.outgoing(module);
+    const imports = this.sourceGraph.relationFromNode(node, 'import');
 
-    if (exprNode[0].attributes.type === 'require_statement') {
-      const moduleNode = this.importModule(exprNode[0]);
-
-      this.sourceGraph.outgoing(moduleNode).forEach((n) => {
-        if (n.attributes.name === node.attributes.identifier) {
-          this.sourceGraph.addEdge(node, n, 'binding');
-          this.sourceGraph.addEdge(n, node, 'reference');
-        }
-      });
-    }
-  }
-
-  importModule (node) {
-    const externalMod = this.sourceGraph.relationFromNode(node, 'module');
-
-    return this.resolveModule(externalMod[0]);
+    // do the imports match function from the module?
+    imports.forEach((importNode) => {
+      const matchedNode = exported.find((n) => n.attributes.name === importNode.attributes.identifier);
+      if (matchedNode) {
+        this.sourceGraph.addEdge(importNode, matchedNode, 'binding');
+        this.sourceGraph.addEdge(matchedNode, importNode, 'reference');
+      } else {
+        throw new Error('import not found');
+      }
+    });
   }
 
   resolveModule (node) {
-    const name = node.attributes.value;
+    const name = node.attributes.name;
     const modules = this.sourceGraph.search('module');
 
     const resolvedMod = modules.find((n) => n.attributes.name === name);
