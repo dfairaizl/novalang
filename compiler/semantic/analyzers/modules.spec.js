@@ -21,10 +21,11 @@ describe('Module Analyzer', () => {
     libIO = parser.parse();
   });
 
-  describe('value assignments', () => {
-    it('checks a single function imported from other modules', () => {
+  describe('import declarations', () => {
+    it.only('checks a single function imported from other modules', () => {
       const parser = new Parser(`
         import printf from 'io';
+        printf('test')
       `);
 
       const sourceGraph = parser.parse();

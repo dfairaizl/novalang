@@ -63,6 +63,7 @@ class ScopeAnalyzer {
   checkInvocation (node) {
     // try find the closest declaration that matches
     const scopeNodes = this.buildSymbolTable(node);
+    console.log(scopeNodes);
     const declNode = scopeNodes.find((n) => {
       return n.attributes.name === node.attributes.name ||
         n.attributes.identifier === node.attributes.name;
@@ -109,6 +110,7 @@ class ScopeAnalyzer {
       visited[node.id] = true;
 
       const parent = this.sourceGraph.incoming(node);
+      console.log('parent incoming', node, parent);
       if (parent[0]) {
         this.sourceGraph.outgoing(parent[0]).forEach((n) => {
           if (!visited[n.id]) {
@@ -128,10 +130,12 @@ class ScopeAnalyzer {
   }
 
   scopable (node) {
+    console.log(node);
     return node.attributes.type === 'immutable_declaration' ||
       node.attributes.type === 'function_argument' ||
       node.attributes.type === 'mutable_declaration' ||
       node.attributes.type === 'immutable_declaration' ||
+      node.attributes.type === 'import_statement' ||
       node.attributes.type === 'function';
   }
 }
