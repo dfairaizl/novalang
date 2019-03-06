@@ -651,20 +651,6 @@ class Parser {
 
   // modules
 
-  // parseModuleRequire () {
-  //   this.validateNextToken('require');
-  //   this.validateNextToken('(');
-  //
-  //   const expr = this.sourceGraph.addNode({ type: 'require_statement' });
-  //   const mod = this.parseExpression();
-  //
-  //   this.validateNextToken(')');
-  //
-  //   this.sourceGraph.addEdge(expr, mod, 'module');
-  //
-  //   return expr;
-  // }
-
   parseImport () {
     this.validateNextToken('import');
 
@@ -673,16 +659,11 @@ class Parser {
 
     do {
       let expr;
-      tok = this.peekNextToken();
 
-      if (tok instanceof IdentifierToken) {
-        const identifier = this.parseIdentifier();
-        expr = this.sourceGraph.addNode({ type: 'import_declaration', identifier });
-      }
+      const identifier = this.parseIdentifier();
+      expr = this.sourceGraph.addNode({ type: 'import_declaration', identifier });
 
-      if (expr) {
-        imports.push(expr);
-      }
+      imports.push(expr);
 
       tok = this.getNextToken();
     } while (tok.value !== 'from');

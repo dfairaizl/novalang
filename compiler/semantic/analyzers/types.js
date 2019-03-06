@@ -190,18 +190,8 @@ class TypeAnalyzer {
   resolveImport (node) {
     const importDecls = this.sourceGraph.relationFromNode(node, 'import');
     importDecls.forEach((node) => {
-      const currentType = this.sourceGraph.relationFromNode(node, 'type');
-
-      if (currentType[0]) {
-        return currentType[0];
-      }
-
       const bindingNode = this.sourceGraph.relationFromNode(node, 'binding');
       const exprType = this.analyzeType(bindingNode[0]);
-
-      if (exprType.attributes.kind === 'Void') {
-        throw new VoidAssignmentError(`Variable \`${node.attributes.identifier}\` cannot have type Void`);
-      }
 
       this.sourceGraph.addEdge(node, exprType, 'type');
 
