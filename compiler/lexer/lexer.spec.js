@@ -122,6 +122,12 @@ describe('Lexer', () => {
       const lex = new Lexer('=>');
       expect(lex.nextToken()).toEqual(new OperatorToken('=>'));
     });
+
+    it('does not lex `*,`', () => {
+      const lex = new Lexer('*,');
+      expect(lex.nextToken()).toEqual(new OperatorToken('*'));
+      expect(lex.nextToken()).toEqual(new PunctuatorToken(','));
+    });
   });
 
   describe('puncuation', () => {
@@ -269,6 +275,14 @@ describe('Lexer', () => {
       expect(token).toEqual(new KeywordToken('extends'));
     });
 
+    it('lexes `external`', () => {
+      const lex = new Lexer('external');
+      const token = lex.nextToken();
+
+      expect(token).toBeInstanceOf(KeywordToken);
+      expect(token).toEqual(new KeywordToken('external'));
+    });
+
     it('lexes `function`', () => {
       const lex = new Lexer('function');
       const token = lex.nextToken();
@@ -335,6 +349,13 @@ describe('Lexer', () => {
     it('lexes `c1`', () => {
       const lex = new Lexer('c1');
       expect(lex.nextToken()).toEqual(new IdentifierToken('c1'));
+    });
+
+    it('lexes `key.value` as separate tokens', () => {
+      const lex = new Lexer('key.value');
+      expect(lex.nextToken()).toEqual(new IdentifierToken('key'));
+      expect(lex.nextToken()).toEqual(new OperatorToken('.'));
+      expect(lex.nextToken()).toEqual(new IdentifierToken('value'));
     });
   });
 });

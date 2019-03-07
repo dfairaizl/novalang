@@ -10,7 +10,7 @@ const {
   ModuleNotFound
 } = require('../errors');
 
-const file = readFileSync(resolve(__dirname, '..', '..', 'library', 'io', 'io.nv'));
+const file = readFileSync(resolve(__dirname, '..', '..', 'library', 'io.nv'));
 const ioFile = file.toString('utf8');
 
 let libIO = null;
@@ -60,7 +60,7 @@ describe('Module Analyzer', () => {
 
     it('checks multiple functions imported from other modules', () => {
       const parser = new Parser(`
-        import printf, readLine from 'io';
+        import printf, scanf from 'io';
       `);
 
       const sourceGraph = parser.parse();
@@ -77,13 +77,13 @@ describe('Module Analyzer', () => {
       ]);
 
       expect(sourceGraph.relationFromNode(ref[1], 'binding')).toMatchObject([
-        { attributes: { type: 'function', name: 'readLine' } }
+        { attributes: { type: 'function', name: 'scanf' } }
       ]);
     });
 
     it('throws an error if import not found in module', () => {
       const parser = new Parser(`
-        import scanf from 'io';
+        import fopen from 'io';
       `);
 
       const sourceGraph = parser.parse();

@@ -12,7 +12,7 @@ const {
 
 const DIGIT = new RegExp(/[0-9.]+/);
 const FLOATING_POINT_DIGIT = new RegExp(/\d+\.\d+/);
-const OPERATOR = new RegExp(/[[\]+-/*><=]+/);
+const OPERATOR = new RegExp(/[[\]+\-/*.><=]+/);
 const PUNCTUATOR = new RegExp(/[{},;:()]+/);
 const STRING = new RegExp(/['"]+/);
 const WHITE_SPACE = new RegExp(/^\s+$/);
@@ -28,6 +28,7 @@ const KEYWORDS = [
   'constructor',
   'do',
   'extends',
+  'external',
   'function',
   'from',
   'if',

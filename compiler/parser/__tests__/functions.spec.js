@@ -324,4 +324,106 @@ describe('Parser', () => {
       });
     });
   });
+
+  describe('external functions', () => {
+    it('parses external functions definitions', () => {
+      const parser = new Parser('external function sin(x: Int) -> Int');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'external_function',
+        name: 'sin',
+        kind: 'Int',
+        arguments: [{
+          type: 'function_argument',
+          identifier: 'x',
+          kind: 'Int'
+        }]
+      });
+    });
+
+    it('parses external functions with C-style argument pointers', () => {
+      const parser = new Parser('external function printf(format: char *, arg: Int) -> Int');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'external_function',
+        name: 'printf',
+        kind: 'Int',
+        arguments: [{
+          type: 'function_argument',
+          identifier: 'format',
+          kind: 'char*'
+        }, {
+          type: 'function_argument',
+          identifier: 'arg',
+          kind: 'Int'
+        }]
+      });
+    });
+
+    it('parses external functions with multiple C-style argument pointers', () => {
+      const parser = new Parser('external function printf(format: char *, args: int *) -> Int');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'external_function',
+        name: 'printf',
+        kind: 'Int',
+        arguments: [{
+          type: 'function_argument',
+          identifier: 'format',
+          kind: 'char*'
+        }, {
+          type: 'function_argument',
+          identifier: 'args',
+          kind: 'int*'
+        }]
+      });
+    });
+
+    it('parses external functions with C-style return type', () => {
+      const parser = new Parser('external function malloc(buff: sizet) -> void *');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'external_function',
+        name: 'malloc',
+        kind: 'void*',
+        arguments: [{
+          type: 'function_argument',
+          identifier: 'buff',
+          kind: 'sizet'
+        }]
+      });
+    });
+
+    it('fails to parse external functions with non-typed args', () => {
+      const parser = new Parser('external function malloc(buff)');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parsed).toBe(null);
+    });
+
+    it('fails to parse external functions with no return type', () => {
+      const parser = new Parser('external function malloc(buff: sizet)');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parsed).toBe(null);
+    });
+
+    it('fails to parse external functions with a body defined', () => {
+      const parser = new Parser('external function free(mem: sizet *) -> void {}');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parsed).toBe(null);
+    });
+  });
 });

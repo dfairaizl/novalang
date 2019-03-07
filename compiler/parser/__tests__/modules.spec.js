@@ -19,7 +19,7 @@ describe('Parser', () => {
       });
     });
 
-    it.only('parses import statements with multiple imported functions', () => {
+    it('parses import statements with multiple imported functions', () => {
       const parser = new Parser("import func1, func2 from 'some-module'");
 
       const parsed = parser.parsePrimaryExpression();

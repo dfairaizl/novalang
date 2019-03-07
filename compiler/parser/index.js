@@ -94,6 +94,8 @@ class Parser {
   parseKeywordExpression (keywordToken) {
     if (keywordToken.value === 'const' || keywordToken.value === 'let') {
       return this.parseVariableDeclaration();
+    } else if (keywordToken.value === 'external') {
+      return this.parseExternalFunctionDefinition();
     } else if (keywordToken.value === 'function') {
       return this.parseFunctionDeclaration();
     } else if (keywordToken.value === 'return') {
@@ -328,6 +330,7 @@ class Parser {
   }
 
   // functions
+
   parseFunctionDeclaration () {
     this.validateNextToken('function');
     const funcIdentifier = this.getNextToken();
@@ -374,12 +377,65 @@ class Parser {
     return funcNode;
   }
 
+  parseExternalFunctionDefinition () {
+    this.validateNextToken('external');
+    this.validateNextToken('function');
+
+    const funcIdentifier = this.getNextToken();
+
+    let funcNode;
+    const args = this.parseExternalFunctionArguments();
+    const funcKind = this.parseExternalFunctionType();
+
+    if (funcKind) {
+      funcNode = this.sourceGraph.addNode({
+        type: 'external_function',
+        name: funcIdentifier.value,
+        kind: funcKind
+      });
+    } else {
+      return null;
+    }
+
+    // external functions cannot have a body
+    const tok = this.peekNextToken();
+
+    if (tok && tok.value === '{') {
+      return null;
+    }
+
+    args.forEach((a) => {
+      this.sourceGraph.addEdge(funcNode, a, 'arguments');
+    });
+
+    return funcNode;
+  }
+
   parseFunctionType () {
     const token = this.peekNextToken();
     if (token instanceof OperatorToken && token.value === '->') {
       this.validateNextToken('->');
 
       const typeToken = this.getNextToken();
+
+      return typeToken.value;
+    }
+
+    return null;
+  }
+
+  parseExternalFunctionType () {
+    const token = this.peekNextToken();
+    if (token instanceof OperatorToken && token.value === '->') {
+      this.validateNextToken('->');
+
+      const typeToken = this.getNextToken();
+
+      // check for indirection
+      const pointerTok = this.peekNextToken();
+      if (pointerTok instanceof OperatorToken) {
+        return `${typeToken.value}${pointerTok.value}`;
+      }
 
       return typeToken.value;
     }
@@ -519,6 +575,25 @@ class Parser {
     return null;
   }
 
+  parseExternalType () {
+    const token = this.peekNextToken();
+
+    if (token instanceof PunctuatorToken && token.value === ':') {
+      this.validateNextToken(':');
+      const typeToken = this.getNextToken();
+
+      // check for indirection
+      const pointerTok = this.peekNextToken();
+      if (pointerTok instanceof OperatorToken) {
+        return `${typeToken.value}${pointerTok.value}`;
+      }
+
+      return typeToken.value;
+    }
+
+    return null;
+  }
+
   // classes
   parseClassDefinition () {
     this.validateNextToken('class');
@@ -604,6 +679,38 @@ class Parser {
           expr = this.sourceGraph.addNode({ type: 'function_argument', kind, identifier });
         } else {
           expr = this.sourceGraph.addNode({ type: 'function_argument', identifier });
+        }
+      }
+
+      if (expr) {
+        args.push(expr);
+      }
+
+      tok = this.getNextToken();
+    } while (tok.value !== ')');
+
+    return args;
+  }
+
+  parseExternalFunctionArguments () {
+    const args = [];
+
+    this.validateNextToken('(');
+
+    let tok = null;
+
+    do {
+      let expr;
+      tok = this.peekNextToken();
+
+      if (tok instanceof IdentifierToken) {
+        const identifier = this.parseIdentifier();
+        const kind = this.parseExternalType();
+
+        if (kind) {
+          expr = this.sourceGraph.addNode({ type: 'function_argument', kind, identifier });
+        } else {
+          return null;
         }
       }
 
