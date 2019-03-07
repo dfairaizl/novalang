@@ -1,2 +1,2 @@
-function printf(format: String, arg: Int) -> Int {}
-function scanf(format: String, arg: Int) -> Int {}
+external function printf(format: char *, args: ...) -> Int
+external function scanf(format: String, args: ...) -> Int

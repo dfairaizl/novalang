@@ -15,10 +15,6 @@ const ioFile = file.toString('utf8');
 
 let libIO = null;
 
-// library IO {
-//   external function printf(format: char *, ...args) -> Int;
-// }
-
 describe('Module Analyzer', () => {
   beforeEach(() => {
     const parser = new Parser(ioFile, 'io');
@@ -54,7 +50,7 @@ describe('Module Analyzer', () => {
       const ref = sourceGraph.search('import_declaration');
 
       expect(sourceGraph.relationFromNode(ref[0], 'binding')).toMatchObject([
-        { attributes: { type: 'function', name: 'printf' } }
+        { attributes: { type: 'external_function', name: 'printf' } }
       ]);
     });
 
@@ -73,11 +69,11 @@ describe('Module Analyzer', () => {
       const ref = sourceGraph.search('import_declaration');
 
       expect(sourceGraph.relationFromNode(ref[0], 'binding')).toMatchObject([
-        { attributes: { type: 'function', name: 'printf' } }
+        { attributes: { type: 'external_function', name: 'printf' } }
       ]);
 
       expect(sourceGraph.relationFromNode(ref[1], 'binding')).toMatchObject([
-        { attributes: { type: 'function', name: 'scanf' } }
+        { attributes: { type: 'external_function', name: 'scanf' } }
       ]);
     });
 
