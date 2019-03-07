@@ -160,19 +160,14 @@ class Generator {
   }
 
   codegenInvocation (node, identifier = '') {
-    this.sourceGraph.debug();
-    console.log('invocation', node);
     // look up function in module
     const funcRef = this.module.getNamedFunction(node.attributes.name);
 
     // build argument type list
     const argTypes = this.sourceGraph.relationFromNode(node, 'arguments').map((n) => {
-      console.log('invoke arg', n);
       // return this.getType(n);
       return this.buildValue(n);
     });
-
-    console.log(argTypes);
 
     const ref = this.builder.buildCall(funcRef, argTypes, identifier);
     if (identifier.length > 0) {
@@ -192,8 +187,6 @@ class Generator {
       case 'Int':
         return Constant(this.getType(node), node.attributes.value);
       case 'String':
-        console.log('Building string', node);
-        // return Pointer(Int8());
         return this.builder.buildGlobalString('format', node.attributes.value);
     }
   }
@@ -202,10 +195,6 @@ class Generator {
     switch (typeNode.attributes.kind) {
       case 'Int':
         return Int32();
-      case 'String':
-        console.log('Building string', typeNode);
-        // return Pointer(Int8());
-        return this.builder.buildGlobalString('string', typeNode.attributes.value);
     }
 
     throw new Error(`Unknown type ${typeNode.attributes.kind}`);
