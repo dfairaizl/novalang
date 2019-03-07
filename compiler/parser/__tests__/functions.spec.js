@@ -343,6 +343,27 @@ describe('Parser', () => {
       });
     });
 
+    it('parses external functions with variadic arguments', () => {
+      const parser = new Parser('external function printf(format: char *, els: ...) -> Int');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'external_function',
+        name: 'printf',
+        kind: 'Int',
+        arguments: [{
+          type: 'function_argument',
+          identifier: 'format',
+          kind: 'char*'
+        }, {
+          type: 'function_argument',
+          identifier: 'els',
+          kind: 'variadic'
+        }]
+      });
+    });
+
     it('parses external functions with C-style argument pointers', () => {
       const parser = new Parser('external function printf(format: char *, arg: Int) -> Int');
 

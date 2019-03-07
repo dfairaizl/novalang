@@ -582,6 +582,10 @@ class Parser {
       this.validateNextToken(':');
       const typeToken = this.getNextToken();
 
+      if (typeToken instanceof OperatorToken && typeToken.value === '...') {
+        return 'variadic';
+      }
+
       // check for indirection
       const pointerTok = this.peekNextToken();
       if (pointerTok instanceof OperatorToken) {
