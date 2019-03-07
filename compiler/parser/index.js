@@ -434,7 +434,11 @@ class Parser {
       // check for indirection
       const pointerTok = this.peekNextToken();
       if (pointerTok instanceof OperatorToken) {
-        return `${typeToken.value}${pointerTok.value}`;
+        return {
+          type: 'pointer',
+          kind: typeToken.value,
+          indirection: pointerTok.value.length
+        };
       }
 
       return typeToken.value;
@@ -589,7 +593,11 @@ class Parser {
       // check for indirection
       const pointerTok = this.peekNextToken();
       if (pointerTok instanceof OperatorToken) {
-        return `${typeToken.value}${pointerTok.value}`;
+        return {
+          type: 'pointer',
+          kind: typeToken.value,
+          indirection: pointerTok.value.length
+        };
       }
 
       return typeToken.value;
@@ -712,7 +720,11 @@ class Parser {
         const kind = this.parseExternalType();
 
         if (kind) {
-          expr = this.sourceGraph.addNode({ type: 'function_argument', kind, identifier });
+          expr = this.sourceGraph.addNode({
+            type: 'function_argument',
+            kind,
+            identifier
+          });
         } else {
           return null;
         }

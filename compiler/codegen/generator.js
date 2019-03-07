@@ -25,12 +25,12 @@ class Generator {
   }
 
   generate () {
-    this.builder.buildVoidRet();
-
     const sources = this.sourceGraph.outgoing(this.codeModule);
     sources.forEach((source) => {
       this.codegenNode(source);
     });
+
+    this.builder.buildVoidRet();
 
     if (this.codeModule.attributes.name === 'main_module') {
       this.createMain(this.codeModule.attributes.name);
@@ -38,14 +38,6 @@ class Generator {
 
     return new BuildUnit(this.buildDir, this.codeModule.attributes.name, this.module);
   }
-
-  // externals
-  // const params = [
-  //   new Parameter('format', Pointer(Int8()))
-  // ];
-  //
-  // const printf = new Func('printf', Int32(), params, true);
-  // this.module.declareFunction(printf);
 
   codegenModule () {
     const llvmMod = new Module(this.codeModule.attributes.name);
@@ -61,12 +53,16 @@ class Generator {
     switch (node.attributes.type) {
       case 'function':
         return this.codeGenFunction(node);
+      case 'external_function':
+        return this.codeGenExternalFunction(node);
+      case 'import_statement':
+        return this.codeGenImports(node);
       // case 'return_statement':
       //   return this.codegenReturn(node);
       // case 'immutable_declaration':
       //   return this.codegenVar(node);
-      // case 'invocation':
-      //   return this.codegenInvocation(node);
+      case 'invocation':
+        return this.codegenInvocation(node);
       // case 'number_literal':
       //   return this.codegenNumberLiteral(node);
       default:
@@ -120,6 +116,31 @@ class Generator {
     this.builder.exit();
   }
 
+  codeGenExternalFunction (node) {
+    const funcName = node.attributes.name;
+    const retType = this.getType(node);
+
+    // build argument type list
+    const args = this.sourceGraph.relationFromNode(node, 'arguments');
+    const variadic = args.find((a) => a.attributes.kind === 'variadic');
+    const argTypes = args
+      .filter((a) => a.attributes.kind !== 'variadic')
+      .map((n) => {
+        return new Parameter(n.attributes.identifier, this.getExternalType(n.attributes.kind));
+      });
+
+    const func = new Func(funcName, retType, argTypes, variadic !== undefined);
+    this.module.declareFunction(func);
+  }
+
+  codeGenImports (node) {
+    const imports = this.sourceGraph.relationFromNode(node, 'import');
+    imports.forEach((i) => {
+      const importFunc = this.sourceGraph.relationFromNode(i, 'binding')[0];
+      this.codegenNode(importFunc);
+    });
+  }
+
   codegenReturn (node) {
     // get the return expression
     const retNode = this.sourceGraph.relationFromNode(node, 'expression')[0];
@@ -139,13 +160,19 @@ class Generator {
   }
 
   codegenInvocation (node, identifier = '') {
+    this.sourceGraph.debug();
+    console.log('invocation', node);
     // look up function in module
     const funcRef = this.module.getNamedFunction(node.attributes.name);
 
     // build argument type list
     const argTypes = this.sourceGraph.relationFromNode(node, 'arguments').map((n) => {
-      return this.buildType(n);
+      console.log('invoke arg', n);
+      // return this.getType(n);
+      return this.buildValue(n);
     });
+
+    console.log(argTypes);
 
     const ref = this.builder.buildCall(funcRef, argTypes, identifier);
     if (identifier.length > 0) {
@@ -160,15 +187,62 @@ class Generator {
 
   // Helpers
 
+  buildValue (node) {
+    switch (node.attributes.kind) {
+      case 'Int':
+        return Constant(this.getType(node), node.attributes.value);
+      case 'String':
+        console.log('Building string', node);
+        // return Pointer(Int8());
+        return this.builder.buildGlobalString('format', node.attributes.value);
+    }
+  }
+
   getType (typeNode) {
     switch (typeNode.attributes.kind) {
       case 'Int':
         return Int32();
       case 'String':
-        return Pointer(Int8());
+        console.log('Building string', typeNode);
+        // return Pointer(Int8());
+        return this.builder.buildGlobalString('string', typeNode.attributes.value);
     }
 
-    throw new Error('Unknown type', typeNode);
+    throw new Error(`Unknown type ${typeNode.attributes.kind}`);
+  }
+
+  getExternalType (type) {
+    let externalType = null;
+
+    if (type.kind) {
+      switch (type.kind) {
+        case 'Int':
+          externalType = Int32();
+          break;
+        case 'char':
+          externalType = Int8();
+          break;
+      }
+
+      if (type.indirection > 0) {
+        return this.wrapPointer(externalType, type.indirection);
+      }
+
+      return externalType;
+    } else {
+      switch (type.kind) {
+        case 'Int':
+          return Int32();
+      }
+    }
+  }
+
+  wrapPointer (type, level) {
+    if (level === 0) {
+      return type;
+    }
+
+    return this.wrapPointer(Pointer(type), level - 1);
   }
 }
 

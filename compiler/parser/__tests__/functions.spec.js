@@ -343,27 +343,6 @@ describe('Parser', () => {
       });
     });
 
-    it('parses external functions with variadic arguments', () => {
-      const parser = new Parser('external function printf(format: char *, els: ...) -> Int');
-
-      const parsed = parser.parsePrimaryExpression();
-
-      expect(parser.toAST(parsed)).toEqual({
-        type: 'external_function',
-        name: 'printf',
-        kind: 'Int',
-        arguments: [{
-          type: 'function_argument',
-          identifier: 'format',
-          kind: 'char*'
-        }, {
-          type: 'function_argument',
-          identifier: 'els',
-          kind: 'variadic'
-        }]
-      });
-    });
-
     it('parses external functions with C-style argument pointers', () => {
       const parser = new Parser('external function printf(format: char *, arg: Int) -> Int');
 
@@ -376,11 +355,36 @@ describe('Parser', () => {
         arguments: [{
           type: 'function_argument',
           identifier: 'format',
-          kind: 'char*'
+          kind: {
+            type: 'pointer',
+            kind: 'char',
+            indirection: 1
+          }
         }, {
           type: 'function_argument',
           identifier: 'arg',
           kind: 'Int'
+        }]
+      });
+    });
+
+    it('parses external functions with C-style argument pointers to pointers', () => {
+      const parser = new Parser('external function getError(error: char**) -> Void');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'external_function',
+        name: 'getError',
+        kind: 'Void',
+        arguments: [{
+          type: 'function_argument',
+          identifier: 'error',
+          kind: {
+            type: 'pointer',
+            kind: 'char',
+            indirection: 2
+          }
         }]
       });
     });
@@ -397,11 +401,44 @@ describe('Parser', () => {
         arguments: [{
           type: 'function_argument',
           identifier: 'format',
-          kind: 'char*'
+          kind: {
+            type: 'pointer',
+            kind: 'char',
+            indirection: 1
+          }
         }, {
           type: 'function_argument',
           identifier: 'args',
-          kind: 'int*'
+          kind: {
+            type: 'pointer',
+            kind: 'int',
+            indirection: 1
+          }
+        }]
+      });
+    });
+
+    it('parses external functions with variadic arguments', () => {
+      const parser = new Parser('external function printf(format: char *, els: ...) -> Int');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'external_function',
+        name: 'printf',
+        kind: 'Int',
+        arguments: [{
+          type: 'function_argument',
+          identifier: 'format',
+          kind: {
+            type: 'pointer',
+            kind: 'char',
+            indirection: 1
+          }
+        }, {
+          type: 'function_argument',
+          identifier: 'els',
+          kind: 'variadic'
         }]
       });
     });
@@ -414,7 +451,11 @@ describe('Parser', () => {
       expect(parser.toAST(parsed)).toEqual({
         type: 'external_function',
         name: 'malloc',
-        kind: 'void*',
+        kind: {
+          type: 'pointer',
+          kind: 'void',
+          indirection: 1
+        },
         arguments: [{
           type: 'function_argument',
           identifier: 'buff',
