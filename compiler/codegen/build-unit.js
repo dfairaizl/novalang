@@ -11,6 +11,8 @@ class BuildUnit {
 
     this.objectFile = resolve(this.buildDir, `${this.sourceName}.o`);
     this.irFile = resolve(this.buildDir, `${this.sourceName}.ll`);
+
+    this.printIR();
   }
 
   printIR () {

@@ -1,2 +1,1 @@
 function printf(format: String, arg: Int) -> Int {}
-function readLine() -> String {}
