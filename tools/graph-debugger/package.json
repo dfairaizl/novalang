@@ -16,5 +16,8 @@
     "react-dom": "^16.7.0",
     "uikit": "^3.0.3",
     "vis": "^4.21.0"
+  },
+  "devDependencies": {
+    "sass": "^1.17.2"
   }
 }
