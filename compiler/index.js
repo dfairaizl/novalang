@@ -55,7 +55,6 @@ class Compiler {
     while (this.sources.length > 0) {
       const currentSource = this.sources.pop();
       console.log(' - ', currentSource.fileName());
-      // const sourceFile = resolve(this.baseDir, currentSource);
       const sourceGraph = this.parse(currentSource);
 
       if (!this.sourceGraph) {
