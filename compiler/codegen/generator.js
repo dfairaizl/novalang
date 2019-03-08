@@ -109,9 +109,13 @@ class Generator {
     const bodyNodes = this.sourceGraph.relationFromNode(funcNode, 'body');
     bodyNodes.forEach((n) => this.codegenNode(n));
 
-    const exitCode = Constant(Int32(), 0);
+    // check for return
+    // TODO move this into parser or analyzer?
+    const retNode = bodyNodes.find((n) => n.attributes.type === 'return_statement');
 
-    // this.builder.buildRet(exitCode);
+    if (!retNode) {
+      this.builder.buildRet(Constant(Int32(), 0));
+    }
 
     this.builder.exit();
   }
@@ -197,6 +201,8 @@ class Generator {
     switch (typeNode.attributes.kind) {
       case 'Int':
         return Int32();
+      case 'Void':
+        return Void();
     }
 
     throw new Error(`Unknown type ${typeNode.attributes.kind}`);

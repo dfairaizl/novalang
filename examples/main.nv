@@ -4,6 +4,10 @@ function getNumber() -> Int {
   return 165;
 }
 
+function sayHello() {
+  printf("Hello!");
+}
+
 const x = getNumber();
 
 printf("Hello there %d", x);
