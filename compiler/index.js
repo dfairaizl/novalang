@@ -115,6 +115,8 @@ class Compiler {
     if (STANDARD_LIBRARY.includes(importName)) {
       return new Source(importName, resolve(this.libraryDir, `${importName}.nv`));
     }
+
+    return new Source(importName, resolve(this.baseDir, `${node.attributes.name}.nv`));
   }
 }
 

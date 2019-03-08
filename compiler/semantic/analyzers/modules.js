@@ -32,8 +32,10 @@ class ModuleAnalyzer {
 
   analyzeImports (node) {
     const module = this.resolveModule(node);
-    const exported = this.sourceGraph.outgoing(module);
     const imports = this.sourceGraph.relationFromNode(node, 'import');
+
+    const exports = this.sourceGraph.outgoing(module).filter((n) => n.attributes.type === 'export_statement');
+    const exported = exports.map((n) => this.sourceGraph.relationFromNode(n, 'expression')[0]);
 
     // do the imports match function from the module?
     imports.forEach((importNode) => {

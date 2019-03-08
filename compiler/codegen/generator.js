@@ -198,6 +198,8 @@ class Generator {
   }
 
   getType (typeNode) {
+    debugger;
+    console.log(typeNode);
     switch (typeNode.attributes.kind) {
       case 'Int':
         return Int32();
