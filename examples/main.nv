@@ -1,3 +1,9 @@
 import printf from 'io';
 
-printf("Hello there %d", 42);
+function getNumber() -> Int {
+  return 165;
+}
+
+const x = getNumber();
+
+printf("Hello there %d", x);

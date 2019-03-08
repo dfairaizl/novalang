@@ -20,8 +20,6 @@ class Generator {
 
     this.builder = new Builder();
     this.module = this.codegenModule();
-
-    this.namedVars = [];
   }
 
   generate () {
@@ -57,14 +55,17 @@ class Generator {
         return this.codeGenExternalFunction(node);
       case 'import_statement':
         return this.codeGenImports(node);
-      // case 'return_statement':
-      //   return this.codegenReturn(node);
-      // case 'immutable_declaration':
-      //   return this.codegenVar(node);
+      case 'variable_reference':
+        return this.codegenReference(node);
+      case 'return_statement':
+        return this.codegenReturn(node);
+      case 'immutable_declaration':
+        return this.codegenVar(node);
       case 'invocation':
         return this.codegenInvocation(node);
-      // case 'number_literal':
-      //   return this.codegenNumberLiteral(node);
+      case 'number_literal':
+      case 'string_literal':
+        return this.buildValue(node);
       default:
         console.log('Unknown expression', node.attributes.type);
     }
@@ -83,7 +84,6 @@ class Generator {
 
     const entryModuleRef = this.module.getNamedFunction(name);
     this.builder.buildCall(entryModuleRef, [], '');
-    // libLLVM.LLVMBuildCall(this.builder, entryModuleRef, [], 0, ''); // last param is the variable to store call retval in
 
     const exitCode = Constant(Int32(), 0);
 
@@ -106,12 +106,12 @@ class Generator {
     this.builder.enter(func);
 
     // build function body
-    // const bodyNodes = this.sourceGraph.relationFromNode(funcNode, 'body');
-    // bodyNodes.forEach((n) => this.codegenNode(n));
+    const bodyNodes = this.sourceGraph.relationFromNode(funcNode, 'body');
+    bodyNodes.forEach((n) => this.codegenNode(n));
 
     const exitCode = Constant(Int32(), 0);
 
-    this.builder.buildRet(exitCode);
+    // this.builder.buildRet(exitCode);
 
     this.builder.exit();
   }
@@ -152,11 +152,17 @@ class Generator {
   }
 
   codegenVar (node) {
+    const typeNode = this.sourceGraph.relationFromNode(node, 'type')[0];
     const exprNode = this.sourceGraph.relationFromNode(node, 'expression')[0];
 
-    if (exprNode.attributes.type === 'invocation') {
-      this.codegenInvocation(exprNode, node.attributes.identifier);
-    }
+    const varRef = this.builder.buildAlloc(this.getType(typeNode), node.attributes.identifier);
+    const expr = this.codegenNode(exprNode);
+
+    this.builder.buildStore(varRef, expr);
+  }
+
+  codegenReference (node) {
+    return this.builder.buildLoad(node.attributes.identifier);
   }
 
   codegenInvocation (node, identifier = '') {
@@ -165,14 +171,10 @@ class Generator {
 
     // build argument type list
     const argTypes = this.sourceGraph.relationFromNode(node, 'arguments').map((n) => {
-      // return this.getType(n);
-      return this.buildValue(n);
+      return this.codegenNode(n);
     });
 
-    const ref = this.builder.buildCall(funcRef, argTypes, identifier);
-    if (identifier.length > 0) {
-      this.namedVars[identifier] = ref;
-    }
+    return this.builder.buildCall(funcRef, argTypes, identifier);
   }
 
   codegenNumberLiteral (node) {
