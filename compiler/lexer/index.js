@@ -26,6 +26,7 @@ const KEYWORDS = [
   'class',
   'const',
   'constructor',
+  'export',
   'do',
   'extends',
   'external',

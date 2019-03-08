@@ -1,5 +1,6 @@
 const {
   ImportNotFoundError,
+  InvalidExportError,
   ModuleNotFound
 } = require('../errors');
 
@@ -22,6 +23,9 @@ class ModuleAnalyzer {
       case 'import_statement':
         this.analyzeImports(node);
         break;
+      case 'export_statement':
+        this.analyzeExport(node);
+        break;
       default:
     }
   }
@@ -41,6 +45,14 @@ class ModuleAnalyzer {
         throw new ImportNotFoundError(`Import \`${importNode.attributes.identifier}\` was not found in module \`${module.attributes.name}\``);
       }
     });
+  }
+
+  analyzeExport (node) {
+    const exportExpr = this.sourceGraph.relationFromNode(node, 'expression')[0];
+
+    if (exportExpr.attributes.type !== 'function') {
+      throw new InvalidExportError(`Only functions are allowed to be exported from modules`);
+    }
   }
 
   resolveModule (node) {

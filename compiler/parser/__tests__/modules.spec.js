@@ -37,4 +37,26 @@ describe('Parser', () => {
       });
     });
   });
+
+  describe('export statements', () => {
+    it('parses export statements for functions', () => {
+      const parser = new Parser('export function addOne(x: Int) -> Int {}');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'export_statement',
+        expression: [{
+          type: 'function',
+          name: 'addOne',
+          kind: 'Int',
+          arguments: [{
+            type: 'function_argument',
+            identifier: 'x',
+            kind: 'Int'
+          }]
+        }]
+      });
+    });
+  });
 });

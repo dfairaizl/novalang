@@ -102,6 +102,8 @@ class Parser {
       return this.parseReturnExpression();
     } else if (keywordToken.value === 'import') {
       return this.parseImport();
+    } else if (keywordToken.value === 'export') {
+      return this.parseExport();
     } else if (keywordToken.value === 'class') {
       return this.parseClassDefinition();
     } else if (keywordToken.value === 'if') {
@@ -799,6 +801,16 @@ class Parser {
     });
 
     return importNode;
+  }
+
+  parseExport () {
+    this.validateNextToken('export');
+    const expr = this.parsePrimaryExpression();
+
+    const exportNode = this.sourceGraph.addNode({ type: 'export_statement' });
+    this.sourceGraph.addEdge(exportNode, expr, 'expression');
+
+    return exportNode;
   }
 
   // atomics and literals

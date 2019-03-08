@@ -7,6 +7,7 @@ const Parser = require('../../parser');
 const Analyzer = require('..');
 const {
   ImportNotFoundError,
+  InvalidExportError,
   ModuleNotFound
 } = require('../errors');
 
@@ -89,6 +90,20 @@ describe('Module Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
 
       expect(() => semanticAnalyzer.analyze()).toThrowError(ImportNotFoundError);
+    });
+  });
+
+  describe('export statements', () => {
+    it('throws an error if a function is not exported', () => {
+      const parser = new Parser(`
+        export const x = 1;
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+
+      expect(() => semanticAnalyzer.analyze()).toThrowError(InvalidExportError);
     });
   });
 });
