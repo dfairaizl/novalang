@@ -55,6 +55,8 @@ class Generator {
         return this.codeGenExternalFunction(node);
       case 'import_statement':
         return this.codeGenImports(node);
+      case 'export_statement':
+        return this.codeGenExport(node);
       case 'variable_reference':
         return this.codegenReference(node);
       case 'return_statement':
@@ -145,6 +147,11 @@ class Generator {
     });
   }
 
+  codeGenExport (node) {
+    const exportExpr = this.sourceGraph.relationFromNode(node, 'expression')[0];
+    return this.codegenNode(exportExpr);
+  }
+
   codegenReturn (node) {
     // get the return expression
     const retNode = this.sourceGraph.relationFromNode(node, 'expression')[0];
@@ -198,8 +205,6 @@ class Generator {
   }
 
   getType (typeNode) {
-    debugger;
-    console.log(typeNode);
     switch (typeNode.attributes.kind) {
       case 'Int':
         return Int32();

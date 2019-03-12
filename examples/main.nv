@@ -1,14 +1,5 @@
 import printf from 'io';
-import doMath from './calculator';
 
-function getNumber() -> Int {
-  return 165;
-}
+const d = 7;
 
-function sayHello() {
-  printf("Hello!");
-}
-
-const x = doMath();
-
-printf("Hello there %d", x);
+printf("Hello there %d", d);

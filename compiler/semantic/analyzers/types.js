@@ -67,9 +67,7 @@ class TypeAnalyzer {
       return currentType[0];
     }
 
-    console.log(node);
     const exprNode = this.sourceGraph.relationFromNode(node, 'expression');
-    console.log(exprNode);
     const exprType = this.analyzeType(exprNode[0]);
 
     if (exprType.attributes.kind === 'Void') {
@@ -189,20 +187,17 @@ class TypeAnalyzer {
 
   resolveInvocation (node) {
     const funcNode = this.sourceGraph.relationFromNode(node, 'binding')[0];
-    console.log(funcNode);
     return this.analyzeType(funcNode);
   }
 
   resolveImportDeclaration (node) {
     const funcNode = this.sourceGraph.relationFromNode(node, 'binding')[0];
-    console.log(funcNode);
     return this.analyzeType(funcNode);
   }
 
   resolveImport (node) {
     const importDecls = this.sourceGraph.relationFromNode(node, 'import');
     importDecls.forEach((node) => {
-      console.log('import', node);
       const bindingNode = this.sourceGraph.relationFromNode(node, 'binding');
       const exprType = this.analyzeType(bindingNode[0]);
 
