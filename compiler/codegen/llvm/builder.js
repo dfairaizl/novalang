@@ -50,6 +50,10 @@ class LLVMBuilder {
     return libLLVM.LLVMBuildStore(this.builderRef, valueRef, varRef);
   }
 
+  buildAdd (lval, rval, placeholder) {
+    return libLLVM.LLVMBuildAdd(this.builderRef, lval, rval, placeholder);
+  }
+
   buildVoidRet () {
     libLLVM.LLVMBuildRetVoid(this.builderRef);
   }

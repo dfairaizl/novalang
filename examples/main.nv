@@ -1,5 +1,5 @@
 import printf from 'io';
 
-const d = 7;
+const d = 764;
 
 printf("Hello there %d", d);

@@ -11,6 +11,13 @@ const {
 
 const Graph = require('../graph/graph');
 
+const OP_PRECEDENCE = {
+  '+': 10,
+  '-': 10,
+  '*': 20,
+  '/': 20
+};
+
 class Parser {
   constructor (input, name, options) {
     this.options = options || {};
@@ -123,24 +130,56 @@ class Parser {
 
     const operator = this.peekNextToken();
     if (operator instanceof OperatorToken) {
-      this.getNextToken(); // consume operator
-
-      right = this.parseExpression();
-
-      let opNode = null;
       if (operator.value === '=') {
-        opNode = this.sourceGraph.addNode({ type: 'assignment', operator: operator.value });
+        this.getNextToken(); // consume operator
+
+        const opNode = this.sourceGraph.addNode({ type: 'assignment', operator: operator.value });
+
+        right = this.parseExpression();
+
+        this.sourceGraph.addEdge(opNode, left, 'left');
+        this.sourceGraph.addEdge(opNode, right, 'right');
+
+        return opNode;
       } else {
-        opNode = this.sourceGraph.addNode({ type: 'bin_op', operator: operator.value });
+        return this.parseBinOp(left, 0); // use `0` as default precedence
       }
-
-      this.sourceGraph.addEdge(opNode, left, 'left');
-      this.sourceGraph.addEdge(opNode, right, 'right');
-
-      return opNode;
     }
 
-    return left; // base case
+    return left;
+  }
+
+  parseBinOp (expr, exprPrec) {
+    while (true) {
+      const tokPrec = this.getTokenPrecedence();
+
+      if (tokPrec < exprPrec) {
+        return expr;
+      }
+
+      const operator = this.getNextToken();
+
+      let right = this.parseAtomic();
+      if (right === null) {
+        return null;
+      }
+
+      const nextTokPrec = this.getTokenPrecedence();
+
+      if (tokPrec < nextTokPrec) {
+        right = this.parseBinOp(right, tokPrec + 1);
+
+        if (right === null) {
+          return null;
+        }
+      }
+
+      const opNode = this.sourceGraph.addNode({ type: 'bin_op', operator: operator.value });
+      this.sourceGraph.addEdge(opNode, expr, 'left');
+      this.sourceGraph.addEdge(opNode, right, 'right');
+
+      expr = opNode;
+    }
   }
 
   parseConditionalBranch () {
@@ -896,6 +935,15 @@ class Parser {
   }
 
   // Helper
+
+  getTokenPrecedence () {
+    const operator = this.peekNextToken();
+    if (operator) {
+      return OP_PRECEDENCE[operator.value] || -1;
+    }
+
+    return -1;
+  }
 
   toAST (node) {
     return this.sourceGraph.treeFromNode(node);

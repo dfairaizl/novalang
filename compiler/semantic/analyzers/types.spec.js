@@ -360,7 +360,7 @@ describe('Type Analyzer', () => {
   describe('imports', () => {
     it('binds references to imported functions', () => {
       const libParser = new Parser(`
-        function add(x: Int, y: Int) -> Int {}
+        export function add(x: Int, y: Int) -> Int {}
       `, 'math');
 
       const parser = new Parser(`
@@ -378,6 +378,24 @@ describe('Type Analyzer', () => {
 
       const zNode = sourceGraph.search('import_declaration')[0];
       const type = sourceGraph.relationFromNode(zNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+    });
+  });
+
+  describe('binary operations', () => {
+    it('determins types from addition binop expressions', () => {
+      const parser = new Parser('1 + 1');
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const yNode = sourceGraph.search('bin_op')[0];
+      const type = sourceGraph.relationFromNode(yNode, 'type');
+
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
       });

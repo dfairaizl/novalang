@@ -65,6 +65,8 @@ class Generator {
         return this.codegenVar(node);
       case 'invocation':
         return this.codegenInvocation(node);
+      case 'bin_op':
+        return this.codegenBinop(node);
       case 'number_literal':
       case 'string_literal':
         return this.buildValue(node);
@@ -186,6 +188,22 @@ class Generator {
     });
 
     return this.builder.buildCall(funcRef, argTypes, identifier);
+  }
+
+  codegenBinop (node) {
+    const op = node.attributes.operator;
+    const lhs = this.sourceGraph.relationFromNode(node, 'left')[0];
+    const rhs = this.sourceGraph.relationFromNode(node, 'right')[0];
+
+    // codegen both sides
+    const lhsRef = this.codegenNode(lhs);
+    const rhsRef = this.codegenNode(rhs);
+
+    switch (op) {
+      case '+':
+      console.log('build add');
+        return this.builder.buildAdd(lhsRef, rhsRef, 'addexpr');
+    }
   }
 
   codegenNumberLiteral (node) {

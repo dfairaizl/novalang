@@ -146,7 +146,7 @@ describe('Scope Analyzer', () => {
   describe('import declarations', () => {
     it('binds references to imported functions', () => {
       const libParser = new Parser(`
-        function add(x: Int, y: Int) -> Int {}
+        export function add(x: Int, y: Int) -> Int {}
       `, 'math');
 
       const parser = new Parser(`
