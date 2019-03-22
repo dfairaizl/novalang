@@ -383,22 +383,4 @@ describe('Type Analyzer', () => {
       });
     });
   });
-
-  describe('binary operations', () => {
-    it('determins types from addition binop expressions', () => {
-      const parser = new Parser('1 + 1');
-
-      const sourceGraph = parser.parse();
-
-      const semanticAnalyzer = new Analyzer(sourceGraph);
-      semanticAnalyzer.analyze();
-
-      const yNode = sourceGraph.search('bin_op')[0];
-      const type = sourceGraph.relationFromNode(yNode, 'type');
-
-      expect(type[0].attributes).toMatchObject({
-        kind: 'Int'
-      });
-    });
-  });
 });

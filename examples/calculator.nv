@@ -1,17 +1,17 @@
-function add(x: Int, y: Int) -> Int {
+export function add(x: Int, y: Int) -> Int {
   const res = x + y;
   return res;
 }
 
-function subtract(x: Int, y: Int) -> Int {
+export function subtract(x: Int, y: Int) -> Int {
   return x - y;
 }
 
-function multiply(x: Int, y: Int) -> Int {
+export function multiply(x: Int, y: Int) -> Int {
   return x * y;
 }
 
-function divide(x: Int, y: Int) -> Int {
+export function divide(x: Int, y: Int) -> Int {
   return x / y;
 }
 

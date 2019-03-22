@@ -40,8 +40,7 @@ class Generator {
   codegenModule () {
     const llvmMod = new Module(this.codeModule.attributes.name);
 
-    const moduleFunc = new Func(this.codeModule.attributes.name, Void(), [], false);
-    llvmMod.defineFunction(moduleFunc);
+    const moduleFunc = new Func(llvmMod, this.codeModule.attributes.name, Void(), [], false);
     this.builder.enter(moduleFunc);
 
     return llvmMod;
@@ -81,8 +80,7 @@ class Generator {
       new Parameter('argv', Pointer(Pointer(Int8())))
     ];
 
-    const mainFunc = new Func('main', Int32(), params, false);
-    this.module.defineFunction(mainFunc);
+    const mainFunc = new Func(this.module, 'main', Int32(), params, false);
 
     this.builder.enter(mainFunc);
 
@@ -105,9 +103,12 @@ class Generator {
       return new Parameter(n.attributes.identifier, this.getType(typeNode));
     });
 
-    const func = new Func(funcName, retType, argTypes, false);
-    this.module.defineFunction(func);
+    const func = new Func(this.module, funcName, retType, argTypes, false);
     this.builder.enter(func);
+
+    func.paramRefs().forEach((p) => {
+      this.builder.namedValues[p.name] = p.ref;
+    });
 
     // build function body
     const bodyNodes = this.sourceGraph.relationFromNode(funcNode, 'body');
@@ -137,8 +138,7 @@ class Generator {
         return new Parameter(n.attributes.identifier, this.getExternalType(n.attributes.kind));
       });
 
-    const func = new Func(funcName, retType, argTypes, variadic !== undefined);
-    this.module.declareFunction(func);
+    return new Func(this.module, funcName, retType, argTypes, variadic !== undefined, true);
   }
 
   codeGenImports (node) {
@@ -175,6 +175,12 @@ class Generator {
   }
 
   codegenReference (node) {
+    const binding = this.sourceGraph.relationFromNode(node, 'binding')[0];
+    if (binding.attributes.type === 'function_argument') {
+      console.log(binding, this.builder.namedValues[binding.attributes.identifier]);
+      return this.builder.namedValues[binding.attributes.identifier];
+    }
+
     return this.builder.buildLoad(node.attributes.identifier);
   }
 
@@ -201,8 +207,11 @@ class Generator {
 
     switch (op) {
       case '+':
-      console.log('build add');
         return this.builder.buildAdd(lhsRef, rhsRef, 'addexpr');
+      case '-':
+        return this.builder.buildSub(lhsRef, rhsRef, 'addexpr');
+      case '*':
+        return this.builder.buildMul(lhsRef, rhsRef, 'addexpr');
     }
   }
 

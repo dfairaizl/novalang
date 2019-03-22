@@ -37,6 +37,7 @@ class LLVMBuilder {
   }
 
   buildLoad (name) {
+    console.log(name, this.namedValues);
     const valueRef = this.namedValues[name];
 
     return libLLVM.LLVMBuildLoad(this.builderRef, valueRef, name);
@@ -52,6 +53,14 @@ class LLVMBuilder {
 
   buildAdd (lval, rval, placeholder) {
     return libLLVM.LLVMBuildAdd(this.builderRef, lval, rval, placeholder);
+  }
+
+  buildSub (lval, rval, placeholder) {
+    return libLLVM.LLVMBuildSub(this.builderRef, lval, rval, placeholder);
+  }
+
+  buildMul (lval, rval, placeholder) {
+    return libLLVM.LLVMBuildMul(this.builderRef, lval, rval, placeholder);
   }
 
   buildVoidRet () {
