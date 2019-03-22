@@ -176,8 +176,8 @@ class Generator {
 
   codegenReference (node) {
     const binding = this.sourceGraph.relationFromNode(node, 'binding')[0];
+
     if (binding.attributes.type === 'function_argument') {
-      console.log(binding, this.builder.namedValues[binding.attributes.identifier]);
       return this.builder.namedValues[binding.attributes.identifier];
     }
 
@@ -209,9 +209,9 @@ class Generator {
       case '+':
         return this.builder.buildAdd(lhsRef, rhsRef, 'addexpr');
       case '-':
-        return this.builder.buildSub(lhsRef, rhsRef, 'addexpr');
+        return this.builder.buildSub(lhsRef, rhsRef, 'subexpr');
       case '*':
-        return this.builder.buildMul(lhsRef, rhsRef, 'addexpr');
+        return this.builder.buildMul(lhsRef, rhsRef, 'mulexpr');
     }
   }
 

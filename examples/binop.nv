@@ -1,9 +1,7 @@
 import printf from 'io';
 
-function add(x: Int, y: Int) -> Int {
-  return x + y;
+function sub(x: Int, y: Int) -> Int {
+  return x - y;
 }
 
-const z = add(1, 2);
-
-printf("The answer is %d", z);
+printf("The answer is %d", sub(42, 10));

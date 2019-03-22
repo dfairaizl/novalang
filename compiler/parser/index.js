@@ -160,18 +160,11 @@ class Parser {
       const operator = this.getNextToken();
 
       let right = this.parseAtomic();
-      if (right === null) {
-        return null;
-      }
 
       const nextTokPrec = this.getTokenPrecedence();
 
       if (tokPrec < nextTokPrec) {
         right = this.parseBinOp(right, tokPrec + 1);
-
-        if (right === null) {
-          return null;
-        }
       }
 
       const opNode = this.sourceGraph.addNode({ type: 'bin_op', operator: operator.value });

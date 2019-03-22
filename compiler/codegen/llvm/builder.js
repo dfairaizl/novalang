@@ -37,7 +37,6 @@ class LLVMBuilder {
   }
 
   buildLoad (name) {
-    console.log(name, this.namedValues);
     const valueRef = this.namedValues[name];
 
     return libLLVM.LLVMBuildLoad(this.builderRef, valueRef, name);

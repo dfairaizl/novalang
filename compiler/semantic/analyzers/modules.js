@@ -26,7 +26,6 @@ class ModuleAnalyzer {
       case 'export_statement':
         this.analyzeExport(node);
         break;
-      default:
     }
   }
 
