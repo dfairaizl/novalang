@@ -159,7 +159,7 @@ class Parser {
 
       const operator = this.getNextToken();
 
-      let right = this.parseAtomic();
+      let right = this.parseBinOpExpression();
 
       const nextTokPrec = this.getTokenPrecedence();
 
@@ -173,6 +173,39 @@ class Parser {
 
       expr = opNode;
     }
+  }
+
+  parseBinOpExpression () {
+    // this should be expanded to support more types as needed
+    const currentToken = this.peekNextToken();
+
+    switch (currentToken.constructor) {
+      case NumberToken:
+        return this.parseNumberLiteral();
+      case IdentifierToken:
+        return this.parseIdentifierExpression();
+      case PunctuatorToken:
+        switch (currentToken.value) {
+          case '(':
+            return this.parseParenExpression();
+        }
+    }
+  }
+
+  parseParenExpression () {
+    this.validateNextToken('(');
+    let tok = this.peekNextToken();
+
+    let expr = this.parseAtomic();
+
+    while (tok.value !== ')') {
+      expr = this.parseBinOp(expr, 0);
+      tok = this.peekNextToken();
+    }
+
+    this.validateNextToken(')');
+
+    return expr;
   }
 
   parseConditionalBranch () {
