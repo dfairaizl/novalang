@@ -440,7 +440,7 @@ describe('Parser', () => {
     });
   });
 
-  describe('if/else if/else statements', () => {
+  describe('if else/if/else statements', () => {
     it('parses simple else if else statements', () => {
       const parser = new Parser(`
         if (1) {

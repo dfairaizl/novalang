@@ -1,5 +1,5 @@
 import printf from 'io';
 
-if (1 > 0) {
-  printf("it was true");
+if (0 > 1) {
+  printf("t");
 }

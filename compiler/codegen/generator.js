@@ -4,6 +4,9 @@ const Func = require('./llvm/function');
 const Module = require('./llvm/module');
 const Parameter = require('./llvm/parameter');
 
+// TODO: remove this and factor branch code info llvm helper
+const { libLLVM, enums } = require('llvm-ffi');
+
 const {
   Constant,
   Int8,
@@ -58,6 +61,8 @@ class Generator {
         return this.codeGenExport(node);
       case 'conditional_branch':
         return this.codegenConditional(node);
+      case 'if_conditional':
+        return this.codegenIfCondition(node);
       case 'variable_reference':
         return this.codegenReference(node);
       case 'return_statement':
@@ -166,8 +171,54 @@ class Generator {
     this.builder.buildRet(expr);
   }
 
-  codegenConditional () {
+  codegenConditional (node) {
+    // ref to current function for block creation and movement
+    const func = libLLVM.LLVMGetBasicBlockParent(libLLVM.LLVMGetInsertBlock(this.builder.builderRef));
 
+    const cond = this.sourceGraph.relationFromNode(node, 'conditions')[0];
+    // build the test value
+    const testNode = this.sourceGraph.relationFromNode(cond, 'test')[0];
+    const condExpr = this.codegenNode(testNode);
+
+    // const positiveTestBlock = libLLVM.LLVMCreateBasicBlockInContext(libLLVM.LLVMGetGlobalContext());
+    // const negativeTestBlock = libLLVM.LLVMCreateBasicBlockInContext(libLLVM.LLVMGetGlobalContext());
+    // const continuationBlock = libLLVM.LLVMCreateBasicBlockInContext(libLLVM.LLVMGetGlobalContext());
+
+    const positiveTestBlock = libLLVM.LLVMAppendBasicBlock(func, 'posBlock');
+    const negativeTestBlock = libLLVM.LLVMAppendBasicBlock(func, 'negBlock');
+    const continuationBlock = libLLVM.LLVMAppendBasicBlock(func, 'contBlock');
+
+    libLLVM.LLVMBuildCondBr(this.builder.builderRef, condExpr, positiveTestBlock, negativeTestBlock);
+
+    // build positive case
+    const ifBodyNode = this.sourceGraph.relationFromNode(cond, 'body')[0];
+    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, positiveTestBlock);
+    this.codegenNode(ifBodyNode);
+    libLLVM.LLVMBuildBr(this.builder.builderRef, continuationBlock);
+
+    // handle else next
+    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, negativeTestBlock);
+    const elseBodyNode = this.sourceGraph.relationFromNode(node, 'else')[0];
+
+    if (elseBodyNode) {
+      this.codegenNode(elseBodyNode);
+    }
+
+    libLLVM.LLVMBuildBr(this.builder.builderRef, continuationBlock);
+
+    // reset builder to end of this function
+    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, continuationBlock);
+  }
+
+  codegenIfCondition (node) {
+    // const testNode = this.sourceGraph.relationFromNode(node, 'test')[0];
+    // const testExpr = this.codegenNode(testNode); // binop or literal
+    //
+    // // build if/else blocks
+    // const func = libLLVM.LLVMGetBasicBlockParent(libLLVM.LLVMGetInsertBlock(this.builder.builderRef));
+    //
+    // // let thenBlock = libLLVM.LLVMAppendBasicBlock(func, 'then');
+    // const positiveTestBlock = libLLVM.LLVMAppendBasicBlock(func, 'posBlock');
   }
 
   codegenVar (node) {
@@ -218,6 +269,16 @@ class Generator {
         return this.builder.buildSub(lhsRef, rhsRef, 'subexpr');
       case '*':
         return this.builder.buildMul(lhsRef, rhsRef, 'mulexpr');
+      // case '/':
+      //   return this.builder.buildDiv(lhsRef, rhsRef, 'mulexpr'); // TODO:
+      case '>':
+        return libLLVM.LLVMBuildICmp(
+          this.builder.builderRef,
+          enums.LLVMIntPredicate.LLVMIntSGT.value,
+          lhsRef,
+          rhsRef,
+          'signed_gt_cmp'
+        );
     }
   }
 
