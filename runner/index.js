@@ -3,7 +3,7 @@ const { resolve } = require('path');
 
 const Compiler = require('../compiler');
 
-const sourceFile = resolve(__dirname, '..', 'examples', 'binop.nv');
+const sourceFile = resolve(__dirname, '..', 'examples', 'if.nv');
 
-const novaCompier = new Compiler(sourceFile, 'binop' /*, { debugGraph: true } */);
+const novaCompier = new Compiler(sourceFile, 'if' /*, { debugGraph: true } */);
 novaCompier.compile();

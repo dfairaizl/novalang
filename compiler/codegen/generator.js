@@ -56,6 +56,8 @@ class Generator {
         return this.codeGenImports(node);
       case 'export_statement':
         return this.codeGenExport(node);
+      case 'conditional_branch':
+        return this.codegenConditional(node);
       case 'variable_reference':
         return this.codegenReference(node);
       case 'return_statement':
@@ -162,6 +164,10 @@ class Generator {
     const expr = this.codegenNode(retNode);
 
     this.builder.buildRet(expr);
+  }
+
+  codegenConditional () {
+
   }
 
   codegenVar (node) {

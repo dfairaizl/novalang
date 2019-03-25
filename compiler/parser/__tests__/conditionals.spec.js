@@ -79,6 +79,168 @@ describe('Parser', () => {
         }]
       });
     });
+
+    it('parses `if` statements with greater than comparisons in test', () => {
+      const parser = new Parser('if (1 > 0) {}');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'conditional_branch',
+        conditions: [{
+          type: 'if_conditional',
+          test: [{
+            type: 'bin_op',
+            operator: '>',
+            left: [{
+              type: 'number_literal',
+              kind: 'Int',
+              value: '1'
+            }],
+            right: [{
+              type: 'number_literal',
+              kind: 'Int',
+              value: '0'
+            }]
+          }]
+        }]
+      });
+    });
+
+    it('parses `if` statements with less than comparisons in test', () => {
+      const parser = new Parser('if (1 < 0) {}');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'conditional_branch',
+        conditions: [{
+          type: 'if_conditional',
+          test: [{
+            type: 'bin_op',
+            operator: '<',
+            left: [{
+              type: 'number_literal',
+              kind: 'Int',
+              value: '1'
+            }],
+            right: [{
+              type: 'number_literal',
+              kind: 'Int',
+              value: '0'
+            }]
+          }]
+        }]
+      });
+    });
+
+    it('parses `if` statements with greater than equal to comparisons in test', () => {
+      const parser = new Parser('if (1 >= 0) {}');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'conditional_branch',
+        conditions: [{
+          type: 'if_conditional',
+          test: [{
+            type: 'bin_op',
+            operator: '>=',
+            left: [{
+              type: 'number_literal',
+              kind: 'Int',
+              value: '1'
+            }],
+            right: [{
+              type: 'number_literal',
+              kind: 'Int',
+              value: '0'
+            }]
+          }]
+        }]
+      });
+    });
+
+    it('parses `if` statements with less than equal to comparisons in test', () => {
+      const parser = new Parser('if (1 <= 0) {}');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'conditional_branch',
+        conditions: [{
+          type: 'if_conditional',
+          test: [{
+            type: 'bin_op',
+            operator: '<=',
+            left: [{
+              type: 'number_literal',
+              kind: 'Int',
+              value: '1'
+            }],
+            right: [{
+              type: 'number_literal',
+              kind: 'Int',
+              value: '0'
+            }]
+          }]
+        }]
+      });
+    });
+
+    it('parses `if` statements with equality comparisons in test', () => {
+      const parser = new Parser('if (1 == 0) {}');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'conditional_branch',
+        conditions: [{
+          type: 'if_conditional',
+          test: [{
+            type: 'bin_op',
+            operator: '==',
+            left: [{
+              type: 'number_literal',
+              kind: 'Int',
+              value: '1'
+            }],
+            right: [{
+              type: 'number_literal',
+              kind: 'Int',
+              value: '0'
+            }]
+          }]
+        }]
+      });
+    });
+
+    it('parses `if` statements with inequality comparisons in test', () => {
+      const parser = new Parser('if (1 != 0) {}');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'conditional_branch',
+        conditions: [{
+          type: 'if_conditional',
+          test: [{
+            type: 'bin_op',
+            operator: '!=',
+            left: [{
+              type: 'number_literal',
+              kind: 'Int',
+              value: '1'
+            }],
+            right: [{
+              type: 'number_literal',
+              kind: 'Int',
+              value: '0'
+            }]
+          }]
+        }]
+      });
+    });
   });
 
   describe('if/else statements', () => {
@@ -279,7 +441,7 @@ describe('Parser', () => {
   });
 
   describe('if/else if/else statements', () => {
-    it('parses simple else if statements', () => {
+    it('parses simple else if else statements', () => {
       const parser = new Parser(`
         if (1) {
           return 1;

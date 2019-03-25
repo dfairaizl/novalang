@@ -98,24 +98,24 @@ describe('Lexer', () => {
       expect(lex.nextToken()).toEqual(new OperatorToken('<='));
     });
 
-    it('lexes `===`', () => {
-      const lex = new Lexer('<=');
-      expect(lex.nextToken()).toEqual(new OperatorToken('<='));
+    it('lexes `==`', () => {
+      const lex = new Lexer('==');
+      expect(lex.nextToken()).toEqual(new OperatorToken('=='));
     });
 
-    it('lexes `!==`', () => {
-      const lex = new Lexer('<=');
-      expect(lex.nextToken()).toEqual(new OperatorToken('<='));
+    it('lexes `!=`', () => {
+      const lex = new Lexer('!=');
+      expect(lex.nextToken()).toEqual(new OperatorToken('!='));
     });
 
     it('lexes `+=`', () => {
-      const lex = new Lexer('<=');
-      expect(lex.nextToken()).toEqual(new OperatorToken('<='));
+      const lex = new Lexer('+=');
+      expect(lex.nextToken()).toEqual(new OperatorToken('+='));
     });
 
     it('lexes `-=`', () => {
-      const lex = new Lexer('<=');
-      expect(lex.nextToken()).toEqual(new OperatorToken('<='));
+      const lex = new Lexer('-=');
+      expect(lex.nextToken()).toEqual(new OperatorToken('-='));
     });
 
     it('lexes `=>`', () => {
