@@ -1,5 +1,9 @@
 import printf from 'io';
 
-if (0 > 1) {
-  printf("t");
+if (1 > 1) {
+  printf("a");
+} else if (4 > 2) {
+  printf("b")
+} else {
+ printf("z")
 }

@@ -61,8 +61,8 @@ class Generator {
         return this.codeGenExport(node);
       case 'conditional_branch':
         return this.codegenConditional(node);
-      case 'if_conditional':
-        return this.codegenIfCondition(node);
+      case 'else_expression':
+        return this.codegenElseCondition(node);
       case 'variable_reference':
         return this.codegenReference(node);
       case 'return_statement':
@@ -175,50 +175,61 @@ class Generator {
     // ref to current function for block creation and movement
     const func = libLLVM.LLVMGetBasicBlockParent(libLLVM.LLVMGetInsertBlock(this.builder.builderRef));
 
-    const cond = this.sourceGraph.relationFromNode(node, 'conditions')[0];
-    // build the test value
-    const testNode = this.sourceGraph.relationFromNode(cond, 'test')[0];
-    const condExpr = this.codegenNode(testNode);
+    const finalBlock = libLLVM.LLVMAppendBasicBlock(func, 'finalBlock');
 
-    // const positiveTestBlock = libLLVM.LLVMCreateBasicBlockInContext(libLLVM.LLVMGetGlobalContext());
-    // const negativeTestBlock = libLLVM.LLVMCreateBasicBlockInContext(libLLVM.LLVMGetGlobalContext());
-    // const continuationBlock = libLLVM.LLVMCreateBasicBlockInContext(libLLVM.LLVMGetGlobalContext());
+    const conditions = this.sourceGraph.relationFromNode(node, 'conditions');
+    conditions.forEach((cond, index) => {
+      const last = index === conditions.length - 1;
+      const testNode = this.sourceGraph.relationFromNode(cond, 'test')[0];
+      const testExpr = this.codegenNode(testNode);
 
-    const positiveTestBlock = libLLVM.LLVMAppendBasicBlock(func, 'posBlock');
-    const negativeTestBlock = libLLVM.LLVMAppendBasicBlock(func, 'negBlock');
-    const continuationBlock = libLLVM.LLVMAppendBasicBlock(func, 'contBlock');
+      // gen then and else blocks
+      const thenBlock = libLLVM.LLVMAppendBasicBlock(func, 'thenBlock');
+      const elseBlock = libLLVM.LLVMAppendBasicBlock(func, 'elseBlock');
+      const mergeBlock = libLLVM.LLVMAppendBasicBlock(func, 'mergeBlock');
 
-    libLLVM.LLVMBuildCondBr(this.builder.builderRef, condExpr, positiveTestBlock, negativeTestBlock);
+      // TODO: try and use LLVMInsertBasicBlock instead
+      libLLVM.LLVMMoveBasicBlockBefore(thenBlock, finalBlock);
+      libLLVM.LLVMMoveBasicBlockBefore(elseBlock, finalBlock);
+      libLLVM.LLVMMoveBasicBlockBefore(mergeBlock, finalBlock);
 
-    // build positive case
-    const ifBodyNode = this.sourceGraph.relationFromNode(cond, 'body')[0];
-    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, positiveTestBlock);
-    this.codegenNode(ifBodyNode);
-    libLLVM.LLVMBuildBr(this.builder.builderRef, continuationBlock);
+      libLLVM.LLVMBuildCondBr(this.builder.builderRef, testExpr, thenBlock, elseBlock);
 
-    // handle else next
-    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, negativeTestBlock);
-    const elseBodyNode = this.sourceGraph.relationFromNode(node, 'else')[0];
+      // gen then
+      libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, thenBlock);
+      const thenNode = this.sourceGraph.relationFromNode(cond, 'body')[0];
+      this.codegenNode(thenNode);
+      libLLVM.LLVMBuildBr(this.builder.builderRef, finalBlock);
 
-    if (elseBodyNode) {
-      this.codegenNode(elseBodyNode);
-    }
+      if (last) {
+        // last branch in the condition is always the else (if one is defined)
+        libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, elseBlock);
+        const elseNode = this.sourceGraph.relationFromNode(node, 'else')[0];
+        this.codegenNode(elseNode);
+        libLLVM.LLVMBuildBr(this.builder.builderRef, finalBlock);
 
-    libLLVM.LLVMBuildBr(this.builder.builderRef, continuationBlock);
+        // TODO:
+        // in the final else block we dont need the trailing merge block
+        // libLLVM.LLVMDeleteBasicBlock(mergeBlock);
+        // and remove the following useless jump
+        libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, mergeBlock);
+        libLLVM.LLVMBuildBr(this.builder.builderRef, finalBlock);
+      } else {
+        // in an else/if branch, the "else" basic block is empty so we
+        // jump immediately to the merge for the next condition to start
+        libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, elseBlock);
+        libLLVM.LLVMBuildBr(this.builder.builderRef, mergeBlock);
+      }
 
-    // reset builder to end of this function
-    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, continuationBlock);
+      libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, mergeBlock);
+    });
+
+    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, finalBlock);
   }
 
-  codegenIfCondition (node) {
-    // const testNode = this.sourceGraph.relationFromNode(node, 'test')[0];
-    // const testExpr = this.codegenNode(testNode); // binop or literal
-    //
-    // // build if/else blocks
-    // const func = libLLVM.LLVMGetBasicBlockParent(libLLVM.LLVMGetInsertBlock(this.builder.builderRef));
-    //
-    // // let thenBlock = libLLVM.LLVMAppendBasicBlock(func, 'then');
-    // const positiveTestBlock = libLLVM.LLVMAppendBasicBlock(func, 'posBlock');
+  codegenElseCondition (node) {
+    const bodyNode = this.sourceGraph.relationFromNode(node, 'body')[0];
+    return this.codegenNode(bodyNode);
   }
 
   codegenVar (node) {
@@ -278,6 +289,30 @@ class Generator {
           lhsRef,
           rhsRef,
           'signed_gt_cmp'
+        );
+      case '<':
+        return libLLVM.LLVMBuildICmp(
+          this.builder.builderRef,
+          enums.LLVMIntPredicate.LLVMIntSLT.value,
+          lhsRef,
+          rhsRef,
+          'signed_lt_cmp'
+        );
+      case '>=':
+        return libLLVM.LLVMBuildICmp(
+          this.builder.builderRef,
+          enums.LLVMIntPredicate.LLVMIntSGE.value,
+          lhsRef,
+          rhsRef,
+          'signed_gte_cmp'
+        );
+      case '<=':
+        return libLLVM.LLVMBuildICmp(
+          this.builder.builderRef,
+          enums.LLVMIntPredicate.LLVMIntSLE.value,
+          lhsRef,
+          rhsRef,
+          'signed_lte_cmp'
         );
     }
   }
