@@ -5,7 +5,7 @@ const Module = require('./llvm/module');
 const Parameter = require('./llvm/parameter');
 
 // TODO: remove this and factor branch code info llvm helper
-const { libLLVM, enums } = require('llvm-ffi');
+const { libLLVM } = require('llvm-ffi');
 
 const {
   Constant,
@@ -283,37 +283,13 @@ class Generator {
       case '/':
         return this.builder.buildDiv(lhsRef, rhsRef, 'divexpr');
       case '>':
-        return libLLVM.LLVMBuildICmp(
-          this.builder.builderRef,
-          enums.LLVMIntPredicate.LLVMIntSGT.value,
-          lhsRef,
-          rhsRef,
-          'signed_gt_cmp'
-        );
+        return this.builder.buildCompareGT(lhsRef, rhsRef, 'gtcmp');
       case '<':
-        return libLLVM.LLVMBuildICmp(
-          this.builder.builderRef,
-          enums.LLVMIntPredicate.LLVMIntSLT.value,
-          lhsRef,
-          rhsRef,
-          'signed_lt_cmp'
-        );
+        return this.builder.buildCompareLT(lhsRef, rhsRef, 'ltcmp');
       case '>=':
-        return libLLVM.LLVMBuildICmp(
-          this.builder.builderRef,
-          enums.LLVMIntPredicate.LLVMIntSGE.value,
-          lhsRef,
-          rhsRef,
-          'signed_gte_cmp'
-        );
+        return this.builder.buildCompareGTE(lhsRef, rhsRef, 'gtecmp');
       case '<=':
-        return libLLVM.LLVMBuildICmp(
-          this.builder.builderRef,
-          enums.LLVMIntPredicate.LLVMIntSLE.value,
-          lhsRef,
-          rhsRef,
-          'signed_lte_cmp'
-        );
+        return this.builder.buildCompareLTE(lhsRef, rhsRef, 'ltecmp');
     }
   }
 

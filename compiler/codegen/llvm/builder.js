@@ -1,4 +1,4 @@
-const { libLLVM } = require('llvm-ffi');
+const { libLLVM, enums } = require('llvm-ffi');
 
 class LLVMBuilder {
   constructor () {
@@ -64,6 +64,46 @@ class LLVMBuilder {
 
   buildDiv (lval, rval, placeholder) {
     return libLLVM.LLVMBuildExactSDiv(this.builderRef, lval, rval, placeholder);
+  }
+
+  buildCompareGT (lval, rval, placeholder) {
+    return libLLVM.LLVMBuildICmp(
+      this.builderRef,
+      enums.LLVMIntPredicate.LLVMIntSGT.value,
+      lval,
+      rval,
+      placeholder
+    );
+  }
+
+  buildCompareGTE (lval, rval, placeholder) {
+    return libLLVM.LLVMBuildICmp(
+      this.builderRef,
+      enums.LLVMIntPredicate.LLVMIntSGE.value,
+      lval,
+      rval,
+      placeholder
+    );
+  }
+
+  buildCompareLT (lval, rval, placeholder) {
+    return libLLVM.LLVMBuildICmp(
+      this.builderRef,
+      enums.LLVMIntPredicate.LLVMIntSLT.value,
+      lval,
+      rval,
+      placeholder
+    );
+  }
+
+  buildCompareLTE (lval, rval, placeholder) {
+    return libLLVM.LLVMBuildICmp(
+      this.builderRef,
+      enums.LLVMIntPredicate.LLVMIntSLE.value,
+      lval,
+      rval,
+      placeholder
+    );
   }
 
   buildVoidRet () {
