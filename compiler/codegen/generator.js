@@ -280,8 +280,8 @@ class Generator {
         return this.builder.buildSub(lhsRef, rhsRef, 'subexpr');
       case '*':
         return this.builder.buildMul(lhsRef, rhsRef, 'mulexpr');
-      // case '/':
-      //   return this.builder.buildDiv(lhsRef, rhsRef, 'mulexpr'); // TODO:
+      case '/':
+        return this.builder.buildDiv(lhsRef, rhsRef, 'divexpr');
       case '>':
         return libLLVM.LLVMBuildICmp(
           this.builder.builderRef,

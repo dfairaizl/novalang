@@ -62,6 +62,10 @@ class LLVMBuilder {
     return libLLVM.LLVMBuildMul(this.builderRef, lval, rval, placeholder);
   }
 
+  buildDiv (lval, rval, placeholder) {
+    return libLLVM.LLVMBuildExactSDiv(this.builderRef, lval, rval, placeholder);
+  }
+
   buildVoidRet () {
     libLLVM.LLVMBuildRetVoid(this.builderRef);
   }
