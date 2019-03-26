@@ -205,7 +205,10 @@ class Generator {
         // last branch in the condition is always the else (if one is defined)
         libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, elseBlock);
         const elseNode = this.sourceGraph.relationFromNode(node, 'else')[0];
-        this.codegenNode(elseNode);
+        if (elseNode) {
+          this.codegenNode(elseNode);
+        }
+
         libLLVM.LLVMBuildBr(this.builder.builderRef, finalBlock);
 
         // TODO:

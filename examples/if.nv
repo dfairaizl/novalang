@@ -1,9 +1,7 @@
 import printf from 'io';
 
-if (1 > 1) {
+if (1 > 2) {
   printf("a");
-} else if (4 > 2) {
+} else if (2 > 1) {
   printf("b")
-} else {
- printf("z")
 }
