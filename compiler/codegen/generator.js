@@ -293,6 +293,10 @@ class Generator {
         return this.builder.buildCompareGTE(lhsRef, rhsRef, 'gtecmp');
       case '<=':
         return this.builder.buildCompareLTE(lhsRef, rhsRef, 'ltecmp');
+      case '==':
+        return this.builder.buildCompareEQ(lhsRef, rhsRef, 'eqcmp');
+      case '!=':
+        return this.builder.buildCompareNEQ(lhsRef, rhsRef, 'neqcmp');
     }
   }
 

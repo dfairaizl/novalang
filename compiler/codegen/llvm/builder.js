@@ -106,6 +106,26 @@ class LLVMBuilder {
     );
   }
 
+  buildCompareEQ (lval, rval, placeholder) {
+    return libLLVM.LLVMBuildICmp(
+      this.builderRef,
+      enums.LLVMIntPredicate.LLVMIntEQ.value,
+      lval,
+      rval,
+      placeholder
+    );
+  }
+
+  buildCompareNEQ (lval, rval, placeholder) {
+    return libLLVM.LLVMBuildICmp(
+      this.builderRef,
+      enums.LLVMIntPredicate.LLVMIntNE.value,
+      lval,
+      rval,
+      placeholder
+    );
+  }
+
   buildVoidRet () {
     libLLVM.LLVMBuildRetVoid(this.builderRef);
   }
