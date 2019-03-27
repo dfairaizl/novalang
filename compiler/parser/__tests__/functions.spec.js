@@ -307,6 +307,31 @@ describe('Parser', () => {
         }]
       });
     });
+
+    it('parses invocations with binop expressions', () => {
+      const parser = new Parser('fib(1 + 1)');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'invocation',
+        name: 'fib',
+        arguments: [{
+          type: 'bin_op',
+          operator: '+',
+          left: [{
+            type: 'number_literal',
+            value: '1',
+            kind: 'Int'
+          }],
+          right: [{
+            type: 'number_literal',
+            value: '1',
+            kind: 'Int'
+          }]
+        }]
+      });
+    });
   });
 
   describe('return statements', () => {

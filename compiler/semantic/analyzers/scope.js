@@ -108,6 +108,10 @@ class ScopeAnalyzer {
     const walk = (node) => {
       visited[node.id] = true;
 
+      if (this.scopable(node)) {
+        scopeNodes.push(node);
+      }
+
       const parent = this.sourceGraph.incoming(node);
       if (parent[0]) {
         this.directScope(parent[0]).forEach((n) => {

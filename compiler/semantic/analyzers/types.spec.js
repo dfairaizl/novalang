@@ -355,6 +355,23 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       expect(() => semanticAnalyzer.analyze()).toThrowError(VoidAssignmentError);
     });
+
+    it('builds types for invocations of recursive functions', () => {
+      const parser = new Parser(`
+        function one(x) -> Int { return one(1) }
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const yNode = sourceGraph.search('function')[0];
+      const type = sourceGraph.relationFromNode(yNode, 'return_type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+    });
   });
 
   describe('imports', () => {

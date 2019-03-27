@@ -822,7 +822,7 @@ class Parser {
     let tok = null;
 
     do {
-      const expr = this.parseAtomic();
+      const expr = this.parseExpression();
       if (expr) {
         args.push(expr);
       }

@@ -164,6 +164,7 @@ class TypeAnalyzer {
 
     if (node.attributes.kind) {
       retType = this.associateType(node);
+      this.sourceGraph.addEdge(node, retType, 'return_type');
 
       const retTypes = this.analyzeReturnStatements(node);
       retTypes.forEach((n) => {
@@ -173,6 +174,8 @@ class TypeAnalyzer {
       });
     } else {
       retType = this.buildType('Void');
+      this.sourceGraph.addEdge(node, retType, 'return_type');
+
       const retTypes = this.analyzeReturnStatements(node);
 
       if (retTypes.length > 0) {
@@ -180,13 +183,19 @@ class TypeAnalyzer {
       }
     }
 
-    this.sourceGraph.addEdge(node, retType, 'return_type');
-
     return retType;
   }
 
   resolveInvocation (node) {
     const funcNode = this.sourceGraph.relationFromNode(node, 'binding')[0];
+
+    // check if the bound functin has already been analyzed
+    // this is the case for recursive functions
+    const funcType = this.sourceGraph.relationFromNode(funcNode, 'return_type');
+    if (funcType[0]) {
+      return funcType[0];
+    }
+
     return this.analyzeType(funcNode);
   }
 
