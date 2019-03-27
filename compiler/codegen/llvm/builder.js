@@ -28,6 +28,10 @@ class LLVMBuilder {
     libLLVM.LLVMPositionBuilderAtEnd(this.builderRef, current.entryRef);
   }
 
+  positionAt (basicBlock) {
+    libLLVM.LLVMPositionBuilderAtEnd(this.builderRef, basicBlock);
+  }
+
   buildAlloc (type, name) {
     const ref = libLLVM.LLVMBuildAlloca(this.builderRef, type, name);
     this.namedValues[name] = new Value(ref);
@@ -140,6 +144,28 @@ class LLVMBuilder {
 
   buildVoidRet () {
     libLLVM.LLVMBuildRetVoid(this.builderRef);
+  }
+
+  buildConditionalBranch (condition, posBranch, negBranch) {
+    libLLVM.LLVMBuildCondBr(this.builderRef, condition, posBranch, negBranch);
+  }
+
+  buildBranch (branchBlock) {
+    libLLVM.LLVMBuildBr(this.builderRef, branchBlock);
+  }
+
+  insertBlock (blockName) {
+    const func = libLLVM.LLVMGetBasicBlockParent(libLLVM.LLVMGetInsertBlock(this.builderRef));
+    return libLLVM.LLVMAppendBasicBlock(func, blockName);
+  }
+
+  insertBlockBeforeBlock (prevBlock, blockName) {
+    const func = libLLVM.LLVMGetBasicBlockParent(libLLVM.LLVMGetInsertBlock(this.builderRef));
+    const block = libLLVM.LLVMAppendBasicBlock(func, blockName);
+
+    libLLVM.LLVMMoveBasicBlockBefore(block, prevBlock);
+
+    return block;
   }
 }
 

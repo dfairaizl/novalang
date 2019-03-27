@@ -4,9 +4,6 @@ const Func = require('./llvm/function');
 const Module = require('./llvm/module');
 const Parameter = require('./llvm/parameter');
 
-// TODO: remove this and factor branch code info llvm helper
-const { libLLVM } = require('llvm-ffi');
-
 const {
   Constant,
   Int1,
@@ -190,10 +187,7 @@ class Generator {
   }
 
   codegenConditional (node) {
-    // ref to current function for block creation and movement
-    const func = libLLVM.LLVMGetBasicBlockParent(libLLVM.LLVMGetInsertBlock(this.builder.builderRef));
-
-    const finalBlock = libLLVM.LLVMAppendBasicBlock(func, 'finalBlock');
+    const finalBlock = this.builder.insertBlock('finalBlock');
 
     const conditions = this.sourceGraph.relationFromNode(node, 'conditions');
     conditions.forEach((cond, index) => {
@@ -202,50 +196,45 @@ class Generator {
       const testExpr = this.codegenNode(testNode);
 
       // gen then and else blocks
-      const thenBlock = libLLVM.LLVMAppendBasicBlock(func, 'thenBlock');
-      const elseBlock = libLLVM.LLVMAppendBasicBlock(func, 'elseBlock');
-      const mergeBlock = libLLVM.LLVMAppendBasicBlock(func, 'mergeBlock');
+      const thenBlock = this.builder.insertBlockBeforeBlock(finalBlock, 'thenBlock');
+      const elseBlock = this.builder.insertBlockBeforeBlock(finalBlock, 'elseBlock');
+      const mergeBlock = this.builder.insertBlockBeforeBlock(finalBlock, 'mergeBlock');
 
-      // TODO: try and use LLVMInsertBasicBlock instead
-      libLLVM.LLVMMoveBasicBlockBefore(thenBlock, finalBlock);
-      libLLVM.LLVMMoveBasicBlockBefore(elseBlock, finalBlock);
-      libLLVM.LLVMMoveBasicBlockBefore(mergeBlock, finalBlock);
-
-      libLLVM.LLVMBuildCondBr(this.builder.builderRef, testExpr, thenBlock, elseBlock);
+      this.builder.buildConditionalBranch(testExpr, thenBlock, elseBlock);
 
       // gen then
-      libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, thenBlock);
+      this.builder.positionAt(thenBlock);
       const thenNode = this.sourceGraph.relationFromNode(cond, 'body')[0];
       this.codegenNode(thenNode);
-      libLLVM.LLVMBuildBr(this.builder.builderRef, finalBlock);
+      this.builder.buildBranch(finalBlock);
 
       if (last) {
         // last branch in the condition is always the else (if one is defined)
-        libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, elseBlock);
+        this.builder.positionAt(elseBlock);
         const elseNode = this.sourceGraph.relationFromNode(node, 'else')[0];
         if (elseNode) {
           this.codegenNode(elseNode);
         }
 
-        libLLVM.LLVMBuildBr(this.builder.builderRef, finalBlock);
+        this.builder.buildBranch(finalBlock);
 
         // TODO:
         // in the final else block we dont need the trailing merge block
         // libLLVM.LLVMDeleteBasicBlock(mergeBlock);
         // and remove the following useless jump
-        libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, mergeBlock);
-        libLLVM.LLVMBuildBr(this.builder.builderRef, finalBlock);
+        this.builder.positionAt(mergeBlock);
+        this.builder.buildBranch(finalBlock);
       } else {
         // in an else/if branch, the "else" basic block is empty so we
         // jump immediately to the merge for the next condition to start
-        libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, elseBlock);
-        libLLVM.LLVMBuildBr(this.builder.builderRef, mergeBlock);
+        this.builder.positionAt(elseBlock);
+        this.builder.buildBranch(mergeBlock);
       }
 
-      libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, mergeBlock);
+      this.builder.positionAt(mergeBlock);
     });
 
-    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, finalBlock);
+    this.builder.positionAt(finalBlock);
   }
 
   codegenElseCondition (node) {
@@ -323,68 +312,57 @@ class Generator {
     const testNode = this.sourceGraph.relationFromNode(node, 'test')[0];
     const bodyNodes = this.sourceGraph.relationFromNode(node, 'body');
 
-    const func = libLLVM.LLVMGetBasicBlockParent(libLLVM.LLVMGetInsertBlock(this.builder.builderRef));
-
-    const finalBlock = libLLVM.LLVMAppendBasicBlock(func, 'finalBlock');
+    const finalBlock = this.builder.insertBlock('finalBlock');
 
     // build test condition block
-    const testBlock = libLLVM.LLVMAppendBasicBlock(func, 'loopTest');
-    const bodyBlock = libLLVM.LLVMAppendBasicBlock(func, 'loopBody');
-    libLLVM.LLVMMoveBasicBlockBefore(testBlock, finalBlock);
-    libLLVM.LLVMMoveBasicBlockBefore(bodyBlock, finalBlock);
+    const testBlock = this.builder.insertBlockBeforeBlock(finalBlock, 'testBlock');
+    const bodyBlock = this.builder.insertBlockBeforeBlock(finalBlock, 'bodyBlock');
 
     // enter loop
-    libLLVM.LLVMBuildBr(this.builder.builderRef, testBlock);
-
-    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, testBlock);
+    this.builder.buildBranch(testBlock);
+    this.builder.positionAt(testBlock);
 
     const testRef = this.codegenNode(testNode);
-    libLLVM.LLVMBuildCondBr(this.builder.builderRef, testRef, bodyBlock, finalBlock);
+    this.builder.buildConditionalBranch(testRef, bodyBlock, finalBlock);
 
-    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, bodyBlock);
+    this.builder.positionAt(bodyBlock);
     bodyNodes.forEach((body) => {
       this.codegenNode(body);
     });
 
     // jump back to the test block for the next iteration
-    libLLVM.LLVMBuildBr(this.builder.builderRef, testBlock);
+    this.builder.buildBranch(testBlock);
 
     // finish
-    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, finalBlock);
+    this.builder.positionAt(finalBlock);
   }
 
   codegenDoWhileLoop (node) {
     const testNode = this.sourceGraph.relationFromNode(node, 'test')[0];
     const bodyNodes = this.sourceGraph.relationFromNode(node, 'body');
 
-    const func = libLLVM.LLVMGetBasicBlockParent(libLLVM.LLVMGetInsertBlock(this.builder.builderRef));
-
-    const finalBlock = libLLVM.LLVMAppendBasicBlock(func, 'finalBlock');
+    const finalBlock = this.builder.insertBlock('finalBlock');
 
     // build test condition block
-    const bodyBlock = libLLVM.LLVMAppendBasicBlock(func, 'loopBody');
-    const testBlock = libLLVM.LLVMAppendBasicBlock(func, 'loopTest');
-    libLLVM.LLVMMoveBasicBlockBefore(bodyBlock, finalBlock);
-    libLLVM.LLVMMoveBasicBlockBefore(testBlock, finalBlock);
+    const testBlock = this.builder.insertBlockBeforeBlock(finalBlock, 'testBlock');
+    const bodyBlock = this.builder.insertBlockBeforeBlock(finalBlock, 'bodyBlock');
 
-    libLLVM.LLVMBuildBr(this.builder.builderRef, bodyBlock);
-
-    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, bodyBlock);
+    this.builder.buildBranch(bodyBlock);
+    this.builder.positionAt(bodyBlock);
 
     bodyNodes.forEach((body) => {
       this.codegenNode(body);
     });
 
     // jump into the test after the first iteration
-    libLLVM.LLVMBuildBr(this.builder.builderRef, testBlock);
-
-    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, testBlock);
+    this.builder.buildBranch(testBlock);
+    this.builder.positionAt(testBlock);
 
     const testRef = this.codegenNode(testNode);
-    libLLVM.LLVMBuildCondBr(this.builder.builderRef, testRef, bodyBlock, finalBlock);
+    this.builder.buildConditionalBranch(testRef, bodyBlock, finalBlock);
 
     // finish
-    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, finalBlock);
+    this.builder.positionAt(finalBlock);
   }
 
   codegenNumberLiteral (node) {
