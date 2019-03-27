@@ -358,7 +358,7 @@ describe('Type Analyzer', () => {
 
     it('builds types for invocations of recursive functions', () => {
       const parser = new Parser(`
-        function one(x) -> Int { return one(1) }
+        function one(x: Int) -> Int { return one(1) }
       `);
 
       const sourceGraph = parser.parse();
