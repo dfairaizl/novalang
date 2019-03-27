@@ -1,5 +1,12 @@
 const { libLLVM, enums } = require('llvm-ffi');
 
+class Value {
+  constructor (allocStore) {
+    this.ref = null;
+    this.storage = allocStore;
+  }
+}
+
 class LLVMBuilder {
   constructor () {
     this.builderRef = libLLVM.LLVMCreateBuilder();
@@ -23,7 +30,7 @@ class LLVMBuilder {
 
   buildAlloc (type, name) {
     const ref = libLLVM.LLVMBuildAlloca(this.builderRef, type, name);
-    this.namedValues[name] = ref;
+    this.namedValues[name] = new Value(ref);
 
     return ref;
   }
@@ -39,15 +46,20 @@ class LLVMBuilder {
   buildLoad (name) {
     const valueRef = this.namedValues[name];
 
-    return libLLVM.LLVMBuildLoad(this.builderRef, valueRef, name);
+    const ref = libLLVM.LLVMBuildLoad(this.builderRef, valueRef.storage, name);
+    this.namedValues[name].ref = ref;
+
+    return ref;
   }
 
   buildRet (returnType) {
     libLLVM.LLVMBuildRet(this.builderRef, returnType);
   }
 
-  buildStore (varRef, valueRef) {
-    return libLLVM.LLVMBuildStore(this.builderRef, valueRef, varRef);
+  buildStore (name, varRef) {
+    const namedValue = this.namedValues[name];
+    namedValue.ref = null; // force the next reference to load the new value
+    return libLLVM.LLVMBuildStore(this.builderRef, varRef, namedValue.storage);
   }
 
   buildAdd (lval, rval, placeholder) {

@@ -1,0 +1,6 @@
+import printf from 'io';
+
+let x = 4;
+x = x * 40;
+
+printf("x=%d", x);

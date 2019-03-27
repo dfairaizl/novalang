@@ -51,6 +51,8 @@ class Generator {
 
   codegenNode (node) {
     switch (node.attributes.type) {
+      case 'assignment':
+        return this.codegenAssignment(node);
       case 'function':
         return this.codeGenFunction(node);
       case 'external_function':
@@ -68,6 +70,7 @@ class Generator {
       case 'return_statement':
         return this.codegenReturn(node);
       case 'immutable_declaration':
+      case 'mutable_declaration':
         return this.codegenVar(node);
       case 'invocation':
         return this.codegenInvocation(node);
@@ -97,6 +100,15 @@ class Generator {
     const exitCode = Constant(Int32(), 0);
 
     this.builder.buildRet(exitCode);
+  }
+
+  codegenAssignment (node) {
+    const assign = this.sourceGraph.relationFromNode(node, 'left')[0];
+    const expr = this.sourceGraph.relationFromNode(node, 'right')[0];
+
+    const exprRef = this.codegenNode(expr);
+
+    this.builder.buildStore(assign.attributes.identifier, exprRef);
   }
 
   codeGenFunction (funcNode) {
@@ -239,10 +251,11 @@ class Generator {
     const typeNode = this.sourceGraph.relationFromNode(node, 'type')[0];
     const exprNode = this.sourceGraph.relationFromNode(node, 'expression')[0];
 
-    const varRef = this.builder.buildAlloc(this.getType(typeNode), node.attributes.identifier);
+    this.builder.buildAlloc(this.getType(typeNode), node.attributes.identifier);
+
     const expr = this.codegenNode(exprNode);
 
-    this.builder.buildStore(varRef, expr);
+    this.builder.buildStore(node.attributes.identifier, expr);
   }
 
   codegenReference (node) {
