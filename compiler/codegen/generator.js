@@ -79,6 +79,8 @@ class Generator {
         return this.codegenBinop(node);
       case 'while_loop':
         return this.codegenWhileLoop(node);
+      case 'do_while_loop':
+        return this.codegenDoWhileLoop(node);
       case 'number_literal':
       case 'string_literal':
       case 'boolean_literal':
@@ -346,6 +348,40 @@ class Generator {
 
     // jump back to the test block for the next iteration
     libLLVM.LLVMBuildBr(this.builder.builderRef, testBlock);
+
+    // finish
+    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, finalBlock);
+  }
+
+  codegenDoWhileLoop (node) {
+    const testNode = this.sourceGraph.relationFromNode(node, 'test')[0];
+    const bodyNodes = this.sourceGraph.relationFromNode(node, 'body');
+
+    const func = libLLVM.LLVMGetBasicBlockParent(libLLVM.LLVMGetInsertBlock(this.builder.builderRef));
+
+    const finalBlock = libLLVM.LLVMAppendBasicBlock(func, 'finalBlock');
+
+    // build test condition block
+    const bodyBlock = libLLVM.LLVMAppendBasicBlock(func, 'loopBody');
+    const testBlock = libLLVM.LLVMAppendBasicBlock(func, 'loopTest');
+    libLLVM.LLVMMoveBasicBlockBefore(bodyBlock, finalBlock);
+    libLLVM.LLVMMoveBasicBlockBefore(testBlock, finalBlock);
+
+    libLLVM.LLVMBuildBr(this.builder.builderRef, bodyBlock);
+
+    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, bodyBlock);
+
+    bodyNodes.forEach((body) => {
+      this.codegenNode(body);
+    });
+
+    // jump into the test after the first iteration
+    libLLVM.LLVMBuildBr(this.builder.builderRef, testBlock);
+
+    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, testBlock);
+
+    const testRef = this.codegenNode(testNode);
+    libLLVM.LLVMBuildCondBr(this.builder.builderRef, testRef, bodyBlock, finalBlock);
 
     // finish
     libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, finalBlock);
