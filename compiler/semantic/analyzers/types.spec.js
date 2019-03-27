@@ -47,7 +47,7 @@ describe('Type Analyzer', () => {
       semanticAnalyzer.analyze();
 
       expect(sourceGraph.search('type')[0].attributes).toMatchObject({
-        kind: 'bool'
+        kind: 'Boolean'
       });
     });
 

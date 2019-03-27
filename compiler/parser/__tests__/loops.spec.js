@@ -13,7 +13,7 @@ describe('Parser', () => {
         type: 'while_loop',
         test: [{
           type: 'boolean_literal',
-          kind: 'bool',
+          kind: 'Boolean',
           value: 'true'
         }]
       });
@@ -28,7 +28,7 @@ describe('Parser', () => {
         type: 'while_loop',
         test: [{
           type: 'boolean_literal',
-          kind: 'bool',
+          kind: 'Boolean',
           value: 'true'
         }],
         body: [{
@@ -61,7 +61,7 @@ describe('Parser', () => {
         type: 'do_while_loop',
         test: [{
           type: 'boolean_literal',
-          kind: 'bool',
+          kind: 'Boolean',
           value: 'true'
         }]
       });
@@ -76,7 +76,7 @@ describe('Parser', () => {
         type: 'do_while_loop',
         test: [{
           type: 'boolean_literal',
-          kind: 'bool',
+          kind: 'Boolean',
           value: 'true'
         }],
         body: [{

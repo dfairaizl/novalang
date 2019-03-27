@@ -12,6 +12,10 @@ function Function (returnType, args, variadic = false) {
 
 }
 
+function Int1 () {
+  return libLLVM.LLVMInt1Type();
+}
+
 function Int8 () {
   return libLLVM.LLVMInt8Type();
 }
@@ -30,6 +34,7 @@ function Void () {
 
 module.exports = {
   Constant,
+  Int1,
   Int8,
   Int32,
   Function,

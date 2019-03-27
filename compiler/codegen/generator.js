@@ -9,6 +9,7 @@ const { libLLVM } = require('llvm-ffi');
 
 const {
   Constant,
+  Int1,
   Int8,
   Int32,
   Pointer,
@@ -76,8 +77,11 @@ class Generator {
         return this.codegenInvocation(node);
       case 'bin_op':
         return this.codegenBinop(node);
+      case 'while_loop':
+        return this.codegenWhileLoop(node);
       case 'number_literal':
       case 'string_literal':
+      case 'boolean_literal':
         return this.buildValue(node);
       default:
         console.log('Unknown expression', node.attributes.type);
@@ -313,6 +317,40 @@ class Generator {
     }
   }
 
+  codegenWhileLoop (node) {
+    const testNode = this.sourceGraph.relationFromNode(node, 'test')[0];
+    const bodyNodes = this.sourceGraph.relationFromNode(node, 'body');
+
+    const func = libLLVM.LLVMGetBasicBlockParent(libLLVM.LLVMGetInsertBlock(this.builder.builderRef));
+
+    const finalBlock = libLLVM.LLVMAppendBasicBlock(func, 'finalBlock');
+
+    // build test condition block
+    const testBlock = libLLVM.LLVMAppendBasicBlock(func, 'loopTest');
+    const bodyBlock = libLLVM.LLVMAppendBasicBlock(func, 'loopBody');
+    libLLVM.LLVMMoveBasicBlockBefore(testBlock, finalBlock);
+    libLLVM.LLVMMoveBasicBlockBefore(bodyBlock, finalBlock);
+
+    // enter loop
+    libLLVM.LLVMBuildBr(this.builder.builderRef, testBlock);
+
+    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, testBlock);
+
+    const testRef = this.codegenNode(testNode);
+    libLLVM.LLVMBuildCondBr(this.builder.builderRef, testRef, bodyBlock, finalBlock);
+
+    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, bodyBlock);
+    bodyNodes.forEach((body) => {
+      this.codegenNode(body);
+    });
+
+    // jump back to the test block for the next iteration
+    libLLVM.LLVMBuildBr(this.builder.builderRef, testBlock);
+
+    // finish
+    libLLVM.LLVMPositionBuilderAtEnd(this.builder.builderRef, finalBlock);
+  }
+
   codegenNumberLiteral (node) {
     const val = node.attributes.value;
     return Constant(Int32(), val);
@@ -324,6 +362,9 @@ class Generator {
     switch (node.attributes.kind) {
       case 'Int':
         return Constant(this.getType(node), node.attributes.value);
+      case 'Boolean':
+        const value = node.attributes.value === 'true' ? 1 : 0;
+        return Constant(this.getType(node), value);
       case 'String':
         return this.builder.buildGlobalString('format', node.attributes.value);
     }
@@ -333,6 +374,8 @@ class Generator {
     switch (typeNode.attributes.kind) {
       case 'Int':
         return Int32();
+      case 'Boolean':
+        return Int1();
       case 'Void':
         return Void();
     }
