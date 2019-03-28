@@ -11,6 +11,7 @@ describe('Parser', () => {
 
       expect(parsed.attributes).toEqual({
         type: 'class_definition',
+        kind: 'Calculator',
         identifier: 'Calculator',
         super_class: null
       });
@@ -23,6 +24,7 @@ describe('Parser', () => {
 
       expect(parsed.attributes).toEqual({
         type: 'class_definition',
+        kind: 'Calculator',
         identifier: 'Calculator',
         super_class: 'Abacus'
       });
@@ -41,6 +43,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'class_definition',
+        kind: 'Calculator',
         identifier: 'Calculator',
         super_class: null,
         body: [{
@@ -63,6 +66,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'class_definition',
+        kind: 'Calculator',
         identifier: 'Calculator',
         super_class: null,
         body: [{
@@ -84,6 +88,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'class_definition',
+        kind: 'Calculator',
         identifier: 'Calculator',
         super_class: null,
         body: [{
@@ -107,6 +112,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'class_definition',
+        kind: 'Calculator',
         identifier: 'Calculator',
         super_class: null,
         body: [{
@@ -138,6 +144,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'class_definition',
+        kind: 'Calculator',
         identifier: 'Calculator',
         super_class: null,
         body: [{

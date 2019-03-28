@@ -3,6 +3,7 @@
 const Parser = require('../../parser');
 const Analyzer = require('..');
 const {
+  DuplicateTypeError,
   MissingTypeAnnotationError,
   TypeMismatchError,
   MismatchedReturnTypeError,
@@ -370,6 +371,52 @@ describe('Type Analyzer', () => {
       const type = sourceGraph.relationFromNode(yNode, 'return_type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
+      });
+    });
+  });
+
+  describe('class definitions', () => {
+    it('builds types for class definitions', () => {
+      const parser = new Parser('class Calculator {}');
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const yNode = sourceGraph.search('class_definition')[0];
+      const type = sourceGraph.relationFromNode(yNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Calculator'
+      });
+    });
+
+    it('throws and error if classes are defined more than once', () => {
+      const parser = new Parser('class Calculator {}; class Calculator {}');
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      expect(() => semanticAnalyzer.analyze()).toThrowError(DuplicateTypeError);
+    });
+  });
+
+  describe('class instantiation', () => {
+    it('builds types for class definitions', () => {
+      const parser = new Parser(`
+        class Calculator {}
+        const x = new Calculator();
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const xNode = sourceGraph.search('immutable_declaration')[0];
+      const type = sourceGraph.relationFromNode(xNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Calculator'
       });
     });
   });

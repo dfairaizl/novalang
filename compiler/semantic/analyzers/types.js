@@ -1,4 +1,5 @@
 const {
+  DuplicateTypeError,
   MissingTypeAnnotationError,
   TypeMismatchError,
   MismatchedReturnTypeError,
@@ -27,6 +28,10 @@ class TypeAnalyzer {
         return this.resolveImmutableDeclaration(node);
       case 'mutable_declaration':
         return this.resolveMutableDeclaration(node);
+      case 'instantiation':
+        return this.resolveInstantiation(node);
+      case 'class_definition':
+        return this.resolveClass(node);
       case 'variable_reference':
         return this.resolveReference(node);
       case 'function_argument':
@@ -46,6 +51,8 @@ class TypeAnalyzer {
         return this.resolveImport(node);
       case 'import_declaration':
         return this.resolveImportDeclaration(node);
+      default:
+        console.error('Unknown type', node.attributes.type);
     }
   }
 
@@ -132,6 +139,29 @@ class TypeAnalyzer {
     }
 
     throw new MissingTypeAnnotationError(`Function argument \`${node.attributes.identifier}\` must have a type`);
+  }
+
+  resolveClass (node) {
+    const typeClass = node.attributes.kind;
+
+    const types = this.sourceGraph.search('type');
+    const typeNode = types.find((n) => {
+      return n.attributes.kind === typeClass;
+    });
+
+    if (!typeNode) {
+      const buildType = this.sourceGraph.addNode({ type: 'type', kind: typeClass });
+
+      this.sourceGraph.addEdge(node, buildType, 'type');
+      return buildType;
+    }
+
+    throw new DuplicateTypeError(`Type \`${typeClass}\` has already been defined.`);
+  }
+
+  resolveInstantiation (node) {
+    const classNode = this.sourceGraph.relationFromNode(node, 'binding')[0];
+    return this.sourceGraph.relationFromNode(classNode, 'type')[0];
   }
 
   resolveReference (node) {

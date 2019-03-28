@@ -699,6 +699,7 @@ class Parser {
     const classDef = this.sourceGraph.addNode({
       type: 'class_definition',
       identifier: className.value,
+      kind: className.value,
       super_class: superClass
     });
 

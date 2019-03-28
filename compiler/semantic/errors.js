@@ -1,4 +1,5 @@
 class ClassNotFoundError extends Error {}
+class DuplicateTypeError extends Error {}
 class FunctionNotFoundError extends Error {}
 class ImportNotFoundError extends Error {}
 class InvalidExportError extends Error {}
@@ -13,6 +14,7 @@ class VoidFunctionReturnError extends Error {}
 
 module.exports = {
   ClassNotFoundError,
+  DuplicateTypeError,
   FunctionNotFoundError,
   ImportNotFoundError,
   InvalidExportError,
