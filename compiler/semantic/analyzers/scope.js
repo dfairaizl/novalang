@@ -1,4 +1,5 @@
 const {
+  ClassNotFoundError,
   FunctionNotFoundError,
   UndeclaredVariableError
 } = require('../errors');
@@ -13,6 +14,7 @@ class ScopeAnalyzer {
 
     this.analyzeReferences(codeModule);
     this.analyzeDeclarations(codeModule);
+    this.analyzeInstantiations(codeModule);
     this.analyzeInvocations(codeModule);
     this.analyzeFunctions(codeModule);
   }
@@ -31,6 +33,15 @@ class ScopeAnalyzer {
     iterator.iterate(node, (n) => {
       if (n.attributes.type === 'immutable_declaration' || n.attributes.type === 'mutable_declaration') {
         this.checkDeclaration(n);
+      }
+    });
+  }
+
+  analyzeInstantiations (node) {
+    const iterator = this.sourceGraph.traverse();
+    iterator.iterate(node, (n) => {
+      if (n.attributes.type === 'instantiation') {
+        this.checkInstantiation(n);
       }
     });
   }
@@ -58,6 +69,22 @@ class ScopeAnalyzer {
     if (refs.length === 0) {
       console.info(`WARNING: Variable declaration \`${node.attributes.identifier}\` has not been used`);
     }
+  }
+
+  checkInstantiation (node) {
+    const scopeNodes = this.buildSymbolTable(node);
+
+    const declClass = scopeNodes.find((n) => {
+      return n.attributes.type === 'class_definition' &&
+        n.attributes.identifier === node.attributes.class;
+    });
+
+    if (!declClass) {
+      throw new ClassNotFoundError(`Cannot instantiate unknown class \`${node.attributes.class}\``);
+    }
+
+    this.sourceGraph.addEdge(node, declClass, 'binding');
+    this.sourceGraph.addEdge(declClass, node, 'reference');
   }
 
   checkInvocation (node) {
@@ -137,6 +164,7 @@ class ScopeAnalyzer {
       node.attributes.type === 'mutable_declaration' ||
       node.attributes.type === 'immutable_declaration' ||
       node.attributes.type === 'import_declaration' ||
+      node.attributes.type === 'class_definition' ||
       node.attributes.type === 'function';
   }
 

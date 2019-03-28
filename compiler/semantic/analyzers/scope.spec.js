@@ -3,6 +3,7 @@
 const Parser = require('../../parser');
 const SemanticAnalyzer = require('..');
 const {
+  ClassNotFoundError,
   FunctionNotFoundError,
   UndeclaredVariableError
 } = require('../errors');
@@ -235,6 +236,43 @@ describe('Scope Analyzer', () => {
       expect(sourceGraph.relationFromNode(ref[0], 'reference')).toMatchObject([
         { attributes: { type: 'invocation' } }
       ]);
+    });
+  });
+
+  describe('class instantiations ', () => {
+    it('binds instantiations to the class definition', () => {
+      const parser = new Parser(`
+        class Calculator {}
+        new Calculator();
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const analyzer = new SemanticAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      const iRef = sourceGraph.search('instantiation');
+
+      expect(sourceGraph.relationFromNode(iRef[0], 'binding')).toMatchObject([
+        { attributes: { type: 'class_definition', identifier: 'Calculator' } }
+      ]);
+
+      const cRef = sourceGraph.search('class_definition');
+
+      expect(sourceGraph.relationFromNode(cRef[0], 'reference')).toMatchObject([
+        { attributes: { type: 'instantiation', class: 'Calculator' } }
+      ]);
+    });
+
+    it('thorws an error instantiating an undefined class', () => {
+      const parser = new Parser(`
+        new Calculator();
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const analyzer = new SemanticAnalyzer(sourceGraph);
+      expect(() => analyzer.analyze()).toThrowError(ClassNotFoundError);
     });
   });
 });

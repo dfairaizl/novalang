@@ -1,3 +1,4 @@
+class ClassNotFoundError extends Error {}
 class FunctionNotFoundError extends Error {}
 class ImportNotFoundError extends Error {}
 class InvalidExportError extends Error {}
@@ -11,11 +12,12 @@ class VoidAssignmentError extends Error {}
 class VoidFunctionReturnError extends Error {}
 
 module.exports = {
+  ClassNotFoundError,
   FunctionNotFoundError,
   ImportNotFoundError,
   InvalidExportError,
-  MissingTypeAnnotationError,
   MismatchedReturnTypeError,
+  MissingTypeAnnotationError,
   ModuleNotFound,
   ReassignImmutableError,
   TypeMismatchError,
