@@ -1,6 +1,7 @@
 const Builder = require('./llvm/builder');
 const BuildUnit = require('./build-unit');
 const Func = require('./llvm/function');
+const Class = require('./llvm/class');
 const Module = require('./llvm/module');
 const Parameter = require('./llvm/parameter');
 
@@ -51,8 +52,12 @@ class Generator {
     switch (node.attributes.type) {
       case 'assignment':
         return this.codegenAssignment(node);
+      case 'class_definition':
+        return this.codegenClass(node);
       case 'function':
         return this.codeGenFunction(node);
+      case 'method':
+        return this.codeGenMethod(node);
       case 'external_function':
         return this.codeGenExternalFunction(node);
       case 'import_statement':
@@ -114,6 +119,24 @@ class Generator {
     this.builder.buildStore(assign.attributes.identifier, exprRef);
   }
 
+  codegenClass (node) {
+    const className = node.attributes.identifier;
+    const classIdentifier = `__${className}`;
+
+    const aClass = new Class(this.module, classIdentifier);
+    this.builder.setClass(aClass);
+    this.builder.enter(aClass);
+
+    // build function body
+    const bodyNodes = this.sourceGraph.relationFromNode(node, 'body');
+    bodyNodes.forEach((n) => this.codegenNode(n));
+
+    this.builder.buildVoidRet();
+
+    this.builder.currentClass = null;
+    this.builder.exit();
+  }
+
   codeGenFunction (funcNode) {
     const funcName = funcNode.attributes.name;
     const typeNode = this.sourceGraph.relationFromNode(funcNode, 'return_type')[0];
@@ -143,6 +166,18 @@ class Generator {
     if (!retNode) {
       this.builder.buildRet(Constant(Int32(), 0));
     }
+
+    this.builder.exit();
+  }
+
+  codeGenMethod (node) {
+    const currentClass = this.builder.currentClass;
+
+    const methodName = `${currentClass.name}_${node.attributes.name}`;
+    const func = new Func(this.module, methodName, Void(), [], false);
+    this.builder.enter(func);
+
+    this.builder.buildVoidRet();
 
     this.builder.exit();
   }

@@ -28,6 +28,10 @@ class LLVMBuilder {
     libLLVM.LLVMPositionBuilderAtEnd(this.builderRef, current.entryRef);
   }
 
+  setClass (aClass) {
+    this.currentClass = aClass;
+  }
+
   positionAt (basicBlock) {
     libLLVM.LLVMPositionBuilderAtEnd(this.builderRef, basicBlock);
   }
