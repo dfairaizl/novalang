@@ -125,6 +125,8 @@ class Parser {
       return this.parseWhileLoop();
     } else if (keywordToken.value === 'do') {
       return this.parseDoWhileLoop();
+    } else if (keywordToken.value === 'new') {
+      return this.parseInstantiation();
     }
   }
 
@@ -758,6 +760,23 @@ class Parser {
     this.validateNextToken('}');
 
     return methodNode;
+  }
+
+  parseInstantiation () {
+    this.validateNextToken('new');
+    const classInstance = this.parseIdentifier();
+
+    const instance = this.sourceGraph.addNode({
+      type: 'instantiation',
+      class: classInstance
+    });
+
+    const instanceArgs = this.parseInvocationArguments();
+    instanceArgs.forEach((a) => {
+      this.sourceGraph.addEdge(instance, a, 'arguments');
+    });
+
+    return instance;
   }
 
   parseFunctionArguments () {

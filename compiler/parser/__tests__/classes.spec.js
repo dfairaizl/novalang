@@ -172,4 +172,53 @@ describe('Parser', () => {
       });
     });
   });
+
+  describe('instance construction', () => {
+    it('instances can be created', () => {
+      const parser = new Parser(`
+        class Calculator {}
+        const c = new Calculator();
+      `);
+
+      parser.parsePrimaryExpression(); // class definitiopn
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'immutable_declaration',
+        identifier: 'c',
+        expression: [{
+          type: 'instantiation',
+          class: 'Calculator'
+        }]
+      });
+    });
+
+    it('instances can be created with arguments', () => {
+      const parser = new Parser(`
+        class Generator {}
+        const c = new Generator(1, 2);
+      `);
+
+      parser.parsePrimaryExpression(); // class definitiopn
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'immutable_declaration',
+        identifier: 'c',
+        expression: [{
+          type: 'instantiation',
+          class: 'Generator',
+          arguments: [{
+            type: 'number_literal',
+            kind: 'Int',
+            value: '1'
+          }, {
+            type: 'number_literal',
+            kind: 'Int',
+            value: '2'
+          }]
+        }]
+      });
+    });
+  });
 });

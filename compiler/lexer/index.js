@@ -26,15 +26,16 @@ const KEYWORDS = [
   'class',
   'const',
   'constructor',
-  'export',
   'do',
+  'export',
   'extends',
   'external',
-  'function',
   'from',
+  'function',
   'if',
   'import',
   'let',
+  'new',
   'return',
   'while'
 ];
