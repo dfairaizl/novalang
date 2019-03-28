@@ -401,6 +401,90 @@ describe('Type Analyzer', () => {
     });
   });
 
+  describe('class methods', () => {
+    it('builds method return types', () => {
+      const parser = new Parser(`
+        class Calculator {
+          turnOn() -> Bool {}
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const yNode = sourceGraph.search('method')[0];
+      const type = sourceGraph.relationFromNode(yNode, 'return_type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Bool'
+      });
+    });
+
+    it('builds methods with Void return type', () => {
+      const parser = new Parser(`
+        class Calculator {
+          turnOff() {}
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const yNode = sourceGraph.search('method')[0];
+      const type = sourceGraph.relationFromNode(yNode, 'return_type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Void'
+      });
+    });
+
+    it('builds types for methods with a single argument', () => {
+      const parser = new Parser(`
+        class Math {
+          addOne(x: Int) -> Int {}
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const yNode = sourceGraph.search('function_argument')[0];
+      const type = sourceGraph.relationFromNode(yNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+    });
+
+    it('builds types for methods with multiple arguments', () => {
+      const parser = new Parser(`
+        class Math {
+          add(x: Int, y: Int) -> Int {}
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const args = sourceGraph.search('function_argument');
+      const typeX = sourceGraph.relationFromNode(args[0], 'type');
+      const typeY = sourceGraph.relationFromNode(args[1], 'type');
+
+      expect(typeX[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+
+      expect(typeY[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+    });
+  });
+
   describe('class instantiation', () => {
     it('builds types for class definitions', () => {
       const parser = new Parser(`

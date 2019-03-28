@@ -44,6 +44,7 @@ class TypeAnalyzer {
         return this.resolveBinop(node);
       case 'function':
       case 'external_function':
+      case 'method':
         return this.resolveFunction(node);
       case 'invocation':
         return this.resolveInvocation(node);
@@ -153,6 +154,11 @@ class TypeAnalyzer {
       const buildType = this.sourceGraph.addNode({ type: 'type', kind: typeClass });
 
       this.sourceGraph.addEdge(node, buildType, 'type');
+
+      // analyze the class methods
+      const methods = this.sourceGraph.relationFromNode(node, 'body');
+      methods.forEach((m) => this.analyzeType(m));
+
       return buildType;
     }
 
