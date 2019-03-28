@@ -27,7 +27,31 @@ describe('Parser', () => {
         super_class: 'Abacus'
       });
     });
+  });
 
+  describe('class constructor', () => {
+    it('parses class definitions with constructor method', () => {
+      const parser = new Parser(`
+        class Calculator {
+          constructor () {}
+        }
+      `);
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'class_definition',
+        identifier: 'Calculator',
+        super_class: null,
+        body: [{
+          type: 'constructor',
+          name: 'constructor'
+        }]
+      });
+    });
+  });
+
+  describe('class methods', () => {
     it('parses class definitions with a method in the body', () => {
       const parser = new Parser(`
         class Calculator {
@@ -75,7 +99,7 @@ describe('Parser', () => {
     it('parses class definitions with methods and arguments in the body', () => {
       const parser = new Parser(`
         class Calculator {
-          add (x, y) {}
+          add (x: Int, y: Int) {}
         }
       `);
 
@@ -90,9 +114,11 @@ describe('Parser', () => {
           name: 'add',
           arguments: [{
             type: 'function_argument',
+            kind: 'Int',
             identifier: 'x'
           }, {
             type: 'function_argument',
+            kind: 'Int',
             identifier: 'y'
           }]
         }]
@@ -102,7 +128,7 @@ describe('Parser', () => {
     it('parses class definitions with methods bodies', () => {
       const parser = new Parser(`
         class Calculator {
-          add (x, y) {
+          add (x: Int, y: Int) -> Int {
             return x + y;
           }
         }
@@ -117,11 +143,14 @@ describe('Parser', () => {
         body: [{
           type: 'method',
           name: 'add',
+          kind: 'Int',
           arguments: [{
             type: 'function_argument',
+            kind: 'Int',
             identifier: 'x'
           }, {
             type: 'function_argument',
+            kind: 'Int',
             identifier: 'y'
           }],
           body: [{
@@ -139,26 +168,6 @@ describe('Parser', () => {
               }]
             }]
           }]
-        }]
-      });
-    });
-
-    it('parses class definitions with constructor method', () => {
-      const parser = new Parser(`
-        class Calculator {
-          constructor () {}
-        }
-      `);
-
-      const parsed = parser.parsePrimaryExpression();
-
-      expect(parser.toAST(parsed)).toEqual({
-        type: 'class_definition',
-        identifier: 'Calculator',
-        super_class: null,
-        body: [{
-          type: 'constructor',
-          name: 'constructor'
         }]
       });
     });

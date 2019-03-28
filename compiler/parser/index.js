@@ -721,9 +721,24 @@ class Parser {
       return null;
     }
 
-    const methodNode = this.sourceGraph.addNode({ type: methodType, name: methodIdentifier.value });
+    let methodNode = null;
 
     const args = this.parseFunctionArguments();
+    const funcKind = this.parseFunctionType();
+
+    if (funcKind) {
+      methodNode = this.sourceGraph.addNode({
+        type: methodType,
+        name: methodIdentifier.value,
+        kind: funcKind
+      });
+    } else {
+      methodNode = this.sourceGraph.addNode({
+        type: methodType,
+        name: methodIdentifier.value
+      });
+    }
+
     args.forEach((a) => {
       this.sourceGraph.addEdge(methodNode, a, 'arguments');
     });
