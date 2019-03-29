@@ -11,6 +11,7 @@ const {
   Int8,
   Int32,
   Pointer,
+  Struct,
   Void
 } = require('./llvm/types');
 
@@ -54,6 +55,8 @@ class Generator {
         return this.codegenAssignment(node);
       case 'class_definition':
         return this.codegenClass(node);
+      case 'instantiation':
+        return this.codegenInstantiation(node);
       case 'function':
         return this.codeGenFunction(node);
       case 'method':
@@ -170,16 +173,55 @@ class Generator {
     this.builder.exit();
   }
 
+  // TODO: consolidate this with codeGenFunction
   codeGenMethod (node) {
     const currentClass = this.builder.currentClass;
 
     const methodName = `${currentClass.name}_${node.attributes.name}`;
-    const func = new Func(this.module, methodName, Void(), [], false);
+
+    const typeNode = this.sourceGraph.relationFromNode(node, 'return_type')[0];
+    const retType = this.getType(typeNode);
+
+    // build argument type list
+    const argTypes = this.sourceGraph.relationFromNode(node, 'arguments').map((n) => {
+      const typeNode = this.sourceGraph.relationFromNode(n, 'type')[0];
+      return new Parameter(n.attributes.identifier, this.getType(typeNode));
+    });
+
+    const func = new Func(this.module, methodName, retType, argTypes, false);
     this.builder.enter(func);
 
-    this.builder.buildVoidRet();
+    func.paramRefs().forEach((p) => {
+      this.builder.namedValues[p.name] = p.ref;
+    });
+
+    // build function body
+    const bodyNodes = this.sourceGraph.relationFromNode(node, 'body');
+    bodyNodes.forEach((n) => this.codegenNode(n));
+
+    // check for return
+    // TODO move this into parser or analyzer?
+    const retNode = bodyNodes.find((n) => n.attributes.type === 'return_statement');
+
+    if (!retNode) {
+      this.builder.buildRet(Constant(Int32(), 0));
+    }
 
     this.builder.exit();
+  }
+
+  codegenInstantiation (node) {
+    const currentClass = this.sourceGraph.relationFromNode(node, 'binding')[0];
+    const classConstructor = `__${currentClass.attributes.identifier}`;
+
+    const funcRef = this.module.getNamedFunction(classConstructor);
+
+    // build argument type list
+    // const argTypes = this.sourceGraph.relationFromNode(node, 'arguments').map((n) => {
+    //   return this.codegenNode(n);
+    // });
+
+    return this.builder.buildCall(funcRef, [], classConstructor);
   }
 
   codeGenExternalFunction (node) {
@@ -428,6 +470,9 @@ class Generator {
       case 'Void':
         return Void();
     }
+
+    // build complex type
+    return new Struct(typeNode.attributes.kind);
 
     throw new Error(`Unknown type ${typeNode.attributes.kind}`);
   }

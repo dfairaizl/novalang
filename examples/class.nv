@@ -1,9 +1,11 @@
 class Calculator {
-  add (x, y) {
+  add (x: Int, y: Int) -> Int {
     return x + y;
   }
 
-  subtract (x, y) {
+  subtract (x: Int, y: Int) -> Int {
     return x - y;
   }
 }
+
+const calc = new Calculator();

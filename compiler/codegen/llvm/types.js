@@ -32,6 +32,11 @@ function Void () {
   return libLLVM.LLVMVoidType();
 }
 
+function Struct (name) {
+  console.log('Building struct', name);
+  return libLLVM.LLVMStructCreateNamed(libLLVM.LLVMGetGlobalContext(), name);
+}
+
 module.exports = {
   Constant,
   Int1,
@@ -40,5 +45,6 @@ module.exports = {
   Function,
   Pointer,
   String,
+  Struct,
   Void
 };
