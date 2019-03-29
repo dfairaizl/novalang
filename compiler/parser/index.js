@@ -85,6 +85,7 @@ class Parser {
       case NumberToken:
         return this.parseNumberLiteral();
       case IdentifierToken:
+      case KeywordToken:
         return this.parseIdentifierExpression();
       case PunctuatorToken:
         switch (currentToken.value) {
@@ -127,6 +128,8 @@ class Parser {
       return this.parseDoWhileLoop();
     } else if (keywordToken.value === 'new') {
       return this.parseInstantiation();
+    } else if (keywordToken.value === 'this') {
+      return this.parseInstanceExpression();
     }
   }
 
@@ -560,6 +563,37 @@ class Parser {
     return funcNode;
   }
 
+  parseInstanceExpression () {
+    this.validateNextToken('this');
+    this.validateNextToken('.');
+
+    const keyExpr = this.parseKeyPath();
+    const left = this.sourceGraph.addNode({ type: 'instance_reference' });
+
+    this.sourceGraph.addEdge(left, keyExpr, 'key_expression');
+    let right = null;
+
+    const operator = this.peekNextToken();
+    if (operator instanceof OperatorToken) {
+      if (operator.value === '=') {
+        this.getNextToken(); // consume operator
+
+        const opNode = this.sourceGraph.addNode({ type: 'assignment', operator: operator.value });
+
+        right = this.parseExpression();
+
+        this.sourceGraph.addEdge(opNode, left, 'left');
+        this.sourceGraph.addEdge(opNode, right, 'right');
+
+        return opNode;
+      } else {
+        return this.parseBinOp(left, 0); // use `0` as default precedence
+      }
+    }
+
+    return left;
+  }
+
   // variables
   parseVariableDeclaration () {
     const declarationType = this.getNextToken();
@@ -750,7 +784,6 @@ class Parser {
 
     while (true) {
       const bodyNode = this.parsePrimaryExpression();
-
       if (!bodyNode) {
         break;
       }

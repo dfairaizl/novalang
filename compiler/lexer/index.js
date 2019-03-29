@@ -37,6 +37,7 @@ const KEYWORDS = [
   'let',
   'new',
   'return',
+  'this',
   'while'
 ];
 

@@ -217,11 +217,11 @@ class Generator {
     const funcRef = this.module.getNamedFunction(classConstructor);
 
     // build argument type list
-    // const argTypes = this.sourceGraph.relationFromNode(node, 'arguments').map((n) => {
-    //   return this.codegenNode(n);
-    // });
+    const argTypes = this.sourceGraph.relationFromNode(node, 'arguments').map((n) => {
+      return this.codegenNode(n);
+    });
 
-    return this.builder.buildCall(funcRef, [], classConstructor);
+    return this.builder.buildCall(funcRef, argTypes, classConstructor);
   }
 
   codeGenExternalFunction (node) {

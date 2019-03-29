@@ -180,6 +180,120 @@ describe('Parser', () => {
     });
   });
 
+  describe('instance variables', () => {
+    it('parses references to `this`', () => {
+      const parser = new Parser(`
+        class Calculator {
+          constructor () {
+            this.on = true;
+          }
+        }
+      `);
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'class_definition',
+        kind: 'Calculator',
+        identifier: 'Calculator',
+        super_class: null,
+        body: [{
+          type: 'constructor',
+          name: 'constructor',
+          body: [{
+            type: 'assignment',
+            operator: '=',
+            left: [{
+              type: 'instance_reference',
+              key_expression: [{
+                type: 'key_reference',
+                identifier: 'on'
+              }]
+            }],
+            right: [{
+              type: 'boolean_literal',
+              kind: 'Boolean',
+              value: 'true'
+            }]
+          }]
+        }]
+      });
+    });
+
+    it('parses `this` in expressions', () => {
+      const parser = new Parser(`
+        class Calculator {
+          constructor () {
+            const x = this.getX()
+          }
+        }
+      `);
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'class_definition',
+        identifier: 'Calculator',
+        kind: 'Calculator',
+        super_class: null,
+        body: [{
+          type: 'constructor',
+          name: 'constructor',
+          body: [{
+            type: 'immutable_declaration',
+            identifier: 'x',
+            expression: [{
+              type: 'instance_reference',
+              key_expression: [{
+                type: 'invocation',
+                name: 'getX'
+              }]
+            }]
+          }]
+        }]
+      });
+    });
+
+    it('parses `this` in binop expressions', () => {
+      const parser = new Parser(`
+        class Calculator {
+          constructor () {
+            this.x + 1;
+          }
+        }
+      `);
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'class_definition',
+        identifier: 'Calculator',
+        kind: 'Calculator',
+        super_class: null,
+        body: [{
+          type: 'constructor',
+          name: 'constructor',
+          body: [{
+            type: 'bin_op',
+            operator: '+',
+            left: [{
+              type: 'instance_reference',
+              key_expression: [{
+                type: 'key_reference',
+                identifier: 'x'
+              }]
+            }],
+            right: [{
+              type: 'number_literal',
+              kind: 'Int',
+              value: '1'
+            }]
+          }]
+        }]
+      });
+    });
+  });
+
   describe('instance construction', () => {
     it('instances can be created', () => {
       const parser = new Parser(`
