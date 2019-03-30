@@ -1,6 +1,7 @@
 class Calculator {
+  let on: Boolean
+
   constructor () {
-    this.on = true;
   }
 }
 

@@ -28,40 +28,4 @@ describe('Expression Analyzer', () => {
       expect(() => semanticAnalyzer.analyze()).not.toThrowError(ReassignImmutableError);
     });
   });
-
-  describe('op precedence', () => {
-    it('parses immutable variables with binary expression assignment', () => {
-      const parser = new Parser('const x = 1 + 2 * 3');
-
-      const parsed = parser.parsePrimaryExpression();
-
-      expect(parser.toAST(parsed)).toEqual({
-        type: 'immutable_declaration',
-        identifier: 'x',
-        expression: [{
-          type: 'bin_op',
-          operator: '+',
-          left: [{
-            type: 'number_literal',
-            kind: 'Int',
-            value: '1'
-          }],
-          right: [{
-            type: 'bin_op',
-            operator: '*',
-            left: [{
-              type: 'number_literal',
-              kind: 'Int',
-              value: '2'
-            }],
-            right: [{
-              type: 'number_literal',
-              kind: 'Int',
-              value: '3'
-            }]
-          }]
-        }]
-      });
-    });
-  });
 });

@@ -505,6 +505,38 @@ describe('Type Analyzer', () => {
     });
   });
 
+  // TODO: add parser support for instance variables
+  // they can be declared along side methods
+  // and need an explicit type or a literal assignment
+  // then we can check for initializations of them,
+  // allow for mutable/immutable, and check them
+  // in scoping and type analyzers etc
+  describe('class instance variables', () => {
+    it.only('types instance variables', () => {
+      const parser = new Parser(`
+        class Calculator {
+          let x: Int
+          const PI = 3.14
+
+          constructor () {
+            this.x = 1
+          }
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const xNode = sourceGraph.search('instance_reference')[0];
+      const type = sourceGraph.relationFromNode(xNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+    });
+  });
+
   describe('imports', () => {
     it('binds references to imported functions', () => {
       const libParser = new Parser(`

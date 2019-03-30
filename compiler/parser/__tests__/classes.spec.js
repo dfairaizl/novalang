@@ -180,7 +180,57 @@ describe('Parser', () => {
     });
   });
 
-  describe('instance variables', () => {
+  describe('instance variable declarations', () => {
+    it('allows for immutable instance variables to be declared', () => {
+      const parser = new Parser(`
+        class Calculator {
+          const PI = 3.14
+        }
+      `);
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'class_definition',
+        kind: 'Calculator',
+        identifier: 'Calculator',
+        super_class: null,
+        instance_variables: [{
+          type: 'immutable_declaration',
+          identifier: 'PI',
+          expression: [{
+            type: 'number_literal',
+            kind: 'Float',
+            value: '3.14'
+          }]
+        }]
+      });
+    });
+
+    it('allows for mutable instance variables to be declared', () => {
+      const parser = new Parser(`
+        class Calculator {
+          let on: Bool
+        }
+      `);
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'class_definition',
+        kind: 'Calculator',
+        identifier: 'Calculator',
+        super_class: null,
+        instance_variables: [{
+          type: 'mutable_declaration',
+          identifier: 'on',
+          kind: 'Bool'
+        }]
+      });
+    });
+  });
+
+  describe('instance variable references', () => {
     it('parses references to `this`', () => {
       const parser = new Parser(`
         class Calculator {

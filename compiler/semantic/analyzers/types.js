@@ -23,6 +23,7 @@ class TypeAnalyzer {
   }
 
   analyzeType (node) {
+    console.log(node);
     switch (node.attributes.type) {
       case 'immutable_declaration':
         return this.resolveImmutableDeclaration(node);
@@ -45,9 +46,14 @@ class TypeAnalyzer {
       case 'function':
       case 'external_function':
       case 'method':
+      case 'constructor':
         return this.resolveFunction(node);
+      case 'assignment':
+        return this.resolveAssignment(node);
       case 'invocation':
         return this.resolveInvocation(node);
+      case 'instance_reference':
+        return this.resolveInstanceReference(node);
       case 'import_statement':
         return this.resolveImport(node);
       case 'import_declaration':
@@ -155,6 +161,10 @@ class TypeAnalyzer {
 
       this.sourceGraph.addEdge(node, buildType, 'type');
 
+      // analyze the instance vars
+      const ivars = this.sourceGraph.relationFromNode(node, 'instance_variables');
+      ivars.forEach((v) => this.analyzeType(v));
+
       // analyze the class methods
       const methods = this.sourceGraph.relationFromNode(node, 'body');
       methods.forEach((m) => this.analyzeType(m));
@@ -173,6 +183,11 @@ class TypeAnalyzer {
   resolveReference (node) {
     const declNode = this.sourceGraph.relationFromNode(node, 'binding')[0];
     return this.analyzeType(declNode);
+  }
+
+  resolveAssignment (node) {
+    const exprNode = this.sourceGraph.relationFromNode(node, 'expression')[0];
+    return this.analyzeType(exprNode);
   }
 
   resolveBinop (node) {
@@ -218,6 +233,10 @@ class TypeAnalyzer {
         throw new VoidFunctionReturnError(`Function \`${node.attributes.name}\` cannot return a value`);
       }
     }
+
+    // TODO: NEEDS TESTS
+    const bodyNodes = this.sourceGraph.relationFromNode(node, 'body');
+    bodyNodes.forEach((n) => this.analyzeType(n));
 
     return retType;
   }

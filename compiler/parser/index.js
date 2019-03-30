@@ -738,12 +738,32 @@ class Parser {
     });
 
     // class body (constructor and methods)
-    let classExpr = null;
-    while ((classExpr = this.parseClassMethod())) {
-      this.sourceGraph.addEdge(classDef, classExpr, 'body');
+    let tok = this.peekNextToken();
+
+    while (tok.value !== '}') {
+      if (tok instanceof KeywordToken) {
+        if (tok.value === 'const' || tok.value === 'let') {
+          const ivarExpr = this.parseInstanceVariable();
+          this.sourceGraph.addEdge(classDef, ivarExpr, 'instance_variables');
+        } else if (tok.value === 'constructor') {
+          const bodyExpr = this.parseClassMethod();
+          this.sourceGraph.addEdge(classDef, bodyExpr, 'body');
+        }
+      } else {
+        const bodyExpr = this.parseClassMethod();
+        this.sourceGraph.addEdge(classDef, bodyExpr, 'body');
+      }
+
+      tok = this.peekNextToken();
     }
 
+    this.validateNextToken('}');
+
     return classDef;
+  }
+
+  parseInstanceVariable () {
+    return this.parseVariableDeclaration();
   }
 
   parseClassMethod () {
@@ -797,6 +817,7 @@ class Parser {
   }
 
   parseInstantiation () {
+    debugger;
     this.validateNextToken('new');
     const classInstance = this.parseIdentifier();
 

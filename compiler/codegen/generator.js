@@ -5,6 +5,8 @@ const Class = require('./llvm/class');
 const Module = require('./llvm/module');
 const Parameter = require('./llvm/parameter');
 
+const { libLLVM } = require('llvm-ffi');
+
 const {
   Constant,
   Int1,
@@ -23,6 +25,7 @@ class Generator {
 
     this.builder = new Builder();
     this.module = this.codegenModule();
+    this.typeMap = {};
   }
 
   generate () {
@@ -129,6 +132,17 @@ class Generator {
     const aClass = new Class(this.module, classIdentifier);
     this.builder.setClass(aClass);
     this.builder.enter(aClass);
+
+    // build the type
+    const classType = new Struct(node.attributes.kind);
+    const ivars = this.sourceGraph.relationFromNode(node, 'instance_variables');
+
+    const structTypes = ivars.map((t) => this.getType(t));
+
+    libLLVM.LLVMStructSetBody(classType, structTypes, structTypes.length, 0);
+
+    // save type
+    this.typeMap[className] = classType;
 
     // build function body
     const bodyNodes = this.sourceGraph.relationFromNode(node, 'body');
@@ -471,8 +485,9 @@ class Generator {
         return Void();
     }
 
-    // build complex type
-    return new Struct(typeNode.attributes.kind);
+    if (this.typeMap[typeNode.attributes.kind]) {
+      return this.typeMap[typeNode.attributes.kind];
+    }
 
     throw new Error(`Unknown type ${typeNode.attributes.kind}`);
   }
