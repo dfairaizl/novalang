@@ -239,6 +239,10 @@ describe('Scope Analyzer', () => {
     });
   });
 
+  // describe('class definitions', () => {
+  //   it('')
+  // });
+
   describe('class instantiations ', () => {
     it('binds instantiations to the class definition', () => {
       const parser = new Parser(`

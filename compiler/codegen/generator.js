@@ -122,12 +122,27 @@ class Generator {
 
     const exprRef = this.codegenNode(expr);
 
-    this.builder.buildStore(assign.attributes.identifier, exprRef);
+    if (assign.attributes.type === 'instance_reference') {
+      const thisVal = this.builder.namedValues['this'];
+
+      const ivar = this.sourceGraph.relationFromNode(assign, 'binding')[0];
+      const ivarRef = libLLVM.LLVMBuildStructGEP(
+        this.builder.builderRef,
+        thisVal,
+        0,
+        ivar.attributes.identifier
+      );
+
+      return libLLVM.LLVMBuildStore(this.builder.builderRef, exprRef, ivarRef);
+    } else {
+      // normal var - use it reference name
+      this.builder.buildStore(assign.attributes.identifier, exprRef);
+    }
   }
 
   codegenClass (node) {
     const className = node.attributes.identifier;
-    const classIdentifier = `__${className}`;
+    const classIdentifier = `${className}`;
 
     const aClass = new Class(this.module, classIdentifier);
     this.builder.setClass(aClass);
@@ -196,14 +211,24 @@ class Generator {
     const typeNode = this.sourceGraph.relationFromNode(node, 'return_type')[0];
     const retType = this.getType(typeNode);
 
+    // add implicit `this` parameter first
+    // TODO: Add analyzer support to add the implicit this param so
+    // we dont have to hack it in here
+    const classType = this.typeMap[currentClass.name];
+
     // build argument type list
     const argTypes = this.sourceGraph.relationFromNode(node, 'arguments').map((n) => {
       const typeNode = this.sourceGraph.relationFromNode(n, 'type')[0];
       return new Parameter(n.attributes.identifier, this.getType(typeNode));
     });
 
-    const func = new Func(this.module, methodName, retType, argTypes, false);
+    let methodArgTypes = [new Parameter('this', Pointer(classType))];
+    methodArgTypes = methodArgTypes.concat(argTypes);
+
+    const func = new Func(this.module, methodName, retType, methodArgTypes, false);
     this.builder.enter(func);
+
+    this.builder.namedValues['this'] = classType;
 
     func.paramRefs().forEach((p) => {
       this.builder.namedValues[p.name] = p.ref;
@@ -221,12 +246,14 @@ class Generator {
       this.builder.buildRet(Constant(Int32(), 0));
     }
 
+    this.builder.namedValues['this'] = null;
+
     this.builder.exit();
   }
 
   codegenInstantiation (node) {
     const currentClass = this.sourceGraph.relationFromNode(node, 'binding')[0];
-    const classConstructor = `__${currentClass.attributes.identifier}`;
+    const classConstructor = `${currentClass.attributes.identifier}`;
 
     const funcRef = this.module.getNamedFunction(classConstructor);
 

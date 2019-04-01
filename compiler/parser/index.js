@@ -817,7 +817,6 @@ class Parser {
   }
 
   parseInstantiation () {
-    debugger;
     this.validateNextToken('new');
     const classInstance = this.parseIdentifier();
 

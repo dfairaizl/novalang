@@ -14,6 +14,7 @@ class ScopeAnalyzer {
 
     this.analyzeReferences(codeModule);
     this.analyzeDeclarations(codeModule);
+    this.analyzeInstanceReferences(codeModule);
     this.analyzeInstantiations(codeModule);
     this.analyzeInvocations(codeModule);
     this.analyzeFunctions(codeModule);
@@ -46,6 +47,15 @@ class ScopeAnalyzer {
     });
   }
 
+  analyzeInstanceReferences (node) {
+    const iterator = this.sourceGraph.traverse();
+    iterator.iterate(node, (n) => {
+      if (n.attributes.type === 'instance_reference') {
+        this.checkInstanceReference(n);
+      }
+    });
+  }
+
   analyzeInvocations (node) {
     const iterator = this.sourceGraph.traverse();
     iterator.iterate(node, (n) => {
@@ -58,7 +68,7 @@ class ScopeAnalyzer {
   analyzeFunctions (node) {
     const iterator = this.sourceGraph.traverse();
     iterator.iterate(node, (n) => {
-      if (n.attributes.type === 'function') {
+      if (n.attributes.type === 'function' || n.attributes.type === 'method') {
         this.checkFunction(n);
       }
     });
@@ -107,6 +117,20 @@ class ScopeAnalyzer {
     // try find the closest declaration that matches
     const scopeNodes = this.buildSymbolTable(node);
     const declNode = scopeNodes.find((n) => n.attributes.identifier === node.attributes.identifier);
+
+    if (!declNode) {
+      throw new UndeclaredVariableError(`Use of undeclared variable \`${node.attributes.identifier}\``);
+    }
+
+    this.sourceGraph.addEdge(node, declNode, 'binding');
+    this.sourceGraph.addEdge(declNode, node, 'reference');
+  }
+
+  checkInstanceReference (node) {
+    // try find the closest declaration that matches
+    const pathExprNode = this.sourceGraph.relationFromNode(node, 'key_expression')[0];
+    const scopeNodes = this.buildSymbolTable(node);
+    const declNode = scopeNodes.find((n) => n.attributes.identifier === pathExprNode.attributes.identifier);
 
     if (!declNode) {
       throw new UndeclaredVariableError(`Use of undeclared variable \`${node.attributes.identifier}\``);

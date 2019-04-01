@@ -1,8 +1,10 @@
 class Calculator {
   let on: Boolean
 
-  constructor () {
+  turnOn () {
+    this.on = true;
   }
 }
 
 const c = new Calculator();
+c.turnOn();

@@ -23,7 +23,6 @@ class TypeAnalyzer {
   }
 
   analyzeType (node) {
-    console.log(node);
     switch (node.attributes.type) {
       case 'immutable_declaration':
         return this.resolveImmutableDeclaration(node);
@@ -185,9 +184,26 @@ class TypeAnalyzer {
     return this.analyzeType(declNode);
   }
 
+  resolveInstanceReference (node) {
+    const declNode = this.sourceGraph.relationFromNode(node, 'binding')[0];
+    return this.analyzeType(declNode);
+  }
+
   resolveAssignment (node) {
-    const exprNode = this.sourceGraph.relationFromNode(node, 'expression')[0];
-    return this.analyzeType(exprNode);
+    const lhs = this.sourceGraph.relationFromNode(node, 'left');
+    const rhs = this.sourceGraph.relationFromNode(node, 'right');
+
+    const lhsType = this.analyzeType(lhs[0]);
+    const rhsType = this.analyzeType(rhs[0]);
+
+    // both sides of the binop need to have equivilant types
+    const recType = this.reconcileTypes(lhsType, rhsType);
+
+    if (!recType) {
+      throw new TypeMismatchError(`Operands must have the same type`);
+    }
+
+    return recType;
   }
 
   resolveBinop (node) {
