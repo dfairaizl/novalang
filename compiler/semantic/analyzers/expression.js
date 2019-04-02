@@ -1,4 +1,5 @@
 const {
+  InvalidExportError,
   ReassignImmutableError
 } = require('../errors');
 
@@ -21,6 +22,9 @@ class ExpressionAnalyzer {
       case 'assignment':
         this.checkAssignment(node);
         break;
+      case 'export_statement':
+        this.checkExport(node);
+        break;
       default:
     }
   }
@@ -31,6 +35,14 @@ class ExpressionAnalyzer {
 
     if (declNode && declNode.attributes.type === 'immutable_declaration') {
       throw new ReassignImmutableError(`Cannot reassign value to const \`${declNode.attributes.identifier}\``);
+    }
+  }
+
+  checkExport (node) {
+    const exportExpr = this.sourceGraph.relationFromNode(node, 'expression')[0];
+
+    if (exportExpr.attributes.type !== 'function') {
+      throw new InvalidExportError('Only functions are allowed to be exported from modules.');
     }
   }
 }

@@ -1,10 +1,12 @@
 /* global describe, it, expect */
 
 const Parser = require('../../parser');
-const SemanticAnalyzer = require('..');
+const ScopeAnalyzer = require('./scope');
 const {
   ClassNotFoundError,
   FunctionNotFoundError,
+  NoMatchingModuleExport,
+  UndeclaredModuleError,
   UndeclaredVariableError
 } = require('../errors');
 
@@ -17,7 +19,7 @@ describe('Scope Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const analyzer = new SemanticAnalyzer(sourceGraph);
+      const analyzer = new ScopeAnalyzer(sourceGraph);
       expect(() => analyzer.analyze()).toThrowError(UndeclaredVariableError);
     });
 
@@ -31,7 +33,7 @@ describe('Scope Analyzer', () => {
       const ref = sourceGraph.search('variable_reference');
       const decl = sourceGraph.search('mutable_declaration');
 
-      const analyzer = new SemanticAnalyzer(sourceGraph);
+      const analyzer = new ScopeAnalyzer(sourceGraph);
       analyzer.analyze();
 
       expect(sourceGraph.relationFromNode(ref[0], 'binding')).toMatchObject([
@@ -53,7 +55,7 @@ describe('Scope Analyzer', () => {
 
       const ref = sourceGraph.search('variable_reference');
 
-      const analyzer = new SemanticAnalyzer(sourceGraph);
+      const analyzer = new ScopeAnalyzer(sourceGraph);
       analyzer.analyze();
 
       expect(sourceGraph.relationFromNode(ref[0], 'binding')).toMatchObject([
@@ -73,7 +75,7 @@ describe('Scope Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const analyzer = new SemanticAnalyzer(sourceGraph);
+      const analyzer = new ScopeAnalyzer(sourceGraph);
       analyzer.analyze();
 
       const node = sourceGraph.search('variable_reference');
@@ -94,30 +96,10 @@ describe('Scope Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const analyzer = new SemanticAnalyzer(sourceGraph);
+      const analyzer = new ScopeAnalyzer(sourceGraph);
       analyzer.analyze();
 
       const node = sourceGraph.search('variable_reference');
-
-      expect(sourceGraph.relationFromNode(node[0], 'binding')).toMatchObject([
-        { attributes: { type: 'mutable_declaration' } } // inner `z` is mutable in this case
-      ]);
-    });
-  });
-
-  describe('function references', () => {
-    it('throws an exception for use of undeclared variables', () => {
-      const parser = new Parser(`
-        let z = function incr(x: Int) -> Int { return x + 1 };
-        z(1);
-      `);
-
-      const sourceGraph = parser.parse();
-
-      const analyzer = new SemanticAnalyzer(sourceGraph);
-      analyzer.analyze();
-
-      const node = sourceGraph.search('invocation');
 
       expect(sourceGraph.relationFromNode(node[0], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration' } } // inner `z` is mutable in this case
@@ -135,7 +117,7 @@ describe('Scope Analyzer', () => {
 
       const ref = sourceGraph.search('mutable_declaration');
 
-      const analyzer = new SemanticAnalyzer(sourceGraph);
+      const analyzer = new ScopeAnalyzer(sourceGraph);
       analyzer.analyze();
 
       expect(sourceGraph.relationFromNode(ref[0], 'reference')).toMatchObject([
@@ -145,24 +127,79 @@ describe('Scope Analyzer', () => {
   });
 
   describe('import declarations', () => {
-    it('binds references to imported functions', () => {
+    it('throws an error if the imported modules is not found', () => {
+      const parser = new Parser(`
+        import add from 'math';
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const analyzer = new ScopeAnalyzer(sourceGraph);
+      expect(() => analyzer.analyze()).toThrowError(UndeclaredModuleError);
+    });
+
+    it('throws an error if the import was not found in source module', () => {
+      const libParser = new Parser(`
+        export function subtract(x: Int, y: Int) -> Int {}
+      `, 'math');
+
+      const parser = new Parser(`
+        import add from 'math';
+      `);
+
+      const libGraph = libParser.parse();
+      const sourceGraph = parser.parse();
+
+      sourceGraph.merge(libGraph);
+
+      const analyzer = new ScopeAnalyzer(sourceGraph);
+      expect(() => analyzer.analyze()).toThrowError(NoMatchingModuleExport);
+    });
+
+    it('binds imported identifiers to their exports in source module', () => {
       const libParser = new Parser(`
         export function add(x: Int, y: Int) -> Int {}
       `, 'math');
 
       const parser = new Parser(`
         import add from 'math';
-        let z: Int = add(1, 1);
       `);
 
-      const lib = libParser.parse();
+      const libGraph = libParser.parse();
       const sourceGraph = parser.parse();
 
-      sourceGraph.merge(lib);
+      sourceGraph.merge(libGraph);
+
+      const ref = sourceGraph.search('import_declaration');
+
+      const analyzer = new ScopeAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      expect(sourceGraph.relationFromNode(ref[0], 'binding')).toMatchObject([
+        { attributes: { type: 'function' } }
+      ]);
+    });
+  });
+
+  describe('import references', () => {
+    it('binds references to imported identifiers', () => {
+      const libParser = new Parser(`
+        export function add(x: Int, y: Int) -> Int {}
+      `, 'math');
+
+      const parser = new Parser(`
+        import add from 'math';
+        add(1, 2);
+      `);
+
+      const libGraph = libParser.parse();
+      const sourceGraph = parser.parse();
+
+      sourceGraph.merge(libGraph);
 
       const ref = sourceGraph.search('invocation');
 
-      const analyzer = new SemanticAnalyzer(sourceGraph);
+      const analyzer = new ScopeAnalyzer(sourceGraph);
       analyzer.analyze();
 
       expect(sourceGraph.relationFromNode(ref[0], 'binding')).toMatchObject([
@@ -172,20 +209,37 @@ describe('Scope Analyzer', () => {
   });
 
   describe('function arguments', () => {
-    it('it binds references to function arguments', () => {
+    it.only('it binds references to function arguments', () => {
+      const parser = new Parser(`
+        function addOne(z: Int) -> Int { return z };
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const analyzer = new ScopeAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      const node = sourceGraph.search('variable_reference');
+
+      expect(sourceGraph.relationFromNode(node[0], 'binding')).toMatchObject([
+        { attributes: { type: 'function_argument', identifier: 'z' } }
+      ]);
+    });
+
+    it('it binds references to function arguments in expressions', () => {
       const parser = new Parser(`
         function addOne(z: Int) -> Int { return z + 1 };
       `);
 
       const sourceGraph = parser.parse();
 
-      const analyzer = new SemanticAnalyzer(sourceGraph);
+      const analyzer = new ScopeAnalyzer(sourceGraph);
       analyzer.analyze();
 
       const node = sourceGraph.search('variable_reference');
 
       expect(sourceGraph.relationFromNode(node[0], 'binding')).toMatchObject([
-        { attributes: { type: 'function_argument' } }
+        { attributes: { type: 'function_argument', identifier: 'z' } }
       ]);
     });
   });
@@ -196,7 +250,7 @@ describe('Scope Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const analyzer = new SemanticAnalyzer(sourceGraph);
+      const analyzer = new ScopeAnalyzer(sourceGraph);
       expect(() => analyzer.analyze()).toThrowError(FunctionNotFoundError);
     });
 
@@ -208,7 +262,7 @@ describe('Scope Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const analyzer = new SemanticAnalyzer(sourceGraph);
+      const analyzer = new ScopeAnalyzer(sourceGraph);
       analyzer.analyze();
 
       const node = sourceGraph.search('invocation');
@@ -230,7 +284,7 @@ describe('Scope Analyzer', () => {
 
       const ref = sourceGraph.search('function');
 
-      const analyzer = new SemanticAnalyzer(sourceGraph);
+      const analyzer = new ScopeAnalyzer(sourceGraph);
       analyzer.analyze();
 
       expect(sourceGraph.relationFromNode(ref[0], 'reference')).toMatchObject([
@@ -239,11 +293,7 @@ describe('Scope Analyzer', () => {
     });
   });
 
-  // describe('class definitions', () => {
-  //   it('')
-  // });
-
-  describe('class instantiations ', () => {
+  describe.skip('class instantiations ', () => {
     it('binds instantiations to the class definition', () => {
       const parser = new Parser(`
         class Calculator {}
@@ -252,7 +302,7 @@ describe('Scope Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const analyzer = new SemanticAnalyzer(sourceGraph);
+      const analyzer = new ScopeAnalyzer(sourceGraph);
       analyzer.analyze();
 
       const iRef = sourceGraph.search('instantiation');
@@ -275,7 +325,7 @@ describe('Scope Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const analyzer = new SemanticAnalyzer(sourceGraph);
+      const analyzer = new ScopeAnalyzer(sourceGraph);
       expect(() => analyzer.analyze()).toThrowError(ClassNotFoundError);
     });
   });

@@ -485,7 +485,7 @@ describe('Type Analyzer', () => {
     });
   });
 
-  describe('class instantiation', () => {
+  describe.skip('class instantiation', () => {
     it('builds types for class definitions', () => {
       const parser = new Parser(`
         class Calculator {}
@@ -511,8 +511,8 @@ describe('Type Analyzer', () => {
   // then we can check for initializations of them,
   // allow for mutable/immutable, and check them
   // in scoping and type analyzers etc
-  describe('class instance variables', () => {
-    it.only('types instance variables', () => {
+  describe.skip('class instance variables', () => {
+    it('types instance variables', () => {
       const parser = new Parser(`
         class Calculator {
           let x: Int

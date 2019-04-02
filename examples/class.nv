@@ -1,10 +1,1 @@
-class Calculator {
-  let on: Boolean
-
-  turnOn () {
-    this.on = true;
-  }
-}
-
-const c = new Calculator();
-c.turnOn();
+const x = 1; let y = x;

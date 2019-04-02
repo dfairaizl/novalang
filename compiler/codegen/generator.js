@@ -384,7 +384,6 @@ class Generator {
   }
 
   codegenObjectReference (node) {
-    debugger;
     const keyPathNode = this.sourceGraph.relationFromNode(node, 'key_expression')[0];
     return this.codegenNode(keyPathNode);
   }
