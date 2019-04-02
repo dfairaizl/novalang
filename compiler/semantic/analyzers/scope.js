@@ -12,10 +12,10 @@ class ScopeAnalyzer {
   analyze () {
     const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.name === 'main_module');
 
-    this.analyzeReferences(codeModule);
     this.analyzeDeclarations(codeModule);
-    this.analyzeInstanceReferences(codeModule);
     this.analyzeInstantiations(codeModule);
+    this.analyzeReferences(codeModule);
+    this.analyzeInstanceReferences(codeModule);
     this.analyzeInvocations(codeModule);
     this.analyzeFunctions(codeModule);
   }
@@ -25,6 +25,8 @@ class ScopeAnalyzer {
     iterator.iterate(node, (n) => {
       if (n.attributes.type === 'variable_reference') {
         this.checkReference(n);
+      } else if (n.attributes.type === 'object_reference') {
+        this.checkObjectReference(n);
       }
     });
   }
@@ -98,8 +100,15 @@ class ScopeAnalyzer {
   }
 
   checkInvocation (node) {
+    const bindingNode = this.sourceGraph.relationFromNode(node, 'binding');
+    if (bindingNode) {
+      // INFO binding was already created via object reference invocation
+      return;
+    }
+
     // try find the closest declaration that matches
     const scopeNodes = this.buildSymbolTable(node);
+
     const declNode = scopeNodes.find((n) => {
       return n.attributes.name === node.attributes.name ||
         n.attributes.identifier === node.attributes.name;
@@ -126,14 +135,43 @@ class ScopeAnalyzer {
     this.sourceGraph.addEdge(declNode, node, 'reference');
   }
 
+  checkObjectReference (node) {
+    const keyNode = this.sourceGraph.relationFromNode(node, 'key_expression')[0];
+    const scopeNodes = this.buildSymbolTable(node);
+    const declNode = scopeNodes.find((n) => n.attributes.identifier === node.attributes.identifier);
+
+    if (!declNode) {
+      throw new Error('REFERENCED UNDECLARED OBJECT');
+    }
+
+    const declExprNode = this.sourceGraph.relationFromNode(declNode, 'expression')[0];
+    const boundNode = this.sourceGraph.relationFromNode(declExprNode, 'binding')[0];
+
+    // found some object or class
+    const objectScope = this.directScope(boundNode);
+    const refNode = objectScope.find((n) =>
+      n.attributes.identifier === keyNode.attributes.identifier ||
+      n.attributes.name === keyNode.attributes.name
+    );
+
+    if (!refNode) {
+      throw new Error('REFERENCED KEY NOT DEFINED');
+    }
+
+    this.sourceGraph.addEdge(keyNode, refNode, 'binding');
+    this.sourceGraph.addEdge(refNode, keyNode, 'reference');
+  }
+
   checkInstanceReference (node) {
     // try find the closest declaration that matches
     const pathExprNode = this.sourceGraph.relationFromNode(node, 'key_expression')[0];
     const scopeNodes = this.buildSymbolTable(node);
-    const declNode = scopeNodes.find((n) => n.attributes.identifier === pathExprNode.attributes.identifier);
+    const declNode = scopeNodes.find((n) => {
+      return n.attributes.identifier === pathExprNode.attributes.identifier;
+    });
 
     if (!declNode) {
-      throw new UndeclaredVariableError(`Use of undeclared variable \`${node.attributes.identifier}\``);
+      throw new UndeclaredVariableError(`Use of undeclared variable \`${pathExprNode.attributes.identifier}\``);
     }
 
     this.sourceGraph.addEdge(node, declNode, 'binding');
@@ -189,9 +227,13 @@ class ScopeAnalyzer {
       node.attributes.type === 'immutable_declaration' ||
       node.attributes.type === 'import_declaration' ||
       node.attributes.type === 'class_definition' ||
+      node.attributes.type === 'method' ||
       node.attributes.type === 'function';
   }
 
+  // TODO: maybe we replace this with some functions that know how to get the
+  // immiedate scope of their children. That way we can handle custom logic like
+  // the import statements below, as well as classes?
   directScope (node) {
     // handle the top level module as a special case
     // so we can make sure import declarations are included in the scope
@@ -204,6 +246,15 @@ class ScopeAnalyzer {
       });
 
       return scope;
+    } else if (node.attributes.type === 'class_definition') {
+      const ivars = this.sourceGraph.relationFromNode(node, 'instance_variables');
+      const methods = this.sourceGraph.relationFromNode(node, 'body');
+
+      const nodes = [];
+      ivars.forEach((n) => nodes.push(n));
+      methods.forEach((n) => nodes.push(n));
+
+      return nodes;
     } else {
       return this.sourceGraph.outgoing(node);
     }

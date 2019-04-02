@@ -76,6 +76,8 @@ class Generator {
         return this.codegenElseCondition(node);
       case 'variable_reference':
         return this.codegenReference(node);
+      case 'object_reference':
+        return this.codegenObjectReference(node);
       case 'return_statement':
         return this.codegenReturn(node);
       case 'immutable_declaration':
@@ -381,9 +383,25 @@ class Generator {
     return this.builder.buildLoad(node.attributes.identifier);
   }
 
+  codegenObjectReference (node) {
+    debugger;
+    const keyPathNode = this.sourceGraph.relationFromNode(node, 'key_expression')[0];
+    return this.codegenNode(keyPathNode);
+  }
+
   codegenInvocation (node, identifier = '') {
     // look up function in module
-    const funcRef = this.module.getNamedFunction(node.attributes.name);
+    const boundNode = this.sourceGraph.relationFromNode(node, 'binding')[0];
+
+    let name = null;
+    if (boundNode.attributes.type === 'method') {
+      const currentClass = this.builder.currentClass;
+      name = `Calculator_${boundNode.attributes.name}`;
+    } else {
+      name = boundNode.attributes.name;
+    }
+
+    const funcRef = this.module.getNamedFunction(name);
 
     // build argument type list
     const argTypes = this.sourceGraph.relationFromNode(node, 'arguments').map((n) => {
