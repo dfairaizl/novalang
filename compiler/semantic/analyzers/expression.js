@@ -40,8 +40,7 @@ class ExpressionAnalyzer {
 
   checkExport (node) {
     const exportExpr = this.sourceGraph.relationFromNode(node, 'expression')[0];
-
-    if (exportExpr.attributes.type !== 'function') {
+    if (exportExpr.attributes.type !== 'function' && exportExpr.attributes.type !== 'external_function') {
       throw new InvalidExportError('Only functions are allowed to be exported from modules.');
     }
   }

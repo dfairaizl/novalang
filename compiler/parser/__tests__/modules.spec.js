@@ -58,5 +58,29 @@ describe('Parser', () => {
         }]
       });
     });
+
+    it('parses export statements for external functions', () => {
+      const parser = new Parser('export external function malloc(buff: sizet) -> void *');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'export_statement',
+        expression: [{
+          type: 'external_function',
+          name: 'malloc',
+          kind: {
+            type: 'pointer',
+            kind: 'void',
+            indirection: 1
+          },
+          arguments: [{
+            type: 'function_argument',
+            identifier: 'buff',
+            kind: 'sizet'
+          }]
+        }]
+      });
+    });
   });
 });

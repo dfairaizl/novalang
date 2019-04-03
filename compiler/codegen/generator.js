@@ -374,6 +374,7 @@ class Generator {
   }
 
   codegenReference (node) {
+    console.log(node);
     const binding = this.sourceGraph.relationFromNode(node, 'binding')[0];
 
     if (binding.attributes.type === 'function_argument') {

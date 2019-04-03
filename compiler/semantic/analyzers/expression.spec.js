@@ -41,6 +41,17 @@ describe('Expression Analyzer', () => {
       expect(() => semanticAnalyzer.analyze()).not.toThrowError(InvalidExportError);
     });
 
+    it('allows external functions to be exported', () => {
+      const parser = new Parser(`export external function printf(format: char *, args: ...) -> Int`);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+
+      // TODO: other exceptions dont get caugth by this matcher
+      expect(() => semanticAnalyzer.analyze()).not.toThrow();
+    });
+
     it('throws an error for invalid exports', () => {
       const parser = new Parser(`export 3.14`);
 

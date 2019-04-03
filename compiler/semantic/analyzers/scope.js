@@ -1,5 +1,5 @@
 const {
-  // ClassNotFoundError,
+  ClassNotFoundError,
   FunctionNotFoundError,
   NoMatchingModuleExport,
   UndeclaredModuleError,
@@ -27,10 +27,17 @@ class SymbolTable {
       .find((s) => s.attributes.identifier === funcNode.attributes.identifier) !== undefined;
   }
 
-  hasExportSymbol (funcNode) {
+  hasClassSymbol (classNode) {
     return this.symbols
-      .filter((s) => s.type !== 'function')
-      .find((s) => s.attributes.name === funcNode.attributes.identifier) !== undefined;
+      .filter((s) => s.type !== 'class_definition')
+      .find((s) => s.attributes.identifier === classNode.attributes.class) !== undefined;
+  }
+
+  hasExportSymbol (exportNode) {
+    console.log(exportNode);
+    return this.symbols
+      .filter((s) => s.type !== 'function' || s.type !== 'external_function')
+      .find((s) => s.attributes.name === exportNode.attributes.identifier) !== undefined;
   }
 
   hasImportSymbol (refNode) {
@@ -41,9 +48,13 @@ class SymbolTable {
 
   matchingSymbol (node) {
     return this.symbols.find((s) =>
-      s.attributes.identifier === node.attributes.identifier ||
-      s.attributes.identifier === node.attributes.name
+      s.attributes.identifier === node.attributes.identifier
     );
+    // return this.symbols.find((s) => {
+    //   return s.attributes.identifier === node.attributes.identifier ||
+    //   s.attributes.identifier === node.attributes.name ||
+    //   s.attributes.identifier === node.attributes.class;
+    // });
   }
 }
 
@@ -56,6 +67,8 @@ class ScopeAnalyzer {
   analyze () {
     const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.name === 'main_module');
 
+    // console.log(require('util').inspect(this.sourceGraph.treeFromNode(), { depth: null }));
+
     // add this modules top-level expressions to the base symbol SymbolTable
     this.buildModuleScope(codeModule);
 
@@ -64,6 +77,8 @@ class ScopeAnalyzer {
     exprs.forEach((n) => {
       this.analyzeNode(n);
     });
+
+    // TODO: create a pass after scoping to check for unreferenced things
   }
 
   buildModuleScope (node) {
@@ -85,7 +100,16 @@ class ScopeAnalyzer {
         exports.forEach((i) => {
           // for now we only allow functions to be exported
           // will need to support classes too
-          if (i.attributes.type === 'function') {
+          if (i.attributes.type === 'function' || i.attributes.type === 'external_function') {
+            symbolTable.addSymbol(i);
+          }
+        });
+      } else if (this.isClassScope(node)) {
+        const classExprs = this.sourceGraph.outgoing(node);
+        symbolTable.addSymbol(node);
+
+        classExprs.forEach((i) => {
+          if (i.attributes.type === 'method') {
             symbolTable.addSymbol(i);
           }
         });
@@ -113,6 +137,8 @@ class ScopeAnalyzer {
         return this.analyzeReference(node);
       case 'invocation':
         return this.analyzeInvocation(node);
+      case 'instantiation':
+        return this.analyzeInstantiation(node);
       default:
         // console.log('Unknow scope expression', node);
     }
@@ -129,7 +155,6 @@ class ScopeAnalyzer {
   analyzeImport (node) {
     const modules = this.sourceGraph.search('module');
     const sourceModule = modules.find((m) => m.attributes.name === node.attributes.name);
-
     if (!sourceModule) {
       throw new UndeclaredModuleError(`Imported module \`${node.attributes.name}\` not found`);
     }
@@ -140,6 +165,7 @@ class ScopeAnalyzer {
     const imports = this.sourceGraph.relationFromNode(node, 'import');
     imports.forEach((i) => {
       const sym = this.symbolStack.find((t) => {
+        console.log(require('util').inspect(t, { depth: null }));
         return t.hasExportSymbol(i);
       });
 
@@ -203,10 +229,34 @@ class ScopeAnalyzer {
     if (sym) {
       const binding = sym.matchingSymbol(node);
       this.createBinding(node, binding);
+
+      // analyze invocation arguments
+      const args = this.sourceGraph.relationFromNode(node, 'arguments');
+      args.forEach((arg) => {
+        const argBinding = this.analyzeNode(arg);
+        console.log('arg binding', arg, argBinding);
+        this.createBinding(arg, argBinding);
+      });
+
       return binding;
     }
 
     throw new FunctionNotFoundError(`Use of undeclared function \`${node.attributes.name}\``);
+  }
+
+  analyzeInstantiation (node) {
+    // check symbol table for the reference
+    const sym = this.symbolStack.find((t) => {
+      return t.hasClassSymbol(node);
+    });
+
+    if (sym) {
+      const binding = sym.matchingSymbol(node);
+      this.createBinding(node, binding);
+      return binding;
+    }
+
+    throw new ClassNotFoundError(`Cannot instantiate undefined class \`${node.attributes.class}\``);
   }
 
   analyzeReference (node) {
@@ -223,6 +273,7 @@ class ScopeAnalyzer {
   }
 
   createBinding (refNode, boundNode) {
+    console.log('binding', refNode, boundNode);
     if (refNode && boundNode) {
       this.sourceGraph.addEdge(refNode, boundNode, 'binding');
       this.sourceGraph.addEdge(boundNode, refNode, 'reference');
@@ -244,6 +295,10 @@ class ScopeAnalyzer {
 
   isExportScope (node) {
     return node.attributes.type === 'export_statement';
+  }
+
+  isClassScope (node) {
+    return node.attributes.type === 'class_definition';
   }
 
   scopable (node) {

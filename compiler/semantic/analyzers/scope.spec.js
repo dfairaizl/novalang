@@ -179,6 +179,30 @@ describe('Scope Analyzer', () => {
         { attributes: { type: 'function' } }
       ]);
     });
+
+    it('binds imported identifiers to their exports in source module', () => {
+      const libParser = new Parser(`
+        export external function printf(format: char *, args: ...) -> Int
+      `, 'io');
+
+      const parser = new Parser(`
+        import printf from 'io';
+      `);
+
+      const libGraph = libParser.parse();
+      const sourceGraph = parser.parse();
+
+      sourceGraph.merge(libGraph);
+
+      const ref = sourceGraph.search('import_declaration');
+
+      const analyzer = new ScopeAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      expect(sourceGraph.relationFromNode(ref[0], 'binding')).toMatchObject([
+        { attributes: { type: 'external_function' } }
+      ]);
+    });
   });
 
   describe('import references', () => {
@@ -209,7 +233,7 @@ describe('Scope Analyzer', () => {
   });
 
   describe('function arguments', () => {
-    it.only('it binds references to function arguments', () => {
+    it('it binds references to function arguments', () => {
       const parser = new Parser(`
         function addOne(z: Int) -> Int { return z };
       `);
@@ -245,7 +269,7 @@ describe('Scope Analyzer', () => {
   });
 
   describe('function invocations', () => {
-    it('throws an exception invoking  undeclared functions', () => {
+    it('throws an exception invoking undeclared functions', () => {
       const parser = new Parser(`addOne(5);`);
 
       const sourceGraph = parser.parse();
@@ -271,6 +295,26 @@ describe('Scope Analyzer', () => {
         { attributes: { type: 'function', name: 'addOne' } }
       ]);
     });
+
+    it('it binds invocation arguments', () => {
+      const parser = new Parser(`
+        function addOne(x: Int) { };
+        const x = 1;
+        addOne(x);
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const analyzer = new ScopeAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      const node = sourceGraph.search('invocation')[0];
+      const arg = sourceGraph.relationFromNode(node, 'arguments');
+      console.log(node, arg);
+      expect(sourceGraph.relationFromNode(arg[0], 'binding')).toMatchObject([
+        { attributes: { type: 'immutable_declaration', identifier: 'x' } }
+      ]);
+    });
   });
 
   describe('function declarations', () => {
@@ -293,7 +337,7 @@ describe('Scope Analyzer', () => {
     });
   });
 
-  describe.skip('class instantiations ', () => {
+  describe('class instantiations ', () => {
     it('binds instantiations to the class definition', () => {
       const parser = new Parser(`
         class Calculator {}
