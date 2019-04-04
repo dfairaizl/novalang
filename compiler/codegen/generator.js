@@ -29,6 +29,7 @@ class Generator {
   }
 
   generate () {
+    debugger;
     const sources = this.sourceGraph.outgoing(this.codeModule);
     sources.forEach((source) => {
       this.codegenNode(source);
@@ -36,17 +37,17 @@ class Generator {
 
     this.builder.buildVoidRet();
 
-    if (this.codeModule.attributes.name === 'main_module') {
-      this.createMain(this.codeModule.attributes.name);
+    if (this.codeModule.attributes.identifier === 'main_module') {
+      this.createMain(this.codeModule.attributes.identifier);
     }
 
-    return new BuildUnit(this.buildDir, this.codeModule.attributes.name, this.module);
+    return new BuildUnit(this.buildDir, this.codeModule.attributes.identifier, this.module);
   }
 
   codegenModule () {
-    const llvmMod = new Module(this.codeModule.attributes.name);
+    const llvmMod = new Module(this.codeModule.attributes.identifier);
 
-    const moduleFunc = new Func(llvmMod, this.codeModule.attributes.name, Void(), [], false);
+    const moduleFunc = new Func(llvmMod, this.codeModule.attributes.identifier, Void(), [], false);
     this.builder.enter(moduleFunc);
 
     return llvmMod;
@@ -172,7 +173,7 @@ class Generator {
   }
 
   codeGenFunction (funcNode) {
-    const funcName = funcNode.attributes.name;
+    const funcName = funcNode.attributes.identifier;
     const typeNode = this.sourceGraph.relationFromNode(funcNode, 'return_type')[0];
     const retType = this.getType(typeNode);
 
@@ -208,7 +209,7 @@ class Generator {
   codeGenMethod (node) {
     const currentClass = this.builder.currentClass;
 
-    const methodName = `${currentClass.name}_${node.attributes.name}`;
+    const methodName = `${currentClass.name}_${node.attributes.identifier}`;
 
     const typeNode = this.sourceGraph.relationFromNode(node, 'return_type')[0];
     const retType = this.getType(typeNode);
@@ -268,7 +269,7 @@ class Generator {
   }
 
   codeGenExternalFunction (node) {
-    const funcName = node.attributes.name;
+    const funcName = node.attributes.identifier;
     const retType = this.getType(node);
 
     // build argument type list
@@ -395,10 +396,10 @@ class Generator {
 
     let name = null;
     if (boundNode.attributes.type === 'method') {
-      const currentClass = this.builder.currentClass;
-      name = `Calculator_${boundNode.attributes.name}`;
+      // const currentClass = this.builder.currentClass;
+      // name = `Calculator_${boundNode.attributes.name}`;
     } else {
-      name = boundNode.attributes.name;
+      name = boundNode.attributes.identifier;
     }
 
     const funcRef = this.module.getNamedFunction(name);
