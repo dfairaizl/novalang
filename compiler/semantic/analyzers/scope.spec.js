@@ -108,9 +108,10 @@ describe('Scope Analyzer', () => {
   });
 
   describe('variable declarations', () => {
-    it('binds references to function arguments', () => {
+    it('declarations have references to bindings', () => {
       const parser = new Parser(`
-        let z = 1; z + 1;
+        let z = 1;
+        z + 1;
       `);
 
       const sourceGraph = parser.parse();
@@ -292,7 +293,7 @@ describe('Scope Analyzer', () => {
       const node = sourceGraph.search('invocation');
 
       expect(sourceGraph.relationFromNode(node[0], 'binding')).toMatchObject([
-        { attributes: { type: 'function', name: 'addOne' } }
+        { attributes: { type: 'function', identifier: 'addOne' } }
       ]);
     });
 
@@ -310,7 +311,7 @@ describe('Scope Analyzer', () => {
 
       const node = sourceGraph.search('invocation')[0];
       const arg = sourceGraph.relationFromNode(node, 'arguments');
-      console.log(node, arg);
+
       expect(sourceGraph.relationFromNode(arg[0], 'binding')).toMatchObject([
         { attributes: { type: 'immutable_declaration', identifier: 'x' } }
       ]);
@@ -358,7 +359,25 @@ describe('Scope Analyzer', () => {
       const cRef = sourceGraph.search('class_definition');
 
       expect(sourceGraph.relationFromNode(cRef[0], 'reference')).toMatchObject([
-        { attributes: { type: 'instantiation', class: 'Calculator' } }
+        { attributes: { type: 'instantiation', identifier: 'Calculator' } }
+      ]);
+    });
+
+    it('instantiations can be stored in variables', () => {
+      const parser = new Parser(`
+        class Calculator {}
+        const c = new Calculator();
+        const a = c;
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const analyzer = new ScopeAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      const ref = sourceGraph.search('variable_reference');
+      expect(sourceGraph.relationFromNode(ref[0], 'binding')).toMatchObject([
+        { attributes: { type: 'immutable_declaration', identifier: 'c' } }
       ]);
     });
 
@@ -371,6 +390,32 @@ describe('Scope Analyzer', () => {
 
       const analyzer = new ScopeAnalyzer(sourceGraph);
       expect(() => analyzer.analyze()).toThrowError(ClassNotFoundError);
+    });
+  });
+
+  describe('class instance variables ', () => {
+    it('binds instance references to the declarations', () => {
+      const parser = new Parser(`
+        class Calculator {
+          let x: Int
+          const PI = 3.14
+
+          constructor () {
+            this.x = 10;
+          }
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const analyzer = new ScopeAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      const iRef = sourceGraph.search('key_reference');
+
+      expect(sourceGraph.relationFromNode(iRef[0], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration', identifier: 'x' } }
+      ]);
     });
   });
 });

@@ -1,3 +1,2 @@
-function addOne(x: Int) { };
-const x = 1;
-addOne(x);
+class Calculator {}
+const c = new Calculator();

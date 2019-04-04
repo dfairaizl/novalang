@@ -485,7 +485,7 @@ describe('Type Analyzer', () => {
     });
   });
 
-  describe.skip('class instantiation', () => {
+  describe('class instantiation', () => {
     it('builds types for class definitions', () => {
       const parser = new Parser(`
         class Calculator {}
@@ -505,13 +505,7 @@ describe('Type Analyzer', () => {
     });
   });
 
-  // TODO: add parser support for instance variables
-  // they can be declared along side methods
-  // and need an explicit type or a literal assignment
-  // then we can check for initializations of them,
-  // allow for mutable/immutable, and check them
-  // in scoping and type analyzers etc
-  describe.skip('class instance variables', () => {
+  describe('class instance variables', () => {
     it('types instance variables', () => {
       const parser = new Parser(`
         class Calculator {
@@ -529,8 +523,10 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const xNode = sourceGraph.search('instance_reference')[0];
-      const type = sourceGraph.relationFromNode(xNode, 'type');
+      const xNode = sourceGraph.search('key_reference')[0];
+      const binding = sourceGraph.relationFromNode(xNode, 'binding')[0];
+      const type = sourceGraph.relationFromNode(binding, 'type');
+
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
       });

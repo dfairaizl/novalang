@@ -14,7 +14,7 @@ class TypeAnalyzer {
 
   analyze () {
     // TODO: Install the build in types so we don't need to create them via strings
-    const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.name === 'main_module');
+    const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.identifier === 'main_module');
     const exprs = this.sourceGraph.outgoing(codeModule);
 
     exprs.forEach((n) => {
