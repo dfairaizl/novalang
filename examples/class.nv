@@ -1,2 +1,5 @@
-class Calculator {}
+class Calculator {
+  const X = 42
+}
+
 const c = new Calculator();

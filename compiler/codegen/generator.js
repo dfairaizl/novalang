@@ -29,7 +29,6 @@ class Generator {
   }
 
   generate () {
-    debugger;
     const sources = this.sourceGraph.outgoing(this.codeModule);
     sources.forEach((source) => {
       this.codegenNode(source);
@@ -144,6 +143,7 @@ class Generator {
   }
 
   codegenClass (node) {
+    debugger;
     const className = node.attributes.identifier;
     const classIdentifier = `${className}`;
 
@@ -155,7 +155,10 @@ class Generator {
     const classType = new Struct(node.attributes.kind);
     const ivars = this.sourceGraph.relationFromNode(node, 'instance_variables');
 
-    const structTypes = ivars.map((t) => this.getType(t));
+    const structTypes = ivars.map((t) => {
+      const type = this.sourceGraph.relationFromNode(t, 'type')[0];
+      return this.getType(type);
+    });
 
     libLLVM.LLVMStructSetBody(classType, structTypes, structTypes.length, 0);
 
