@@ -110,7 +110,7 @@ class Compiler {
   }
 
   createSource (node) {
-    const importName = node.attributes.name;
+    const importName = node.attributes.identifier;
 
     if (STANDARD_LIBRARY.includes(importName)) {
       return new Source(importName, resolve(this.libraryDir, `${importName}.nv`));

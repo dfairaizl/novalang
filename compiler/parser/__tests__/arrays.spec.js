@@ -103,7 +103,7 @@ describe('Parser', () => {
           type: 'array_literal',
           members: [{
             type: 'invocation',
-            name: 'random'
+            identifier: 'random'
           }]
         }]
       });
@@ -144,7 +144,7 @@ describe('Parser', () => {
         operator: '=',
         left: [{
           type: 'array_reference',
-          name: 'fib',
+          identifier: 'fib',
           index: '0'
         }],
         right: [{

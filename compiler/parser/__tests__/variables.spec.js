@@ -48,7 +48,7 @@ describe('Parser', () => {
         identifier: 'x',
         expression: [{
           type: 'invocation',
-          name: 'sqrt',
+          identifier: 'sqrt',
           arguments: [{
             type: 'number_literal',
             kind: 'Int',

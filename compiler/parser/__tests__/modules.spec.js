@@ -11,7 +11,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'import_statement',
-        name: 'some-module',
+        identifier: 'some-module',
         import: [{
           type: 'import_declaration',
           identifier: 'func'
@@ -26,7 +26,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'import_statement',
-        name: 'some-module',
+        identifier: 'some-module',
         import: [{
           type: 'import_declaration',
           identifier: 'func1'
@@ -48,7 +48,7 @@ describe('Parser', () => {
         type: 'export_statement',
         expression: [{
           type: 'function',
-          name: 'addOne',
+          identifier: 'addOne',
           kind: 'Int',
           arguments: [{
             type: 'function_argument',
@@ -68,7 +68,7 @@ describe('Parser', () => {
         type: 'export_statement',
         expression: [{
           type: 'external_function',
-          name: 'malloc',
+          identifier: 'malloc',
           kind: {
             type: 'pointer',
             kind: 'void',

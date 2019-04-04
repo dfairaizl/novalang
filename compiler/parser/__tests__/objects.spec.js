@@ -144,7 +144,7 @@ describe('Parser', () => {
         identifier: 'obj',
         key_expression: [{
           type: 'invocation',
-          name: 'key'
+          identifier: 'key'
         }]
       });
     });

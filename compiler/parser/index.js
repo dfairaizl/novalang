@@ -43,7 +43,7 @@ class Parser {
   // Decent Parsing Methods
 
   parse () {
-    const codeModule = this.sourceGraph.addNode({ type: 'module', name: this.moduleName });
+    const codeModule = this.sourceGraph.addNode({ type: 'module', identifier: this.moduleName });
     let currentExpression = null;
 
     while ((currentExpression = this.parsePrimaryExpression())) {
@@ -424,13 +424,13 @@ class Parser {
     if (funcKind) {
       funcNode = this.sourceGraph.addNode({
         type: 'function',
-        name: funcIdentifier.value,
+        identifier: funcIdentifier.value,
         kind: funcKind
       });
     } else {
       funcNode = this.sourceGraph.addNode({
         type: 'function',
-        name: funcIdentifier.value
+        identifier: funcIdentifier.value
       });
     }
 
@@ -468,7 +468,7 @@ class Parser {
     if (funcKind) {
       funcNode = this.sourceGraph.addNode({
         type: 'external_function',
-        name: funcIdentifier.value,
+        identifier: funcIdentifier.value,
         kind: funcKind
       });
     } else {
@@ -526,7 +526,7 @@ class Parser {
   }
 
   parseFunctionInvocation (funcIdentifier) {
-    const invokeNode = this.sourceGraph.addNode({ type: 'invocation', name: funcIdentifier });
+    const invokeNode = this.sourceGraph.addNode({ type: 'invocation', identifier: funcIdentifier });
     const args = this.parseInvocationArguments();
 
     args.forEach((a) => {
@@ -786,13 +786,13 @@ class Parser {
     if (funcKind) {
       methodNode = this.sourceGraph.addNode({
         type: methodType,
-        name: methodIdentifier.value,
+        identifier: methodIdentifier.value,
         kind: funcKind
       });
     } else {
       methodNode = this.sourceGraph.addNode({
         type: methodType,
-        name: methodIdentifier.value
+        identifier: methodIdentifier.value
       });
     }
 
@@ -822,7 +822,7 @@ class Parser {
 
     const instance = this.sourceGraph.addNode({
       type: 'instantiation',
-      class: classInstance
+      identifier: classInstance
     });
 
     const instanceArgs = this.parseInvocationArguments();
@@ -953,7 +953,7 @@ class Parser {
     } while (tok.value !== 'from');
 
     const modName = this.parseIdentifier();
-    const importNode = this.sourceGraph.addNode({ type: 'import_statement', name: modName });
+    const importNode = this.sourceGraph.addNode({ type: 'import_statement', identifier: modName });
 
     imports.forEach((i) => {
       this.sourceGraph.addEdge(importNode, i, 'import');
@@ -1027,7 +1027,7 @@ class Parser {
 
       this.validateNextToken(']');
 
-      return this.sourceGraph.addNode({ type: 'array_reference', name: identifier, index });
+      return this.sourceGraph.addNode({ type: 'array_reference', identifier, index });
     }
 
     return this.sourceGraph.addNode({ type: 'variable_reference', identifier });

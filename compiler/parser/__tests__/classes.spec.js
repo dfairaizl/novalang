@@ -48,7 +48,7 @@ describe('Parser', () => {
         super_class: null,
         body: [{
           type: 'constructor',
-          name: 'constructor'
+          identifier: 'constructor'
         }]
       });
     });
@@ -71,7 +71,7 @@ describe('Parser', () => {
         super_class: null,
         body: [{
           type: 'method',
-          name: 'turnOn'
+          identifier: 'turnOn'
         }]
       });
     });
@@ -93,10 +93,10 @@ describe('Parser', () => {
         super_class: null,
         body: [{
           type: 'method',
-          name: 'turnOn'
+          identifier: 'turnOn'
         }, {
           type: 'method',
-          name: 'turnOff'
+          identifier: 'turnOff'
         }]
       });
     });
@@ -117,7 +117,7 @@ describe('Parser', () => {
         super_class: null,
         body: [{
           type: 'method',
-          name: 'add',
+          identifier: 'add',
           arguments: [{
             type: 'function_argument',
             kind: 'Int',
@@ -149,7 +149,7 @@ describe('Parser', () => {
         super_class: null,
         body: [{
           type: 'method',
-          name: 'add',
+          identifier: 'add',
           kind: 'Int',
           arguments: [{
             type: 'function_argument',
@@ -249,7 +249,7 @@ describe('Parser', () => {
         super_class: null,
         body: [{
           type: 'constructor',
-          name: 'constructor',
+          identifier: 'constructor',
           body: [{
             type: 'assignment',
             operator: '=',
@@ -288,7 +288,7 @@ describe('Parser', () => {
         super_class: null,
         body: [{
           type: 'constructor',
-          name: 'constructor',
+          identifier: 'constructor',
           body: [{
             type: 'immutable_declaration',
             identifier: 'x',
@@ -296,7 +296,7 @@ describe('Parser', () => {
               type: 'instance_reference',
               key_expression: [{
                 type: 'invocation',
-                name: 'getX'
+                identifier: 'getX'
               }]
             }]
           }]
@@ -322,7 +322,7 @@ describe('Parser', () => {
         super_class: null,
         body: [{
           type: 'constructor',
-          name: 'constructor',
+          identifier: 'constructor',
           body: [{
             type: 'bin_op',
             operator: '+',
@@ -359,7 +359,7 @@ describe('Parser', () => {
         identifier: 'c',
         expression: [{
           type: 'instantiation',
-          class: 'Calculator'
+          identifier: 'Calculator'
         }]
       });
     });
@@ -378,7 +378,7 @@ describe('Parser', () => {
         identifier: 'c',
         expression: [{
           type: 'instantiation',
-          class: 'Generator',
+          identifier: 'Generator',
           arguments: [{
             type: 'number_literal',
             kind: 'Int',

@@ -11,7 +11,7 @@ describe('Parser', () => {
         const nodeGraph = parser.parse();
         expect(nodeGraph.treeFromNode()).toEqual({
           type: 'module',
-          name: 'main_module',
+          identifier: 'main_module',
           sources: [{
             type: 'immutable_declaration',
             identifier: 'x',
@@ -26,7 +26,7 @@ describe('Parser', () => {
         const nodeGraph = parser.parse();
         expect(nodeGraph.treeFromNode()).toEqual({
           type: 'module',
-          name: 'calculator',
+          identifier: 'calculator',
           sources: [{
             type: 'immutable_declaration',
             identifier: 'x',

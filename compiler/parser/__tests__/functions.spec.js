@@ -19,7 +19,7 @@ describe('Parser', () => {
 
       expect(parsed.attributes).toEqual({
         type: 'function',
-        name: 'sayHello'
+        identifier: 'sayHello'
       });
     });
 
@@ -30,7 +30,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'function',
-        name: 'incr',
+        identifier: 'incr',
         arguments: [{
           type: 'function_argument',
           identifier: 'x'
@@ -45,7 +45,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'function',
-        name: 'add',
+        identifier: 'add',
         arguments: [{
           type: 'function_argument',
           identifier: 'x'
@@ -63,7 +63,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'function',
-        name: 'add',
+        identifier: 'add',
         arguments: [{
           type: 'function_argument',
           identifier: 'x'
@@ -101,7 +101,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'function',
-        name: 'add',
+        identifier: 'add',
         arguments: [{
           type: 'function_argument',
           identifier: 'x'
@@ -139,7 +139,7 @@ describe('Parser', () => {
 
       expect(parsed.attributes).toEqual({
         type: 'function',
-        name: 'incr',
+        identifier: 'incr',
         kind: 'Int'
       });
     });
@@ -199,7 +199,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'invocation',
-        name: 'forEach',
+        identifier: 'forEach',
         arguments: [{
           type: 'anonymous_function',
           arguments: [{
@@ -249,7 +249,7 @@ describe('Parser', () => {
 
       expect(parsed.attributes).toEqual({
         type: 'invocation',
-        name: 'random'
+        identifier: 'random'
       });
     });
 
@@ -260,7 +260,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'invocation',
-        name: 'incr',
+        identifier: 'incr',
         arguments: [{
           type: 'number_literal',
           kind: 'Int',
@@ -276,7 +276,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'invocation',
-        name: 'add',
+        identifier: 'add',
         arguments: [{
           type: 'number_literal',
           kind: 'Int',
@@ -296,7 +296,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'invocation',
-        name: 'assign',
+        identifier: 'assign',
         arguments: [{
           type: 'object_literal',
           member: [{
@@ -315,7 +315,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'invocation',
-        name: 'fib',
+        identifier: 'fib',
         arguments: [{
           type: 'bin_op',
           operator: '+',
@@ -358,7 +358,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'external_function',
-        name: 'sin',
+        identifier: 'sin',
         kind: 'Int',
         arguments: [{
           type: 'function_argument',
@@ -375,7 +375,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'external_function',
-        name: 'printf',
+        identifier: 'printf',
         kind: 'Int',
         arguments: [{
           type: 'function_argument',
@@ -400,7 +400,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'external_function',
-        name: 'getError',
+        identifier: 'getError',
         kind: 'Void',
         arguments: [{
           type: 'function_argument',
@@ -421,7 +421,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'external_function',
-        name: 'printf',
+        identifier: 'printf',
         kind: 'Int',
         arguments: [{
           type: 'function_argument',
@@ -450,7 +450,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'external_function',
-        name: 'printf',
+        identifier: 'printf',
         kind: 'Int',
         arguments: [{
           type: 'function_argument',
@@ -475,7 +475,7 @@ describe('Parser', () => {
 
       expect(parser.toAST(parsed)).toEqual({
         type: 'external_function',
-        name: 'malloc',
+        identifier: 'malloc',
         kind: {
           type: 'pointer',
           kind: 'void',
