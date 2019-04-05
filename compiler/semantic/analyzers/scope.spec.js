@@ -417,7 +417,7 @@ describe('Scope Analyzer', () => {
     });
   });
 
-  describe('class instance variables ', () => {
+  describe('class instance variables', () => {
     it('binds instance references to the declarations', () => {
       const parser = new Parser(`
         class Calculator {
@@ -439,6 +439,52 @@ describe('Scope Analyzer', () => {
 
       expect(sourceGraph.relationFromNode(iRef[0], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration', identifier: 'x' } }
+      ]);
+    });
+  });
+
+  describe('instance accessors', () => {
+    it('binds objects references to their instance', () => {
+      const parser = new Parser(`
+        class Calculator {
+          let x: Int
+        }
+
+        const c = new Calculator();
+        c.x
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const analyzer = new ScopeAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      const objRef = sourceGraph.search('object_reference');
+
+      expect(sourceGraph.relationFromNode(objRef[0], 'binding')).toMatchObject([
+        { attributes: { type: 'immutable_declaration', identifier: 'c' } }
+      ]);
+    });
+
+    it('creates reference to class declaration', () => {
+      const parser = new Parser(`
+        class Calculator {
+          let x: Int
+        }
+
+        const c = new Calculator();
+        c.x
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const analyzer = new ScopeAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      const objRef = sourceGraph.search('object_reference');
+
+      expect(sourceGraph.relationFromNode(objRef[0], 'definition')).toMatchObject([
+        { attributes: { type: 'class_definition', identifier: 'Calculator' } }
       ]);
     });
   });

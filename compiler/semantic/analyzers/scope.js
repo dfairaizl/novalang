@@ -186,9 +186,11 @@ class ScopeAnalyzer {
       case 'assignment':
       case 'bin_op':
         return this.analyzeBinOP(node);
-      case 'variable_reference':
       case 'key_reference':
+      case 'variable_reference':
         return this.analyzeReference(node);
+      case 'object_reference':
+        return this.analyzeObjectReference(node);
       case 'instance_reference':
         return this.analyzeInstanceReference(node);
       case 'invocation':
@@ -321,6 +323,24 @@ class ScopeAnalyzer {
     const sym = this.symbolTable.findVariableSymbol(node);
 
     if (sym) {
+      return sym;
+    }
+
+    throw new UndeclaredVariableError(`Use of undeclared variable \`${node.attributes.identifier}\``);
+  }
+
+  analyzeObjectReference (node) {
+    const sym = this.symbolTable.findVariableSymbol(node);
+
+    if (sym) {
+      this.createBinding(node, sym);
+
+      // now check the key_expression to make sure it exists in the object declaration
+      const instanceExpr = this.sourceGraph.relationFromNode(sym, 'expression')[0];
+      const classDef = this.sourceGraph.relationFromNode(instanceExpr, 'binding')[0];
+
+      this.sourceGraph.addEdge(node, classDef, 'definition');
+
       return sym;
     }
 

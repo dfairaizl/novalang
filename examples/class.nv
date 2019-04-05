@@ -1,2 +1,11 @@
 import printf from 'io';
-printf("Hello world");
+
+class Calculator {
+  const PI = 42
+  const X = 3
+}
+
+const calc = new Calculator();
+
+printf("PI is %d", calc.PI);
+printf("X is %d", calc.X);

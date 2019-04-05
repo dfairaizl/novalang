@@ -436,13 +436,22 @@ class Generator {
 
   codegenObjectReference (node) {
     const keyPathNode = this.sourceGraph.relationFromNode(node, 'key_expression')[0];
+    const defNode = this.sourceGraph.relationFromNode(node, 'definition')[0];
+    const bindingObject = this.sourceGraph.relationFromNode(node, 'binding')[0];
 
-    // TODO: Needs a binding to the instance
-    if (keyPathNode.attributes.type === 'key_reference') {
+    // find the key in the class definition
+    const ivars = this.sourceGraph.relationFromNode(defNode, 'instance_variables');
 
-    }
+    const index = ivars.findIndex((v) => v.attributes.identifier === keyPathNode.attributes.identifier);
 
-    // return this.codegenNode(keyPathNode);
+    const instance = libLLVM.LLVMBuildStructGEP(
+      this.builder.builderRef,
+      this.builder.namedValues[bindingObject.attributes.identifier].storage,
+      index,
+      bindingObject.attributes.identifier
+    );
+
+    return libLLVM.LLVMBuildLoad(this.builder.builderRef, instance, 'ref');
   }
 
   codegenKeyReference (node) {
