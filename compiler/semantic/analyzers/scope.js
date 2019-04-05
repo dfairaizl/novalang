@@ -340,6 +340,11 @@ class ScopeAnalyzer {
   }
 
   createBinding (refNode, boundNode) {
+    // check if the binding was already created
+    if (this.sourceGraph.relationFromNode(refNode, 'binding')[0]) {
+      return;
+    }
+
     if (refNode && boundNode) {
       this.sourceGraph.addEdge(refNode, boundNode, 'binding');
       this.sourceGraph.addEdge(boundNode, refNode, 'reference');

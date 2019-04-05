@@ -350,9 +350,33 @@ describe('Scope Analyzer', () => {
       const analyzer = new ScopeAnalyzer(sourceGraph);
       analyzer.analyze();
 
-      const iRef = sourceGraph.search('instantiation');
+      const instance = sourceGraph.search('instantiation');
 
-      expect(sourceGraph.relationFromNode(iRef[0], 'binding')).toMatchObject([
+      expect(sourceGraph.relationFromNode(instance[0], 'binding')).toMatchObject([
+        { attributes: { type: 'class_definition', identifier: 'Calculator' } }
+      ]);
+
+      const cRef = sourceGraph.search('class_definition');
+
+      expect(sourceGraph.relationFromNode(cRef[0], 'reference')).toMatchObject([
+        { attributes: { type: 'instantiation', identifier: 'Calculator' } }
+      ]);
+    });
+
+    it('binds instance declarations to the class definition', () => {
+      const parser = new Parser(`
+        class Calculator {}
+        const a = new Calculator();
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const analyzer = new ScopeAnalyzer(sourceGraph);
+      analyzer.analyze();
+
+      const instance = sourceGraph.search('instantiation');
+
+      expect(sourceGraph.relationFromNode(instance[0], 'binding')).toMatchObject([
         { attributes: { type: 'class_definition', identifier: 'Calculator' } }
       ]);
 

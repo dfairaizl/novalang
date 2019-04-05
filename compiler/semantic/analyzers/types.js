@@ -139,6 +139,11 @@ class TypeAnalyzer {
   resolveArgument (node) {
     if (node.attributes.kind) {
       const argType = this.associateType(node);
+
+      // if (this.sourceGraph.relationFromNode(node, 'type')[0]) {
+      //   return this.sourceGraph.relationFromNode(node, 'type')[0];
+      // }
+
       this.sourceGraph.addEdge(node, argType, 'type');
 
       return argType;
@@ -225,6 +230,10 @@ class TypeAnalyzer {
 
   resolveFunction (node) {
     let retType = null;
+
+    if (this.sourceGraph.relationFromNode(node, 'return_type')[0]) {
+      return this.sourceGraph.relationFromNode(node, 'return_type')[0];
+    }
 
     const argNodes = this.sourceGraph.relationFromNode(node, 'arguments');
     argNodes.forEach((n) => this.analyzeType(n));
