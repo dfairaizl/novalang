@@ -78,6 +78,8 @@ class Generator {
         return this.codegenReference(node);
       case 'object_reference':
         return this.codegenObjectReference(node);
+      case 'key_reference':
+        return this.codegenKeyReference(node);
       case 'return_statement':
         return this.codegenReturn(node);
       case 'immutable_declaration':
@@ -143,13 +145,8 @@ class Generator {
   }
 
   codegenClass (node) {
-    debugger;
     const className = node.attributes.identifier;
     const classIdentifier = `${className}`;
-
-    const aClass = new Class(this.module, classIdentifier);
-    this.builder.setClass(aClass);
-    this.builder.enter(aClass);
 
     // build the type
     const classType = new Struct(node.attributes.kind);
@@ -162,8 +159,33 @@ class Generator {
 
     libLLVM.LLVMStructSetBody(classType, structTypes, structTypes.length, 0);
 
+    const aClass = new Class(this.module, classIdentifier, classType);
+
+    // TODO: Consolidate these into a genertic module stack that works for
+    // classes and general modules e.g. main module etc so its not special
+    // case logic
+    this.builder.setClass(aClass);
+    this.builder.enter(aClass);
+
     // save type
     this.typeMap[className] = classType;
+
+    // setup any initial ivar values such as constants for each instance (before main constructor)
+    ivars.forEach((v, index) => {
+      if (v.attributes.type === 'immutable_declaration') {
+        const exprNode = this.sourceGraph.relationFromNode(v, 'expression')[0];
+        const val = this.codegenNode(exprNode);
+
+        const structMember = libLLVM.LLVMBuildStructGEP(
+          this.builder.builderRef,
+          aClass.instanceRef(),
+          index,
+          v.attributes.identifier
+        );
+
+        libLLVM.LLVMBuildStore(this.builder.builderRef, val, structMember);
+      }
+    });
 
     // build function body
     const bodyNodes = this.sourceGraph.relationFromNode(node, 'body');
@@ -263,12 +285,17 @@ class Generator {
 
     const funcRef = this.module.getNamedFunction(classConstructor);
 
+    const classType = this.typeMap[currentClass.attributes.identifier];
+    const instance = this.builder.buildAlloc(classType, node.attributes.identifier);
+
     // build argument type list
     const argTypes = this.sourceGraph.relationFromNode(node, 'arguments').map((n) => {
       return this.codegenNode(n);
     });
 
-    return this.builder.buildCall(funcRef, argTypes, classConstructor);
+    this.builder.buildCall(funcRef, argTypes, '');
+
+    return instance;
   }
 
   codeGenExternalFunction (node) {
@@ -370,15 +397,34 @@ class Generator {
     const typeNode = this.sourceGraph.relationFromNode(node, 'type')[0];
     const exprNode = this.sourceGraph.relationFromNode(node, 'expression')[0];
 
-    this.builder.buildAlloc(this.getType(typeNode), node.attributes.identifier);
+    // this.builder.buildAlloc(this.getType(typeNode), node.attributes.identifier);
 
-    const expr = this.codegenNode(exprNode);
+    if (exprNode.attributes.type === 'instantiation') {
+      const currentClass = this.sourceGraph.relationFromNode(exprNode, 'binding')[0];
+      const classConstructor = `${currentClass.attributes.identifier}`;
 
-    this.builder.buildStore(node.attributes.identifier, expr);
+      const funcRef = this.module.getNamedFunction(classConstructor);
+
+      const classType = this.getType(typeNode);
+      const instance = this.builder.buildAlloc(classType, node.attributes.identifier);
+
+      // build the instnace first
+      this.builder.buildCall(funcRef, [instance], '');
+
+      // build argument type list
+      // const argTypes = this.sourceGraph.relationFromNode(node, 'arguments').map((n) => {
+      //   return this.codegenNode(n);
+      // });
+
+      // now call the constructor wtih argTypes if one is defined
+      // TODO: CONSTRUCTOR
+    } else {
+      const expr = this.codegenNode(exprNode);
+      this.builder.buildStore(node.attributes.identifier, expr);
+    }
   }
 
   codegenReference (node) {
-    console.log(node);
     const binding = this.sourceGraph.relationFromNode(node, 'binding')[0];
 
     if (binding.attributes.type === 'function_argument') {
@@ -389,6 +435,18 @@ class Generator {
   }
 
   codegenObjectReference (node) {
+    const keyPathNode = this.sourceGraph.relationFromNode(node, 'key_expression')[0];
+
+    // TODO: Needs a binding to the instance
+    if (keyPathNode.attributes.type === 'key_reference') {
+
+    }
+
+    // return this.codegenNode(keyPathNode);
+  }
+
+  codegenKeyReference (node) {
+    console.log(node);
     const keyPathNode = this.sourceGraph.relationFromNode(node, 'key_expression')[0];
     return this.codegenNode(keyPathNode);
   }

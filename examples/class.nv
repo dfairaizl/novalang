@@ -1,5 +1,9 @@
+import printf from 'io';
+
 class Calculator {
   const X = 42
 }
 
 const c = new Calculator();
+
+printf("c.X = %d", c.X);
