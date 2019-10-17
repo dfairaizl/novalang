@@ -9,40 +9,58 @@ class Iterator {
     this.visitCache = {};
   }
 
-  dfs (source, callback) {
-    this.visitCache[source.id] = true;
-
-    if (this.options.order === 'preorder') {
-      callback(source);
+  dfs (source, level, currentLevel, visited, path) {
+    console.log(currentLevel, level);
+    if (currentLevel >= level) {
+      console.log('up');
+      return true;
     }
 
-    // get the adjacency list
-    const neighborsList = this.graph.adjacencyList[source.id];
+    // we've searched the entire graph, FIXME and memoize or something
+    if (path.length === this.graph.nodes.length) {
+      return true;
+    }
 
-    // get all the nodes in this adj list
-    neighborsList.edges.forEach((edge) => {
-      if (!this.visitCache[edge.target.id]) {
-        this.dfs(edge.target, callback);
+    if (visited[source.id]) {
+      return false;
+    }
+
+    visited[source.id] = true;
+
+    const neighborsList = this.graph.adjacencyList[source.id].edges;
+    neighborsList.forEach((edge) => {
+      // self pointing?
+
+      const seen = visited[edge.target.id];
+      if (!seen) {
+        path.push(edge.target);
+
+        console.log(path);
+        if (this.dfs(edge.target, level, ++currentLevel, visited, path)) {
+          console.log('done');
+          return true;
+        }
+
+        path.pop();
       }
-    });
 
-    if (this.options.order === 'postorder') {
-      callback(source);
-    }
+      visited[source.id] = null;
+      return false;
+    });
   }
 
-  iterate (entryNode, callback) {
-    // no entry node, traverse all components in the graph
-    if (typeof entryNode === 'function') {
-      callback = entryNode;
-      this.graph.nodes.forEach((node) => {
-        if (this.visitCache[node.id] !== true) {
-          this.dfs(node, callback);
-        }
-      });
-    } else {
-      this.dfs(entryNode, callback);
+  iterate (entryNode = null, depth = 100) {
+    // no entry node, traverse all nodes in the graph
+    if (entryNode === null) {
+      entryNode = this.graph.nodes[0];
     }
+
+    let path = [entryNode];
+    let visited = {};
+
+    this.dfs(entryNode, depth, 0, visited, path);
+
+    return path;
   }
 }
 

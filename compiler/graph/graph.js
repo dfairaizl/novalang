@@ -65,6 +65,7 @@ class Graph {
   }
 
   outgoing (fromNode) {
+    console.log(fromNode);
     return this.adjacencyList[fromNode.id].edges.map((n) => n.target);
   }
 

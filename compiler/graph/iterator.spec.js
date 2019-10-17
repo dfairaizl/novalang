@@ -4,55 +4,8 @@ const Graph = require('./graph');
 
 describe('Graph Iterator', () => {
   describe('recursive depth-first search traversal', () => {
-    it('visits all nodes in preorder', () => {
+    it.only('visits all nodes only once', () => {
       const graph = new Graph();
-      const nodes = [];
-
-      const node1 = graph.addNode({ name: 'node 1' });
-      const node2 = graph.addNode({ name: 'node 2' });
-      const node3 = graph.addNode({ name: 'node 3' });
-
-      graph.addEdge(node1, node2);
-      graph.addEdge(node1, node3);
-
-      const iterator = graph.traverse(null);
-      iterator.iterate((n) => {
-        nodes.push(n);
-      });
-
-      expect(nodes).toEqual([
-        node1,
-        node2,
-        node3
-      ]);
-    });
-
-    it('visits all nodes in postorder', () => {
-      const graph = new Graph();
-      const nodes = [];
-
-      const node1 = graph.addNode({ name: 'node 1' });
-      const node2 = graph.addNode({ name: 'node 2' });
-      const node3 = graph.addNode({ name: 'node 3' });
-
-      graph.addEdge(node1, node2);
-      graph.addEdge(node1, node3);
-
-      const iterator = graph.traverse({ order: 'postorder' });
-      iterator.iterate((n) => {
-        nodes.push(n);
-      });
-
-      expect(nodes).toEqual([
-        node2,
-        node3,
-        node1
-      ]);
-    });
-
-    it('visits all nodes only once', () => {
-      const graph = new Graph();
-      const nodes = [];
 
       const node1 = graph.addNode({ name: 'node 1' });
       const node2 = graph.addNode({ name: 'node 2' });
@@ -63,9 +16,7 @@ describe('Graph Iterator', () => {
       graph.addEdge(node2, node3);
 
       const iterator = graph.traverse(null);
-      iterator.iterate((n) => {
-        nodes.push(n);
-      });
+      const nodes = iterator.iterate(null);
 
       expect(nodes).toEqual([
         node1,
@@ -76,7 +27,6 @@ describe('Graph Iterator', () => {
 
     it('visits all nodes adjacent to starting point', () => {
       const graph = new Graph();
-      const nodes = [];
 
       const node1 = graph.addNode({ name: 'node 1' });
       const node2 = graph.addNode({ name: 'node 2' });
@@ -86,9 +36,29 @@ describe('Graph Iterator', () => {
       graph.addEdge(node1, node3);
 
       const iterator = graph.traverse(null);
-      iterator.iterate(node1, (n) => {
-        nodes.push(n);
-      });
+      const nodes = iterator.iterate(node1, 1);
+
+      expect(nodes).toEqual([
+        node1,
+        node2,
+        node3
+      ]);
+    });
+
+    it('visits all nodes up to max depth', () => {
+      const graph = new Graph();
+
+      const node1 = graph.addNode({ name: 'node 1' });
+      const node2 = graph.addNode({ name: 'node 2' });
+      const node3 = graph.addNode({ name: 'node 3' });
+      const node4 = graph.addNode({ name: 'node 4' });
+
+      graph.addEdge(node1, node2);
+      graph.addEdge(node2, node3);
+      graph.addEdge(node3, node4);
+
+      const iterator = graph.traverse(null);
+      const nodes = iterator.iterate(node1, 2);
 
       expect(nodes).toEqual([
         node1,
