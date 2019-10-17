@@ -3,6 +3,7 @@ const uuid = require('uuid/v4');
 const Edge = require('./edge');
 const Iterator = require('./iterator');
 const Node = require('./node');
+const QueryBuilder = require('./query');
 
 class AdjacencyList {
   constructor (node) {
@@ -121,6 +122,10 @@ class Graph {
 
   traverse (options) {
     return new Iterator(this, options);
+  }
+
+  query (options) {
+    return new QueryBuilder(this, options);
   }
 
   /* istanbul ignore next */

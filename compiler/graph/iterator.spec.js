@@ -3,8 +3,8 @@
 const Graph = require('./graph');
 
 describe('Graph Iterator', () => {
-  describe('recursive depth-first search traversal', () => {
-    it.only('visits all nodes only once', () => {
+  describe('depth-first search traversal', () => {
+    it('visits all nodes only once', () => {
       const graph = new Graph();
 
       const node1 = graph.addNode({ name: 'node 1' });
@@ -32,11 +32,13 @@ describe('Graph Iterator', () => {
       const node2 = graph.addNode({ name: 'node 2' });
       const node3 = graph.addNode({ name: 'node 3' });
 
+      graph.addNode({ name: 'node 4' }); // extra node to not be visted
+
       graph.addEdge(node1, node2);
       graph.addEdge(node1, node3);
 
       const iterator = graph.traverse(null);
-      const nodes = iterator.iterate(node1, 1);
+      const nodes = iterator.iterate(node1);
 
       expect(nodes).toEqual([
         node1,
@@ -58,7 +60,29 @@ describe('Graph Iterator', () => {
       graph.addEdge(node3, node4);
 
       const iterator = graph.traverse(null);
-      const nodes = iterator.iterate(node1, 2);
+      const nodes = iterator.iterate(node1, 1);
+
+      expect(nodes).toEqual([
+        node1,
+        node2
+      ]);
+    });
+  });
+
+  describe('breadth-first search traversal', () => {
+    it.only('visits all nodes only once', () => {
+      const graph = new Graph();
+
+      const node1 = graph.addNode({ name: 'node 1' });
+      const node2 = graph.addNode({ name: 'node 2' });
+      const node3 = graph.addNode({ name: 'node 3' });
+
+      graph.addEdge(node1, node2);
+      graph.addEdge(node1, node3);
+      graph.addEdge(node2, node3);
+
+      const iterator = graph.traverse(null);
+      const nodes = iterator.query(null);
 
       expect(nodes).toEqual([
         node1,

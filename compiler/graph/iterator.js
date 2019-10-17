@@ -9,44 +9,43 @@ class Iterator {
     this.visitCache = {};
   }
 
-  dfs (source, level, currentLevel, visited, path) {
-    console.log(currentLevel, level);
-    if (currentLevel >= level) {
-      console.log('up');
-      return true;
-    }
+  dfs (source, depth, maxDepth, visited, path) {
+    visited[source.id] = true;
 
     // we've searched the entire graph, FIXME and memoize or something
     if (path.length === this.graph.nodes.length) {
       return true;
     }
 
-    if (visited[source.id]) {
-      return false;
+    if (depth >= maxDepth) {
+      return true;
     }
-
-    visited[source.id] = true;
 
     const neighborsList = this.graph.adjacencyList[source.id].edges;
     neighborsList.forEach((edge) => {
-      // self pointing?
-
-      const seen = visited[edge.target.id];
-      if (!seen) {
+      if (!visited[edge.target.id]) {
         path.push(edge.target);
 
-        console.log(path);
-        if (this.dfs(edge.target, level, ++currentLevel, visited, path)) {
-          console.log('done');
-          return true;
-        }
-
-        path.pop();
+        return this.dfs(edge.target, ++depth, maxDepth, visited, path);
       }
 
-      visited[source.id] = null;
       return false;
     });
+  }
+
+  bfs (visited, frontier, path) {
+    while (frontier.length > 0) {
+      const v = frontier.pop();
+      path.push(v);
+
+      const neighborsList = this.graph.adjacencyList[v.id].edges;
+      neighborsList.forEach((edge) => {
+        if (!visited[edge.target.id]) {
+          visited[edge.target.id] = true;
+          frontier.unshift(edge.target);
+        }
+      });
+    }
   }
 
   iterate (entryNode = null, depth = 100) {
@@ -58,7 +57,21 @@ class Iterator {
     let path = [entryNode];
     let visited = {};
 
-    this.dfs(entryNode, depth, 0, visited, path);
+    this.dfs(entryNode, 0, depth, visited, path);
+
+    return path;
+  }
+
+  query (entryNode = null, depth = 100) {
+    // no entry node, traverse all nodes in the graph
+    if (entryNode === null) {
+      entryNode = this.graph.nodes[0];
+    }
+
+    let path = [];
+    let visited = {};
+
+    this.bfs(visited, [entryNode], path);
 
     return path;
   }
