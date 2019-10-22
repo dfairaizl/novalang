@@ -3,29 +3,8 @@
 const Graph = require('./graph');
 
 describe('Graph Query', () => {
-  describe('finds paths by attributes', () => {
-    it('finds paths that match criteria', () => {
-      const graph = new Graph();
-
-      const node1 = graph.addNode({ type: 'person' });
-      const node2 = graph.addNode({ type: 'person' });
-      graph.addNode({ type: 'animal' });
-
-      graph.addEdge(node1, node2);
-
-      const q = graph.query();
-
-      q.match({ type: 'person' }).execute();
-
-      expect(q.paths()).toEqual([
-        [node1, node2],
-        [node1]
-      ]);
-    });
-  });
-
-  describe('finds matchings nodes by attributes in a path', () => {
-    it('finds paths that match criteria', () => {
+  describe('nodes', () => {
+    it('finds nodes matching the criteria', () => {
       const graph = new Graph();
 
       const node1 = graph.addNode({ type: 'person' });
@@ -87,7 +66,7 @@ describe('Graph Query', () => {
 
       q.begin(node1)
         .outgoing()
-        .any({ maxDepth: 3 })
+        .any()
         .match({ name: 'node 4' })
         .execute();
 
@@ -117,7 +96,7 @@ describe('Graph Query', () => {
 
       q.begin(node1)
         .outgoing()
-        .any({ maxDepth: 3 })
+        .any()
         .match({ name: 'node 4' })
         .execute();
 
@@ -145,7 +124,7 @@ describe('Graph Query', () => {
 
       q.begin(node1)
         .outgoing()
-        .any({ maxDepth: 3 })
+        .any()
         .match({ name: 'end node' })
         .execute();
 
@@ -155,7 +134,7 @@ describe('Graph Query', () => {
   });
 
   describe('multi-stage queries', () => {
-    it.only('finds a path with multiple traversal conditions', () => {
+    it('finds a path with multiple traversal conditions', () => {
       const graph = new Graph();
 
       const node1 = graph.addNode({ name: 'node 1' });
