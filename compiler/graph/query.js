@@ -17,15 +17,15 @@ class Traversal {
   }
 
   // BFS collecting all paths
-  run (graph) {
-    let q = [];
+  run (graph, q) {
+    // let q = [];
 
-    if (!this.startNode) {
-      // no starting point, let's collect all nodes according to the criteria
-      q = this.findNodes(graph);
-    } else {
-      q = [[this.startNode]];
-    }
+    // if (!this.startNode) {
+    //   // no starting point, let's collect all nodes according to the criteria
+    //   q = this.findNodes(graph);
+    // } else {
+    //   q = [[this.startNode]];
+    // }
 
     while (q.length > 0) {
       const path = q.shift();
@@ -60,9 +60,12 @@ class Traversal {
   }
 
   findNodes (graph) {
-    return graph.nodes.filter((node) => {
+    const nodes = graph.nodes.filter((node) => {
       return this.isDestination(node);
-    }).map((node) => [node]); // convert each node into a path
+    });
+
+    this.matchedNodes = nodes;
+    this.matchedPaths = nodes.map((node) => [node]);
   }
 }
 
@@ -107,18 +110,27 @@ class QueryPlanner {
   }
 
   execute () {
-    return this.queryStages.forEach((stage) => {
-      stage.run(this.graph);
-      console.log(require('util').inspect(stage, { depth: null }));
-    });
+    debugger;
+    return this.queryStages.reduce((paths, stage) => {
+      if (stage.startNode) {
+        paths.push([stage.startNode]);
+      } else if (!stage.startNode && paths.length === 0) {
+        // this condition could be done in a better way
+        stage.findNodes(this.graph);
+        return stage.matchedPaths;
+      }
+
+      stage.run(this.graph, paths);
+      return stage.matchedPaths; // mutated in-place from the accumulator in this reduce
+    }, []);
   }
 
-  get paths () {
-    debugger;
-    return this.queryStages.map((stage) => {
-      return stage.matchedPaths;
-    })[0]; // FIXME
-  }
+  // get paths () {
+  //   console.log(require('util').inspect(this.queryStages, { depth: null }));
+  //   return this.queryStages.map((stage) => {
+  //     return stage.matchedPaths;
+  //   })[0]; // FIXME
+  // }
 
   get nodes () {
     return this.queryStages.reduce((nodes, stage) => {
@@ -164,7 +176,7 @@ class Query {
   }
 
   paths () {
-    return this.planner.paths;
+    return this.matchedPaths;
   }
 
   execute () {

@@ -163,5 +163,41 @@ describe('Graph Query', () => {
         [node1, node2, node3, node4, node5]
       ]);
     });
+
+    it('finds multiple paths with multiple traversal conditions', () => {
+      const graph = new Graph();
+
+      const node1 = graph.addNode({ name: 'first' });
+      const node2 = graph.addNode({ name: 'first' });
+      const node3 = graph.addNode({ name: 'second' });
+      const node4 = graph.addNode({ name: 'third' });
+      const node5 = graph.addNode({ name: 'fourth' });
+
+      //
+      //  2 \
+      //      3 - 4 - 5
+      //  1 /
+      //
+
+      graph.addEdge(node1, node3);
+      graph.addEdge(node2, node3);
+      graph.addEdge(node3, node4);
+      graph.addEdge(node4, node5);
+
+      const q = graph.query();
+
+      q.match({ name: 'first' })
+        .outgoing()
+        .any({ maxDepth: 2 })
+        .outgoing()
+        .any({ maxDepth: 2 })
+        .match({ name: 'fourth' })
+        .execute();
+
+      expect(q.paths()).toEqual([
+        [node2, node3, node4, node5],
+        [node1, node3, node4, node5]
+      ]);
+    });
   });
 });
