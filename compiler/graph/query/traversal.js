@@ -28,7 +28,6 @@ class Traversal {
 
   // Modified BFS collecting all paths
   run (graph, q) {
-    debugger;
     let depth = 0;
 
     while (depth <= this.options.maxDepth && q.length > 0) {

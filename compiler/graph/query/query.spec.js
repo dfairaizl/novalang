@@ -201,6 +201,24 @@ describe('Graph Query', () => {
     });
   });
 
+  describe('matching criteria', () => {
+    it('finds nodes with mathing criteria using AND boolean logic', () => {
+      const graph = new Graph();
+
+      const node1 = graph.addNode({ type: 'person', name: 'Dan' });
+      const node2 = graph.addNode({ type: 'person', name: 'Arthur' });
+      graph.addNode({ type: 'animal' });
+
+      graph.addEdge(node1, node2);
+
+      const q = graph.query();
+
+      q.match({ type: 'person', name: 'Arthur' }).execute();
+
+      expect(q.nodes()).toEqual([node2]);
+    });
+  });
+
   describe('multi-stage queries', () => {
     it('finds a path with multiple traversal conditions', () => {
       const graph = new Graph();
