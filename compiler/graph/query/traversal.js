@@ -28,9 +28,7 @@ class Traversal {
 
   // Modified BFS collecting all paths
   run (graph, q) {
-    let depth = 0;
-
-    while (depth <= this.options.maxDepth && q.length > 0) {
+    while (q.length > 0) {
       const path = q.shift();
       const endNode = path.last();
 
@@ -38,6 +36,10 @@ class Traversal {
         this.matchedPaths.unshift(path);
         this.matchedNodes[endNode.id] = endNode;
 
+        continue;
+      }
+
+      if (path.path.length - 1 >= this.options.maxDepth) {
         continue;
       }
 
@@ -51,8 +53,6 @@ class Traversal {
           q.unshift(newPath);
         }
       });
-
-      depth++;
     }
   }
 
