@@ -1,4 +1,5 @@
 const Traversal = require('./traversal');
+const Path = require('./path');
 
 class QueryPlanner {
   constructor (graph) {
@@ -12,6 +13,7 @@ class QueryPlanner {
 
   compile () {
     const stages = [new Traversal()];
+
     this.steps.forEach((step, index) => {
       let currStage = stages.pop();
 
@@ -23,10 +25,14 @@ class QueryPlanner {
           currStage.direction(step.options);
           break;
         case 'traversal':
-          currStage.maxDepth = step.options;
+          currStage.configure(step.options);
+          break;
+        case 'match_all':
+          currStage.filters = null; // clear any filters on this stage so all nodes match
           break;
         case 'filter':
           currStage.filters = step.options;
+
           if (index !== this.steps.length - 1) { // FIXME ugly
             stages.push(currStage);
             currStage = new Traversal();
@@ -41,9 +47,9 @@ class QueryPlanner {
   }
 
   execute () {
-    return this.queryStages.reduce((paths, stage) => {
+    const matchedPaths = this.queryStages.reduce((paths, stage) => {
       if (stage.startNode) {
-        paths.push([stage.startNode]);
+        paths.push(new Path(stage.startNode, stage.options));
       } else if (!stage.startNode && paths.length === 0) {
         // this condition could be done in a better way
         stage.findNodes(this.graph);
@@ -54,6 +60,8 @@ class QueryPlanner {
 
       return stage.matchedPaths; // mutated in-place from the accumulator in this reduce
     }, []);
+
+    this.matchedPaths = matchedPaths;
   }
 
   get nodes () {
@@ -61,6 +69,10 @@ class QueryPlanner {
       Object.values(stage.matchedNodes).forEach((n) => nodes.push(n));
       return nodes;
     }, []);
+  }
+
+  get paths () {
+    return this.matchedPaths.map((path) => path.path);
   }
 }
 

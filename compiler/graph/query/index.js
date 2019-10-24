@@ -24,6 +24,12 @@ class QueryBuilder {
     return this;
   }
 
+  matchAll () {
+    this.planner.addStep('match_all');
+
+    return this;
+  }
+
   any (options) {
     this.planner.addStep('traversal', options);
 
@@ -35,12 +41,12 @@ class QueryBuilder {
   }
 
   paths () {
-    return this.matchedPaths;
+    return this.planner.paths;
   }
 
   execute () {
     this.planner.compile();
-    this.matchedPaths = this.planner.execute();
+    this.planner.execute();
 
     return this;
   }
