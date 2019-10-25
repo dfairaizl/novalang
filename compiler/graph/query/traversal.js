@@ -32,14 +32,7 @@ class Traversal {
       const path = q.shift();
       const endNode = path.last();
 
-      if (endNode !== path.rootNode && this.isDestination(endNode)) {
-        this.matchedPaths.unshift(path);
-        this.matchedNodes[endNode.id] = endNode;
-
-        continue;
-      }
-
-      if (path.path.length - 1 >= this.options.maxDepth) {
+      if (path.currentDepth > this.options.maxDepth) {
         continue;
       }
 
@@ -50,9 +43,19 @@ class Traversal {
         if (!path.contains(target)) {
           const newPath = path.clone();
           newPath.append(target);
+
+          if (this.isDestination(target)) {
+            this.matchedPaths.push(newPath);
+            this.matchedNodes[target.id] = target;
+
+            return;
+          }
+
           q.unshift(newPath);
         }
       });
+
+      path.currentDepth++;
     }
   }
 

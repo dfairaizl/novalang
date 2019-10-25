@@ -117,8 +117,8 @@ describe('Graph Query', () => {
         .execute();
 
       expect(q.paths()).toEqual([
-        [node1, node2, node4],
-        [node1, node3, node4]
+        [node1, node3, node4],
+        [node1, node2, node4]
       ]);
     });
 

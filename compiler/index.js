@@ -3,6 +3,7 @@ const { readFileSync } = require('fs');
 const { spawn } = require('child_process');
 
 const Parser = require('./parser');
+const Binder = require('./semantic/bindings');
 const SemanticAnalyzer = require('./semantic');
 const CodeGenerator = require('./codegen');
 const LLVMInit = require('./codegen/llvm');
@@ -70,6 +71,12 @@ class Compiler {
       });
     }
 
+    // run the binder before semantic analysis
+    const binder = new Binder(this.sourceGraph);
+    binder.analyze();
+
+    this.sourceGraph.debug();
+
     const scopeAnalyzer = new SemanticAnalyzer(this.sourceGraph);
     scopeAnalyzer.analyze();
 
@@ -77,7 +84,6 @@ class Compiler {
     const buildUnits = codeGenerator.codegen();
 
     if (this.options.debugGraph) {
-      this.sourceGraph.debug();
     }
 
     console.log('Generating object files');

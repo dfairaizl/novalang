@@ -118,7 +118,7 @@ class ScopeAnalyzer {
     const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.identifier === 'main_module');
 
     // add this modules top-level expressions to the base symbol SymbolTable
-    this.buildModuleScope(codeModule);
+    // this.buildModuleScope(codeModule);
 
     // begin the recursive traverse from each top level expr
     const exprs = this.sourceGraph.outgoing(codeModule);
@@ -172,33 +172,33 @@ class ScopeAnalyzer {
     switch (node.attributes.type) {
       case 'import_statement':
         return this.analyzeImport(node);
-      case 'immutable_declaration':
-      case 'mutable_declaration':
-        return this.analyzeDeclaration(node);
-      case 'class_definition':
-        return this.analyzeClass(node);
-      case 'function':
-      case 'method':
-      case 'constructor':
-        return this.analyzeFunction(node);
-      case 'return_statement':
-        return this.analyzeReturn(node);
-      case 'assignment':
-      case 'bin_op':
-        return this.analyzeBinOP(node);
-      case 'key_reference':
-      case 'variable_reference':
-        return this.analyzeReference(node);
-      case 'object_reference':
-        return this.analyzeObjectReference(node);
-      case 'instance_reference':
-        return this.analyzeInstanceReference(node);
-      case 'invocation':
-        return this.analyzeInvocation(node);
-      case 'instantiation':
-        return this.analyzeInstantiation(node);
+      // case 'immutable_declaration':
+      // case 'mutable_declaration':
+      //   return this.analyzeDeclaration(node);
+      // case 'class_definition':
+      //   return this.analyzeClass(node);
+      // case 'function':
+      // case 'method':
+      // case 'constructor':
+      //   return this.analyzeFunction(node);
+      // case 'return_statement':
+      //   return this.analyzeReturn(node);
+      // case 'assignment':
+      // case 'bin_op':
+      //   return this.analyzeBinOP(node);
+      // case 'key_reference':
+      // case 'variable_reference':
+      //   return this.analyzeReference(node);
+      // case 'object_reference':
+      //   return this.analyzeObjectReference(node);
+      // case 'instance_reference':
+      //   return this.analyzeInstanceReference(node);
+      // case 'invocation':
+      //   return this.analyzeInvocation(node);
+      // case 'instantiation':
+      //   return this.analyzeInstantiation(node);
       default:
-        // console.log('Unknow scope expression', node);
+        console.log('Unknow scope expression', node);
     }
   }
 
@@ -223,6 +223,7 @@ class ScopeAnalyzer {
   }
 
   analyzeImport (node) {
+    console.log('IMPORT', node);
     const modules = this.sourceGraph.search('module');
     const sourceModule = modules.find((m) => m.attributes.identifier === node.attributes.identifier);
     if (!sourceModule) {
