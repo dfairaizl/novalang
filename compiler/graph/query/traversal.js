@@ -18,8 +18,9 @@ class Traversal {
     this.startNode = node;
   }
 
-  direction (d) {
-    this.degree = d;
+  direction (options) {
+    this.degree = options.degree;
+    this.edgeLabel = options.label;
   }
 
   filter (criteria) {
@@ -38,15 +39,19 @@ class Traversal {
 
       const neighborsList = graph.adjacencyList[endNode.id].edges;
       neighborsList.forEach((edge) => {
-        const target = edge.target;
+        const neighborNode = this.nextMatchingEdge(edge);
 
-        if (!path.contains(target)) {
+        if (!neighborNode) {
+          return;
+        }
+
+        if (!path.contains(neighborNode)) {
           const newPath = path.clone();
-          newPath.append(target);
+          newPath.append(neighborNode);
 
-          if (this.isDestination(target)) {
+          if (this.isDestination(neighborNode)) {
             this.matchedPaths.push(newPath);
-            this.matchedNodes[target.id] = target;
+            this.matchedNodes[neighborNode.id] = neighborNode;
 
             return;
           }
@@ -76,6 +81,14 @@ class Traversal {
 
     this.matchedNodes = nodes;
     this.matchedPaths = nodes.map((node) => new Path(node, this.options));
+  }
+
+  nextMatchingEdge (edge) {
+    if (this.edgeLabel && this.edgeLabel !== edge.label) {
+      return null;
+    }
+
+    return this.degree === 'out' ? edge.target : edge.source;
   }
 }
 

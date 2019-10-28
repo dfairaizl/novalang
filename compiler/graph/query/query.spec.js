@@ -219,6 +219,28 @@ describe('Graph Query', () => {
     });
   });
 
+  describe('labeled edge queries', () => {
+    it('follows only edges with the specified label', () => {
+      const graph = new Graph();
+
+      const node1 = graph.addNode({ type: 'person', name: 'Arthur' });
+      const node2 = graph.addNode({ type: 'person', name: 'Dan' });
+      const node3 = graph.addNode({ type: 'person', name: 'Juli' });
+
+      graph.addEdge(node1, node2, 'dada');
+      graph.addEdge(node1, node3, 'mama');
+
+      const q = graph.query();
+
+      q.begin(node1)
+        .outgoing('dada')
+        .matchAll()
+        .execute();
+
+      expect(q.nodes()).toEqual([node2]);
+    });
+  });
+
   describe('multi-stage queries', () => {
     it('finds a path with multiple traversal conditions', () => {
       const graph = new Graph();

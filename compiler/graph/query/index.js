@@ -12,8 +12,8 @@ class QueryBuilder {
     return this;
   }
 
-  outgoing () {
-    this.planner.addStep('direction', 'out');
+  outgoing (label) {
+    this.planner.addStep('direction', { degree: 'out', label });
 
     return this;
   }
