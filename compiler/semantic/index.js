@@ -1,13 +1,15 @@
+const BindingAnalyzer = require('./bindings');
 const ExpressionAnalyzer = require('./analyzers/expression');
-const TypeAnalyzer = require('./analyzers/types');
+// const TypeAnalyzer = require('./analyzers/types');
 
 class SemanticAnalyzer {
   constructor (sourceGraph) {
     this.sourceGraph = sourceGraph;
 
     this.analyzers = [
-      new ExpressionAnalyzer(sourceGraph),
-      new TypeAnalyzer(sourceGraph)
+      new BindingAnalyzer(sourceGraph),
+      new ExpressionAnalyzer(sourceGraph)
+      // new TypeAnalyzer(sourceGraph)
     ];
   }
 

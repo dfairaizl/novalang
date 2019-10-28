@@ -9,11 +9,28 @@ class ExpressionAnalyzer {
   }
 
   analyze () {
-    const codeModule = this.sourceGraph.nodes.find((n) => n.attributes.type === 'module');
-    const iterator = this.sourceGraph.traverse();
+    const sourceQuery = this.sourceGraph.query();
+    const sources = sourceQuery
+      .match({ type: 'module', identifier: 'main_module' })
+      .execute();
 
-    iterator.iterate(codeModule, (node) => {
-      this.analyzeNode(node);
+    if (sources.nodes()[0]) {
+      this.codeModule = sources.nodes()[0];
+      this.analyzeSources(this.codeModule);
+    }
+  }
+
+  analyzeSources (sourceNode) {
+    const sourceQuery = this.sourceGraph.query();
+    const sources = sourceQuery
+      .begin(sourceNode)
+      .outgoing()
+      .any({ maxDepth: 1 })
+      .matchAll()
+      .execute();
+
+    sources.nodes().forEach((source) => {
+      this.analyzeNode(source);
     });
   }
 
@@ -30,8 +47,23 @@ class ExpressionAnalyzer {
   }
 
   checkAssignment (node) {
-    const left = this.sourceGraph.relationFromNode(node, 'left')[0];
-    const declNode = this.sourceGraph.relationFromNode(left, 'binding')[0];
+    const leftQuery = this.sourceGraph.query();
+    leftQuery.begin(node)
+      .outgoing('left')
+      .any({ maxDepth: 1 })
+      .matchAll()
+      .execute();
+
+    const left = leftQuery.nodes()[0];
+
+    const bindingQuery = this.sourceGraph.query();
+    bindingQuery.begin(left)
+      .outgoing('binding')
+      .any({ maxDepth: 1 })
+      .matchAll()
+      .execute();
+
+    const declNode = bindingQuery.nodes()[0];
 
     if (declNode && declNode.attributes.type === 'immutable_declaration') {
       throw new ReassignImmutableError(`Cannot reassign value to const \`${declNode.attributes.identifier}\``);
@@ -39,7 +71,15 @@ class ExpressionAnalyzer {
   }
 
   checkExport (node) {
-    const exportExpr = this.sourceGraph.relationFromNode(node, 'expression')[0];
+    const exportQuery = this.sourceGraph.query();
+    exportQuery.begin(node)
+      .outgoing('expression')
+      .any({ maxDepth: 1 })
+      .matchAll()
+      .execute();
+
+    const exportExpr = exportQuery.nodes()[0];
+
     if (exportExpr.attributes.type !== 'function' && exportExpr.attributes.type !== 'external_function') {
       throw new InvalidExportError('Only functions are allowed to be exported from modules.');
     }

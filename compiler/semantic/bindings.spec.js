@@ -230,7 +230,7 @@ describe('Binding Analyzer', () => {
       ]);
     });
 
-    it('it binds references to nearest declaration for shadowed variables', () => {
+    it('binds references to nearest declaration for shadowed variables', () => {
       const parser = new Parser(`
         const z = 7;
         function addZ() -> Int {
@@ -248,6 +248,21 @@ describe('Binding Analyzer', () => {
 
       expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration' } } // inner `z` is mutable in this case
+      ]);
+    });
+
+    it('binds variable references to declarations in assignments', () => {
+      const parser = new Parser(`let x = 1; x = 2`);
+
+      const sourceGraph = parser.parse();
+
+      const binding = sourceGraph.search('variable_reference');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+      bindingAnalyzer.analyze();
+
+      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration' } }
       ]);
     });
   });

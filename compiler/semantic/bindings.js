@@ -33,6 +33,7 @@ class BindingAnalyzer {
 
     sources.nodes().forEach((source) => {
       switch (source.attributes.type) {
+        case 'assignment':
         case 'bin_op':
         case 'function':
         case 'return_statement':
