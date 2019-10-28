@@ -3,7 +3,6 @@ const { readFileSync } = require('fs');
 const { spawn } = require('child_process');
 
 const Parser = require('./parser');
-const Binder = require('./semantic/bindings');
 const SemanticAnalyzer = require('./semantic');
 const CodeGenerator = require('./codegen');
 const LLVMInit = require('./codegen/llvm');
@@ -72,26 +71,24 @@ class Compiler {
     }
 
     // run the binder before semantic analysis
-    const binder = new Binder(this.sourceGraph);
+    const binder = new SemanticAnalyzer(this.sourceGraph);
     binder.analyze();
 
-    this.sourceGraph.debug();
+    if (this.options.debugGraph) {
+      this.sourceGraph.debug();
+    }
 
-    const scopeAnalyzer = new SemanticAnalyzer(this.sourceGraph);
-    scopeAnalyzer.analyze();
-
+    // generate LLVM IR and comile it for the target machine
     const codeGenerator = new CodeGenerator(this.buildDir, this.sourceGraph);
     const buildUnits = codeGenerator.codegen();
 
-    if (this.options.debugGraph) {
-    }
-
+    // emit binary object files for the program before linking
     console.log('Generating object files');
     buildUnits.forEach((unit) => {
       unit.emitObjectFile(this.machine);
     });
 
-    // Link the object files into a binary
+    // link the object files into a binary
     console.log('Creating binary');
 
     const linkerParams = ['-o', this.outputProgramName];

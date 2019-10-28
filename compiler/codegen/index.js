@@ -7,8 +7,13 @@ class CodeGenerator {
   }
 
   codegen () {
-    const codeModules = this.sourceGraph.search('module');
-    const buildUnits = codeModules.map((codeModule) => {
+    debugger;
+    const sourceQuery = this.sourceGraph.query();
+    const sources = sourceQuery
+      .match({ type: 'module' })
+      .execute();
+
+    const buildUnits = sources.nodes().map((codeModule) => {
       const generator = new Generator(this.buildDir, this.sourceGraph, codeModule);
 
       return generator.generate();

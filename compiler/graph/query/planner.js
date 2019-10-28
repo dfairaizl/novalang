@@ -29,6 +29,11 @@ class QueryPlanner {
           break;
         case 'match_all':
           currStage.filters = null; // clear any filters on this stage so all nodes match
+
+          if (index !== this.steps.length - 1) { // FIXME ugly
+            stages.push(currStage);
+            currStage = new Traversal();
+          }
           break;
         case 'filter':
           currStage.filters = step.options;

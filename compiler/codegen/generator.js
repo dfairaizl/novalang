@@ -29,12 +29,19 @@ class Generator {
   }
 
   generate () {
-    const sources = this.sourceGraph.outgoing(this.codeModule);
-    sources.forEach((source) => {
-      this.codegenNode(source);
-    });
+    const sourceQuery = this.sourceGraph.query();
+    const sources = sourceQuery
+      .begin(this.codeModule)
+      .outgoing()
+      .any({ maxDepth: 1 })
+      .matchAll()
+      .execute();
 
     this.builder.buildVoidRet();
+
+    sources.nodes().forEach((source) => {
+      this.codegenNode(source);
+    });
 
     if (this.codeModule.attributes.identifier === 'main_module') {
       this.createMain(this.codeModule.attributes.identifier);
@@ -303,7 +310,15 @@ class Generator {
     const retType = this.getType(node);
 
     // build argument type list
-    const args = this.sourceGraph.relationFromNode(node, 'arguments');
+    const query = this.sourceGraph.query();
+    query.begin(node)
+      .outgoing('arguments')
+      .any({ maxDepth: 1 })
+      .matchAll()
+      .execute();
+
+    const args = query.nodes();
+
     const variadic = args.find((a) => a.attributes.kind === 'variadic');
     const argTypes = args
       .filter((a) => a.attributes.kind !== 'variadic')
@@ -315,11 +330,22 @@ class Generator {
   }
 
   codeGenImports (node) {
-    const imports = this.sourceGraph.relationFromNode(node, 'import');
-    imports.forEach((i) => {
-      const importFunc = this.sourceGraph.relationFromNode(i, 'binding')[0];
-      this.codegenNode(importFunc);
-    });
+    const importQuery = this.sourceGraph.query();
+    importQuery.begin(node)
+      .outgoing()
+      .any({ maxDepth: 1 })
+      .matchAll()
+      .outgoing()
+      .any({ maxDepth: 1 })
+      .matchAll()
+      .execute();
+
+    const nodes = importQuery.nodes();
+    const importedBinding = nodes[nodes.length - 1];
+
+    if (importedBinding) {
+      this.codegenNode(importedBinding);
+    }
   }
 
   codeGenExport (node) {
