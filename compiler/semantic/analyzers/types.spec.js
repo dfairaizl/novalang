@@ -414,6 +414,23 @@ describe('Type Analyzer', () => {
     });
   });
 
+  describe('exports', () => {
+    it('builds types for exported functions', () => {
+      const parser = new Parser('export function one() -> Int {}');
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const funcNode = sourceGraph.search('function')[0];
+      const type = sourceGraph.relationFromNode(funcNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+    });
+  });
+
   describe.skip('class definitions', () => {
     it('builds types for class definitions', () => {
       const parser = new Parser('class Calculator {}');

@@ -103,6 +103,23 @@ describe('Binding Analyzer', () => {
     });
   });
 
+  describe('exports', () => {
+    it('binds sources of exported functions', () => {
+      const parser = new Parser(`export function double(x: Int) -> Int { return x * 2; };`);
+
+      const sourceGraph = parser.parse();
+
+      const binding = sourceGraph.search('variable_reference');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+      bindingAnalyzer.analyze();
+
+      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+        { attributes: { type: 'function_argument' } }
+      ]);
+    });
+  });
+
   describe('functions', () => {
     it('throws an error for invoking undefined functions', () => {
       const parser = new Parser(`speak('hello')`);
@@ -334,7 +351,7 @@ describe('Binding Analyzer', () => {
       ]);
     });
 
-    it.only('binds functions to invocations with recursion', () => {
+    it('binds functions to invocations with recursion', () => {
       const parser = new Parser(`function addOne(x: Int) -> Int { return addOne(x + 1) };`);
 
       const sourceGraph = parser.parse();

@@ -53,11 +53,12 @@ class TypeAnalyzer {
         return this.analyzeReturn(node);
       case 'invocation':
         return this.analyzeInvocation(node);
+      case 'export_statement':
+        return this.analyzeExport(node);
       case 'boolean_literal':
       case 'number_literal':
       case 'string_literal':
         return this.analyzeLiteral(node);
-      default:
     }
   }
 
@@ -132,6 +133,7 @@ class TypeAnalyzer {
       .execute();
 
     const leftNode = binopQuery.nodes()[0];
+    console.log(require('util').inspect(leftNode, { depth: null }));
     const leftResolved = this.analyzeType(leftNode);
 
     binopQuery = this.sourceGraph.query();
@@ -144,6 +146,7 @@ class TypeAnalyzer {
     const rightNode = binopQuery.nodes()[0];
     const rightResolved = this.analyzeType(rightNode);
 
+    console.log(require('util').inspect(leftResolved, { depth: null }));
     const resolvedType = this.reconcileTypes(leftResolved, rightResolved);
 
     if (!resolvedType) {
@@ -261,6 +264,20 @@ class TypeAnalyzer {
       .execute();
 
     const funcNode = invokeQuery.nodes()[0];
+    if (funcNode) {
+      return this.analyzeType(funcNode);
+    }
+  }
+
+  analyzeExport (exportNode) {
+    const query = this.sourceGraph.query();
+    query.begin(exportNode)
+      .outgoing()
+      .any({ maxDepth: 1 })
+      .matchAll()
+      .execute();
+
+    const funcNode = query.nodes()[0];
     if (funcNode) {
       return this.analyzeType(funcNode);
     }

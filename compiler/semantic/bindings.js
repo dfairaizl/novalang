@@ -23,11 +23,6 @@ class BindingAnalyzer {
   }
 
   bindSources (sourceNode) {
-    const binding = this.checkBinding(sourceNode);
-    if (binding) {
-      return;
-    }
-
     const sourceQuery = this.sourceGraph.query();
     const sources = sourceQuery
       .begin(sourceNode)
@@ -37,13 +32,19 @@ class BindingAnalyzer {
       .execute();
 
     sources.nodes().forEach((source) => {
+      const binding = this.checkBinding(source);
+      if (binding) {
+        return binding;
+      }
+
       switch (source.attributes.type) {
         case 'assignment':
         case 'bin_op':
+        case 'export_statement':
         case 'function':
-        case 'return_statement':
         case 'immutable_declaration':
         case 'mutable_declaration':
+        case 'return_statement':
           return this.bindSources(source);
       }
 
