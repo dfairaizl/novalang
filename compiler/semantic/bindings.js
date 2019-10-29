@@ -23,6 +23,11 @@ class BindingAnalyzer {
   }
 
   bindSources (sourceNode) {
+    const binding = this.checkBinding(sourceNode);
+    if (binding) {
+      return;
+    }
+
     const sourceQuery = this.sourceGraph.query();
     const sources = sourceQuery
       .begin(sourceNode)
@@ -37,6 +42,8 @@ class BindingAnalyzer {
         case 'bin_op':
         case 'function':
         case 'return_statement':
+        case 'immutable_declaration':
+        case 'mutable_declaration':
           return this.bindSources(source);
       }
 
@@ -131,6 +138,22 @@ class BindingAnalyzer {
     }
 
     throw new UndeclaredModuleError(`Cannot import from undeclared module \`${importNode.attributes.identifier}\``);
+  }
+
+  checkBinding (node) {
+    // check if this node has an already computed type
+    const typeQuery = this.sourceGraph.query();
+    typeQuery.begin(node)
+      .outgoing('binding')
+      .any({ maxDepth: 1 })
+      .matchAll()
+      .execute();
+
+    if (typeQuery.nodes().length === 1) {
+      return typeQuery.nodes()[0];
+    }
+
+    return null;
   }
 
   bindInvocation (invocationNode) {

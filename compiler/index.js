@@ -74,8 +74,8 @@ class Compiler {
     const binder = new SemanticAnalyzer(this.sourceGraph);
     binder.analyze();
 
+    this.sourceGraph.debug();
     if (this.options.debugGraph) {
-      this.sourceGraph.debug();
     }
 
     // generate LLVM IR and comile it for the target machine

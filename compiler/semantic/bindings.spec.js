@@ -187,6 +187,21 @@ describe('Binding Analyzer', () => {
       ]);
     });
 
+    it('binds variable references in expressions', () => {
+      const parser = new Parser(`const x = 1; let y = x`);
+
+      const sourceGraph = parser.parse();
+
+      const binding = sourceGraph.search('variable_reference');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+      bindingAnalyzer.analyze();
+
+      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+        { attributes: { type: 'immutable_declaration', identifier: 'x' } }
+      ]);
+    });
+
     it('binds multiple variable references to declarations', () => {
       const parser = new Parser(`
         const x = 1; x + 1;
@@ -316,6 +331,21 @@ describe('Binding Analyzer', () => {
 
       expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
         { attributes: { type: 'immutable_declaration', identifier: 'x' } }
+      ]);
+    });
+
+    it.only('binds functions to invocations with recursion', () => {
+      const parser = new Parser(`function addOne(x: Int) -> Int { return addOne(x + 1) };`);
+
+      const sourceGraph = parser.parse();
+
+      const binding = sourceGraph.search('invocation');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+      bindingAnalyzer.analyze();
+
+      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+        { attributes: { type: 'function' } }
       ]);
     });
   });
