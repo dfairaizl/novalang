@@ -7,7 +7,6 @@ const {
   MissingTypeAnnotationError,
   TypeMismatchError,
   MismatchedReturnTypeError,
-  VoidAssignmentError,
   VoidFunctionReturnError
 } = require('../errors');
 
