@@ -300,6 +300,23 @@ describe('Type Analyzer', () => {
       });
     });
 
+    it('checks functions with multiple return statements', () => {
+      const parser = new Parser(`
+        function decide(n: Int) -> Float {
+          if (n <= 1) {
+            return 1;
+          }
+
+          return 1.0;
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      expect(() => semanticAnalyzer.analyze()).toThrowError(MismatchedReturnTypeError);
+    });
+
     it('throws an error if return does not match function return type', () => {
       const parser = new Parser('function guess() -> Int { return false }');
 

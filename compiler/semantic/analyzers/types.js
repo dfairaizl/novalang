@@ -133,7 +133,6 @@ class TypeAnalyzer {
       .execute();
 
     const leftNode = binopQuery.nodes()[0];
-    console.log(require('util').inspect(leftNode, { depth: null }));
     const leftResolved = this.analyzeType(leftNode);
 
     binopQuery = this.sourceGraph.query();
@@ -146,7 +145,6 @@ class TypeAnalyzer {
     const rightNode = binopQuery.nodes()[0];
     const rightResolved = this.analyzeType(rightNode);
 
-    console.log(require('util').inspect(leftResolved, { depth: null }));
     const resolvedType = this.reconcileTypes(leftResolved, rightResolved);
 
     if (!resolvedType) {
@@ -213,18 +211,20 @@ class TypeAnalyzer {
       .match({ type: 'return_statement' })
       .execute();
 
-    const retNode = retQuery.nodes()[0];
-    if (retNode) {
+    // reconsile types of all return statements in the func body
+    retQuery.nodes().reduce((finalType, retNode) => {
       const retType = this.analyzeType(retNode);
 
-      if (!this.reconcileTypes(funcType, retType)) {
+      if (!this.reconcileTypes(finalType, retType)) {
         if (funcType.attributes.kind === 'Void') {
           throw new VoidFunctionReturnError(`Void function \`${funcNode.attributes.identifier}\` is not allowed to return a value`);
         }
 
         throw new MismatchedReturnTypeError(`Type mismatch in function \`${funcNode.attributes.identifier}\`. Returned type \`${retType.attributes.kind}\` is not compatible with declared type \`${funcNode.attributes.kind}\``);
       }
-    }
+
+      return finalType;
+    }, funcType);
 
     return funcType;
   }
