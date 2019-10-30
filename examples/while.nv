@@ -2,7 +2,7 @@ import printf from 'io';
 
 let i = 0;
 
-while (i < 0) {
+while (i < 10) {
   printf('Hello');
   i = i + 1
 }

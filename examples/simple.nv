@@ -1,6 +1,0 @@
-function test () {
-  return 42;
-}
-
-const m = test();
-printf("Answer to the life, universe, and everything is %d\n", m);

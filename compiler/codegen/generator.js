@@ -37,11 +37,11 @@ class Generator {
       .matchAll()
       .execute();
 
-    this.builder.buildVoidRet();
-
     sources.nodes().forEach((source) => {
       this.codegenNode(source);
     });
+
+    this.builder.buildVoidRet();
 
     if (this.codeModule.attributes.identifier === 'main_module') {
       this.createMain(this.codeModule.attributes.identifier);
@@ -206,7 +206,7 @@ class Generator {
 
   codeGenFunction (funcNode) {
     const funcName = funcNode.attributes.identifier;
-    const typeNode = this.sourceGraph.relationFromNode(funcNode, 'return_type')[0];
+    const typeNode = this.sourceGraph.relationFromNode(funcNode, 'type')[0];
     const retType = this.getType(typeNode);
 
     // build argument type list
@@ -423,8 +423,6 @@ class Generator {
     const typeNode = this.sourceGraph.relationFromNode(node, 'type')[0];
     const exprNode = this.sourceGraph.relationFromNode(node, 'expression')[0];
 
-    // this.builder.buildAlloc(this.getType(typeNode), node.attributes.identifier);
-
     if (exprNode.attributes.type === 'instantiation') {
       const currentClass = this.sourceGraph.relationFromNode(exprNode, 'binding')[0];
       const classConstructor = `${currentClass.attributes.identifier}`;
@@ -445,7 +443,10 @@ class Generator {
       // now call the constructor wtih argTypes if one is defined
       // TODO: CONSTRUCTOR
     } else {
+      this.builder.buildAlloc(this.getType(typeNode), node.attributes.identifier);
+
       const expr = this.codegenNode(exprNode);
+
       this.builder.buildStore(node.attributes.identifier, expr);
     }
   }
@@ -481,7 +482,6 @@ class Generator {
   }
 
   codegenKeyReference (node) {
-    console.log(node);
     const keyPathNode = this.sourceGraph.relationFromNode(node, 'key_expression')[0];
     return this.codegenNode(keyPathNode);
   }

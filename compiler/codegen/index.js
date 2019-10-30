@@ -7,7 +7,6 @@ class CodeGenerator {
   }
 
   codegen () {
-    debugger;
     const sourceQuery = this.sourceGraph.query();
     const sources = sourceQuery
       .match({ type: 'module' })
