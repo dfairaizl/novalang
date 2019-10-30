@@ -259,6 +259,14 @@ describe('Lexer', () => {
       expect(token).toEqual(new KeywordToken('constructor'));
     });
 
+    it('lexes `else`', () => {
+      const lex = new Lexer('else');
+      const token = lex.nextToken();
+
+      expect(token).toBeInstanceOf(KeywordToken);
+      expect(token).toEqual(new KeywordToken('else'));
+    });
+
     it('lexes `export`', () => {
       const lex = new Lexer('export');
       const token = lex.nextToken();
