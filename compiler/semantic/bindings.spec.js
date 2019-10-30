@@ -366,4 +366,135 @@ describe('Binding Analyzer', () => {
       ]);
     });
   });
+
+  describe('loops', () => {
+    it('binds expressions inside do-while loops', () => {
+      const parser = new Parser(`
+        let i = 0;
+
+        do {
+          i = i + 1
+        } while (i < 10)
+      `);
+
+      const sourceGraph = parser.parse();
+      sourceGraph.merge(stdLibGraph);
+
+      const binding = sourceGraph.search('variable_reference');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+      bindingAnalyzer.analyze();
+
+      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration' } }
+      ]);
+    });
+
+    it('binds expressions inside while loops', () => {
+      const parser = new Parser(`
+        let i = 0;
+
+        while (i < 10) {
+          i = i + 1
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+      sourceGraph.merge(stdLibGraph);
+
+      const binding = sourceGraph.search('variable_reference');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+      bindingAnalyzer.analyze();
+
+      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration' } }
+      ]);
+    });
+  });
+
+  describe('conditionals', () => {
+    it('binds expressions inside if statements', () => {
+      const parser = new Parser(`
+        let i = 0;
+        if (0 < 1) {
+          i = i + 1
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+      sourceGraph.merge(stdLibGraph);
+
+      const binding = sourceGraph.search('variable_reference');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+      bindingAnalyzer.analyze();
+
+      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration' } }
+      ]);
+    });
+
+    it('binds expressions inside if/else statements', () => {
+      const parser = new Parser(`
+        let i;
+
+        if (0 < 1) {
+          i = 1
+        } else {
+          i = 2
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+      sourceGraph.merge(stdLibGraph);
+
+      const binding = sourceGraph.search('variable_reference');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+      bindingAnalyzer.analyze();
+
+      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration' } }
+      ]);
+
+      expect(sourceGraph.relationFromNode(binding[1], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration' } }
+      ]);
+    });
+
+    it('binds expressions inside if/else if/else statements', () => {
+      const parser = new Parser(`
+        let i;
+
+        if (0 < 1) {
+          i = 1
+        } else if (1 < 2) {
+          i = 2
+        } else {
+          i = 3
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+      sourceGraph.merge(stdLibGraph);
+
+      const binding = sourceGraph.search('variable_reference');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+      bindingAnalyzer.analyze();
+
+      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration' } }
+      ]);
+
+      expect(sourceGraph.relationFromNode(binding[1], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration' } }
+      ]);
+
+      expect(sourceGraph.relationFromNode(binding[2], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration' } }
+      ]);
+    });
+  });
 });

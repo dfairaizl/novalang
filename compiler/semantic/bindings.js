@@ -40,11 +40,16 @@ class BindingAnalyzer {
       switch (source.attributes.type) {
         case 'assignment':
         case 'bin_op':
+        case 'conditional_branch':
+        case 'do_while_loop':
+        case 'else_expression':
         case 'export_statement':
         case 'function':
+        case 'if_conditional':
         case 'immutable_declaration':
         case 'mutable_declaration':
         case 'return_statement':
+        case 'while_loop':
           return this.bindSources(source);
       }
 
