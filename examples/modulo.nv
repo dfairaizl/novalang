@@ -1,0 +1,5 @@
+import printf from 'io';
+
+const z =  6 % 5;
+
+printf("The answer is %d", z);

@@ -1,4 +1,4 @@
-const Lexer = require('../lexer');
+const Lexer = require("../lexer");
 const {
   BooleanToken,
   IdentifierToken,
@@ -7,31 +7,32 @@ const {
   OperatorToken,
   PunctuatorToken,
   StringToken
-} = require('../lexer/tokens');
+} = require("../lexer/tokens");
 
-const Graph = require('../graph/graph');
+const Graph = require("../graph/graph");
 
 const OP_PRECEDENCE = {
-  '+': 10,
-  '-': 10,
-  '*': 20,
-  '/': 20,
-  '>': 40,
-  '<': 40,
-  '>=': 40,
-  '<=': 40,
-  '==': 40,
-  '!=': 40
+  "+": 10,
+  "-": 10,
+  "*": 20,
+  "/": 20,
+  "%": 20,
+  ">": 40,
+  "<": 40,
+  ">=": 40,
+  "<=": 40,
+  "==": 40,
+  "!=": 40
 };
 
 class Parser {
-  constructor (input, name, options) {
+  constructor(input, name, options) {
     this.options = options || {};
 
     if (name) {
       this.moduleName = name;
     } else {
-      this.moduleName = 'main_module';
+      this.moduleName = "main_module";
     }
 
     this.lexer = new Lexer(input);
@@ -42,23 +43,26 @@ class Parser {
 
   // Decent Parsing Methods
 
-  parse () {
-    const codeModule = this.sourceGraph.addNode({ type: 'module', identifier: this.moduleName });
+  parse() {
+    const codeModule = this.sourceGraph.addNode({
+      type: "module",
+      identifier: this.moduleName
+    });
     let currentExpression = null;
 
     while ((currentExpression = this.parsePrimaryExpression())) {
-      this.sourceGraph.addEdge(codeModule, currentExpression, 'sources');
+      this.sourceGraph.addEdge(codeModule, currentExpression, "sources");
     }
 
     return this.sourceGraph;
   }
 
   // top level parser to handle main blocks in a source file
-  parsePrimaryExpression () {
+  parsePrimaryExpression() {
     // skip any line terminators
     const terminator = this.peekNextToken();
-    if (terminator instanceof PunctuatorToken && terminator.value === ';') {
-      this.validateNextToken(';');
+    if (terminator instanceof PunctuatorToken && terminator.value === ";") {
+      this.validateNextToken(";");
     }
 
     // begin to parse the next expression
@@ -76,7 +80,7 @@ class Parser {
     return this.parseExpression();
   }
 
-  parseAtomic () {
+  parseAtomic() {
     const currentToken = this.peekNextToken();
 
     switch (currentToken.constructor) {
@@ -89,9 +93,9 @@ class Parser {
         return this.parseIdentifierExpression();
       case PunctuatorToken:
         switch (currentToken.value) {
-          case '{':
+          case "{":
             return this.parseObjectLiteral();
-          case '(':
+          case "(":
             return this.parseAnonymousFunction();
         }
         break;
@@ -105,51 +109,55 @@ class Parser {
   }
 
   // keywords
-  parseKeywordExpression (keywordToken) {
-    if (keywordToken.value === 'const' || keywordToken.value === 'let') {
+  parseKeywordExpression(keywordToken) {
+    if (keywordToken.value === "const" || keywordToken.value === "let") {
       return this.parseVariableDeclaration();
-    } else if (keywordToken.value === 'external') {
+    } else if (keywordToken.value === "external") {
       return this.parseExternalFunctionDefinition();
-    } else if (keywordToken.value === 'function') {
+    } else if (keywordToken.value === "function") {
       return this.parseFunctionDeclaration();
-    } else if (keywordToken.value === 'return') {
+    } else if (keywordToken.value === "return") {
       return this.parseReturnExpression();
-    } else if (keywordToken.value === 'import') {
+    } else if (keywordToken.value === "import") {
       return this.parseImport();
-    } else if (keywordToken.value === 'export') {
+    } else if (keywordToken.value === "export") {
       return this.parseExport();
-    } else if (keywordToken.value === 'class') {
+    } else if (keywordToken.value === "class") {
       return this.parseClassDefinition();
-    } else if (keywordToken.value === 'if') {
+    } else if (keywordToken.value === "if") {
       return this.parseConditionalBranch();
-    } else if (keywordToken.value === 'while') {
+    } else if (keywordToken.value === "while") {
       return this.parseWhileLoop();
-    } else if (keywordToken.value === 'do') {
+    } else if (keywordToken.value === "do") {
       return this.parseDoWhileLoop();
-    } else if (keywordToken.value === 'new') {
+    } else if (keywordToken.value === "new") {
       return this.parseInstantiation();
-    } else if (keywordToken.value === 'this') {
+    } else if (keywordToken.value === "this") {
       return this.parseInstanceExpression();
     }
   }
 
   // Parsing methods
 
-  parseExpression () {
+  parseExpression() {
     const left = this.parseAtomic();
     let right = null;
 
     const operator = this.peekNextToken();
+
     if (operator instanceof OperatorToken) {
-      if (operator.value === '=') {
+      if (operator.value === "=") {
         this.getNextToken(); // consume operator
 
-        const opNode = this.sourceGraph.addNode({ type: 'assignment', operator: operator.value });
+        const opNode = this.sourceGraph.addNode({
+          type: "assignment",
+          operator: operator.value
+        });
 
         right = this.parseExpression();
 
-        this.sourceGraph.addEdge(opNode, left, 'left');
-        this.sourceGraph.addEdge(opNode, right, 'right');
+        this.sourceGraph.addEdge(opNode, left, "left");
+        this.sourceGraph.addEdge(opNode, right, "right");
 
         return opNode;
       } else {
@@ -160,7 +168,7 @@ class Parser {
     return left;
   }
 
-  parseBinOp (expr, exprPrec) {
+  parseBinOp(expr, exprPrec) {
     while (true) {
       const tokPrec = this.getTokenPrecedence();
 
@@ -178,15 +186,18 @@ class Parser {
         right = this.parseBinOp(right, tokPrec + 1);
       }
 
-      const opNode = this.sourceGraph.addNode({ type: 'bin_op', operator: operator.value });
-      this.sourceGraph.addEdge(opNode, expr, 'left');
-      this.sourceGraph.addEdge(opNode, right, 'right');
+      const opNode = this.sourceGraph.addNode({
+        type: "bin_op",
+        operator: operator.value
+      });
+      this.sourceGraph.addEdge(opNode, expr, "left");
+      this.sourceGraph.addEdge(opNode, right, "right");
 
       expr = opNode;
     }
   }
 
-  parseBinOpExpression () {
+  parseBinOpExpression() {
     // this should be expanded to support more types as needed
     const currentToken = this.peekNextToken();
 
@@ -197,48 +208,48 @@ class Parser {
         return this.parseIdentifierExpression();
       case PunctuatorToken:
         switch (currentToken.value) {
-          case '(':
+          case "(":
             return this.parseParenExpression();
         }
     }
   }
 
-  parseParenExpression () {
-    this.validateNextToken('(');
+  parseParenExpression() {
+    this.validateNextToken("(");
     let tok = this.peekNextToken();
 
     let expr = this.parseAtomic();
 
-    while (tok.value !== ')') {
+    while (tok.value !== ")") {
       expr = this.parseBinOp(expr, 0);
       tok = this.peekNextToken();
     }
 
-    this.validateNextToken(')');
+    this.validateNextToken(")");
 
     return expr;
   }
 
-  parseConditionalBranch () {
-    const branchNode = this.sourceGraph.addNode({ type: 'conditional_branch' });
+  parseConditionalBranch() {
+    const branchNode = this.sourceGraph.addNode({ type: "conditional_branch" });
 
     const conditionNode = this.parseIfCondition();
 
-    this.sourceGraph.addEdge(branchNode, conditionNode, 'conditions');
+    this.sourceGraph.addEdge(branchNode, conditionNode, "conditions");
 
     while (true) {
       const nextCondition = this.peekNextToken();
-      if (nextCondition && nextCondition.value === 'else') {
-        this.validateNextToken('else');
+      if (nextCondition && nextCondition.value === "else") {
+        this.validateNextToken("else");
 
         const altIf = this.peekNextToken();
 
-        if (altIf && altIf.value === 'if') {
+        if (altIf && altIf.value === "if") {
           const conditionNode = this.parseIfCondition();
-          this.sourceGraph.addEdge(branchNode, conditionNode, 'conditions');
+          this.sourceGraph.addEdge(branchNode, conditionNode, "conditions");
         } else {
           const elseExpr = this.parseElseCondition();
-          this.sourceGraph.addEdge(branchNode, elseExpr, 'else');
+          this.sourceGraph.addEdge(branchNode, elseExpr, "else");
         }
       } else {
         break;
@@ -248,11 +259,11 @@ class Parser {
     return branchNode;
   }
 
-  parseDoWhileLoop () {
-    this.validateNextToken('do');
-    this.validateNextToken('{');
+  parseDoWhileLoop() {
+    this.validateNextToken("do");
+    this.validateNextToken("{");
 
-    const loopNode = this.sourceGraph.addNode({ type: 'do_while_loop' });
+    const loopNode = this.sourceGraph.addNode({ type: "do_while_loop" });
 
     while (true) {
       const bodyNode = this.parsePrimaryExpression();
@@ -261,34 +272,34 @@ class Parser {
         break;
       }
 
-      this.sourceGraph.addEdge(loopNode, bodyNode, 'body');
+      this.sourceGraph.addEdge(loopNode, bodyNode, "body");
     }
 
-    this.validateNextToken('}');
-    this.validateNextToken('while');
-    this.validateNextToken('(');
+    this.validateNextToken("}");
+    this.validateNextToken("while");
+    this.validateNextToken("(");
 
     const testExpr = this.parsePrimaryExpression();
-    this.sourceGraph.addEdge(loopNode, testExpr, 'test');
+    this.sourceGraph.addEdge(loopNode, testExpr, "test");
 
-    this.validateNextToken(')');
+    this.validateNextToken(")");
 
     return loopNode;
   }
 
-  parseWhileLoop () {
-    this.validateNextToken('while');
+  parseWhileLoop() {
+    this.validateNextToken("while");
 
-    this.validateNextToken('(');
+    this.validateNextToken("(");
 
     const testExpr = this.parsePrimaryExpression();
 
-    this.validateNextToken(')');
-    this.validateNextToken('{');
+    this.validateNextToken(")");
+    this.validateNextToken("{");
 
-    const loopNode = this.sourceGraph.addNode({ type: 'while_loop' });
+    const loopNode = this.sourceGraph.addNode({ type: "while_loop" });
 
-    this.sourceGraph.addEdge(loopNode, testExpr, 'test');
+    this.sourceGraph.addEdge(loopNode, testExpr, "test");
 
     while (true) {
       const bodyNode = this.parsePrimaryExpression();
@@ -297,26 +308,26 @@ class Parser {
         break;
       }
 
-      this.sourceGraph.addEdge(loopNode, bodyNode, 'body');
+      this.sourceGraph.addEdge(loopNode, bodyNode, "body");
     }
 
-    this.validateNextToken('}');
+    this.validateNextToken("}");
 
     return loopNode;
   }
 
-  parseIfCondition () {
-    this.validateNextToken('if');
-    this.validateNextToken('(');
+  parseIfCondition() {
+    this.validateNextToken("if");
+    this.validateNextToken("(");
 
     const testExpr = this.parsePrimaryExpression();
 
-    this.validateNextToken(')');
-    this.validateNextToken('{');
+    this.validateNextToken(")");
+    this.validateNextToken("{");
 
-    const ifNode = this.sourceGraph.addNode({ type: 'if_conditional' });
+    const ifNode = this.sourceGraph.addNode({ type: "if_conditional" });
 
-    this.sourceGraph.addEdge(ifNode, testExpr, 'test');
+    this.sourceGraph.addEdge(ifNode, testExpr, "test");
 
     while (true) {
       const bodyNode = this.parsePrimaryExpression();
@@ -325,18 +336,18 @@ class Parser {
         break;
       }
 
-      this.sourceGraph.addEdge(ifNode, bodyNode, 'body');
+      this.sourceGraph.addEdge(ifNode, bodyNode, "body");
     }
 
-    this.validateNextToken('}');
+    this.validateNextToken("}");
 
     return ifNode;
   }
 
-  parseElseCondition () {
-    this.validateNextToken('{');
+  parseElseCondition() {
+    this.validateNextToken("{");
 
-    const elseNode = this.sourceGraph.addNode({ type: 'else_expression' });
+    const elseNode = this.sourceGraph.addNode({ type: "else_expression" });
 
     while (true) {
       const bodyNode = this.parsePrimaryExpression();
@@ -345,33 +356,36 @@ class Parser {
         break;
       }
 
-      this.sourceGraph.addEdge(elseNode, bodyNode, 'body');
+      this.sourceGraph.addEdge(elseNode, bodyNode, "body");
     }
 
-    this.validateNextToken('}');
+    this.validateNextToken("}");
 
     return elseNode;
   }
 
   // objects
-  parseObjectLiteral () {
-    this.validateNextToken('{');
+  parseObjectLiteral() {
+    this.validateNextToken("{");
 
-    const objNode = this.sourceGraph.addNode({ type: 'object_literal' });
+    const objNode = this.sourceGraph.addNode({ type: "object_literal" });
 
     let objTok = this.getNextToken();
-    while (objTok.value !== '}') {
-      const keyNode = this.sourceGraph.addNode({ type: 'object_key', key: objTok.value });
+    while (objTok.value !== "}") {
+      const keyNode = this.sourceGraph.addNode({
+        type: "object_key",
+        key: objTok.value
+      });
 
-      this.validateNextToken(':');
+      this.validateNextToken(":");
 
       const valNode = this.parsePrimaryExpression();
 
-      this.sourceGraph.addEdge(keyNode, valNode, 'value');
-      this.sourceGraph.addEdge(objNode, keyNode, 'member');
+      this.sourceGraph.addEdge(keyNode, valNode, "value");
+      this.sourceGraph.addEdge(objNode, keyNode, "member");
 
       objTok = this.getNextToken();
-      if (objTok.value === ',') {
+      if (objTok.value === ",") {
         objTok = this.getNextToken();
         continue;
       } else {
@@ -383,11 +397,11 @@ class Parser {
   }
 
   // arrays
-  parseArrayLiteral () {
+  parseArrayLiteral() {
     const operator = this.getNextToken();
-    const arrayNode = this.sourceGraph.addNode({ type: 'array_literal' });
+    const arrayNode = this.sourceGraph.addNode({ type: "array_literal" });
 
-    if (operator.value === '[]') {
+    if (operator.value === "[]") {
       // empty array literal
       return arrayNode;
     }
@@ -398,19 +412,19 @@ class Parser {
     do {
       const expr = this.parseAtomic();
       if (expr) {
-        this.sourceGraph.addEdge(arrayNode, expr, 'members');
+        this.sourceGraph.addEdge(arrayNode, expr, "members");
       }
 
       tok = this.getNextToken();
-    } while (tok.value !== ']');
+    } while (tok.value !== "]");
 
     return arrayNode;
   }
 
   // functions
 
-  parseFunctionDeclaration () {
-    this.validateNextToken('function');
+  parseFunctionDeclaration() {
+    this.validateNextToken("function");
     const funcIdentifier = this.getNextToken();
 
     if (!(funcIdentifier instanceof IdentifierToken)) {
@@ -423,22 +437,22 @@ class Parser {
 
     if (funcKind) {
       funcNode = this.sourceGraph.addNode({
-        type: 'function',
+        type: "function",
         identifier: funcIdentifier.value,
         kind: funcKind
       });
     } else {
       funcNode = this.sourceGraph.addNode({
-        type: 'function',
+        type: "function",
         identifier: funcIdentifier.value
       });
     }
 
-    args.forEach((a) => {
-      this.sourceGraph.addEdge(funcNode, a, 'arguments');
+    args.forEach(a => {
+      this.sourceGraph.addEdge(funcNode, a, "arguments");
     });
 
-    this.validateNextToken('{');
+    this.validateNextToken("{");
 
     while (true) {
       const bodyNode = this.parsePrimaryExpression();
@@ -447,17 +461,17 @@ class Parser {
         break;
       }
 
-      this.sourceGraph.addEdge(funcNode, bodyNode, 'body');
+      this.sourceGraph.addEdge(funcNode, bodyNode, "body");
     }
 
-    this.validateNextToken('}');
+    this.validateNextToken("}");
 
     return funcNode;
   }
 
-  parseExternalFunctionDefinition () {
-    this.validateNextToken('external');
-    this.validateNextToken('function');
+  parseExternalFunctionDefinition() {
+    this.validateNextToken("external");
+    this.validateNextToken("function");
 
     const funcIdentifier = this.getNextToken();
 
@@ -467,7 +481,7 @@ class Parser {
 
     if (funcKind) {
       funcNode = this.sourceGraph.addNode({
-        type: 'external_function',
+        type: "external_function",
         identifier: funcIdentifier.value,
         kind: funcKind
       });
@@ -478,21 +492,21 @@ class Parser {
     // external functions cannot have a body
     const tok = this.peekNextToken();
 
-    if (tok && tok.value === '{') {
+    if (tok && tok.value === "{") {
       return null;
     }
 
-    args.forEach((a) => {
-      this.sourceGraph.addEdge(funcNode, a, 'arguments');
+    args.forEach(a => {
+      this.sourceGraph.addEdge(funcNode, a, "arguments");
     });
 
     return funcNode;
   }
 
-  parseFunctionType () {
+  parseFunctionType() {
     const token = this.peekNextToken();
-    if (token instanceof OperatorToken && token.value === '->') {
-      this.validateNextToken('->');
+    if (token instanceof OperatorToken && token.value === "->") {
+      this.validateNextToken("->");
 
       const typeToken = this.getNextToken();
 
@@ -502,10 +516,10 @@ class Parser {
     return null;
   }
 
-  parseExternalFunctionType () {
+  parseExternalFunctionType() {
     const token = this.peekNextToken();
-    if (token instanceof OperatorToken && token.value === '->') {
-      this.validateNextToken('->');
+    if (token instanceof OperatorToken && token.value === "->") {
+      this.validateNextToken("->");
 
       const typeToken = this.getNextToken();
 
@@ -513,7 +527,7 @@ class Parser {
       const pointerTok = this.peekNextToken();
       if (pointerTok instanceof OperatorToken) {
         return {
-          type: 'pointer',
+          type: "pointer",
           kind: typeToken.value,
           indirection: pointerTok.value.length
         };
@@ -525,28 +539,31 @@ class Parser {
     return null;
   }
 
-  parseFunctionInvocation (funcIdentifier) {
-    const invokeNode = this.sourceGraph.addNode({ type: 'invocation', identifier: funcIdentifier });
+  parseFunctionInvocation(funcIdentifier) {
+    const invokeNode = this.sourceGraph.addNode({
+      type: "invocation",
+      identifier: funcIdentifier
+    });
     const args = this.parseInvocationArguments();
 
-    args.forEach((a) => {
-      this.sourceGraph.addEdge(invokeNode, a, 'arguments');
+    args.forEach(a => {
+      this.sourceGraph.addEdge(invokeNode, a, "arguments");
     });
 
     return invokeNode;
   }
 
-  parseAnonymousFunction () {
-    const funcNode = this.sourceGraph.addNode({ type: 'anonymous_function' });
+  parseAnonymousFunction() {
+    const funcNode = this.sourceGraph.addNode({ type: "anonymous_function" });
     const args = this.parseFunctionArguments();
 
-    args.forEach((a) => {
-      this.sourceGraph.addEdge(funcNode, a, 'arguments');
+    args.forEach(a => {
+      this.sourceGraph.addEdge(funcNode, a, "arguments");
     });
 
-    this.validateNextToken('=>');
+    this.validateNextToken("=>");
 
-    this.validateNextToken('{');
+    this.validateNextToken("{");
 
     while (true) {
       const bodyNode = this.parsePrimaryExpression();
@@ -555,35 +572,38 @@ class Parser {
         break;
       }
 
-      this.sourceGraph.addEdge(funcNode, bodyNode, 'body');
+      this.sourceGraph.addEdge(funcNode, bodyNode, "body");
     }
 
-    this.validateNextToken('}');
+    this.validateNextToken("}");
 
     return funcNode;
   }
 
-  parseInstanceExpression () {
-    this.validateNextToken('this');
-    this.validateNextToken('.');
+  parseInstanceExpression() {
+    this.validateNextToken("this");
+    this.validateNextToken(".");
 
     const keyExpr = this.parseKeyPath();
-    const left = this.sourceGraph.addNode({ type: 'instance_reference' });
+    const left = this.sourceGraph.addNode({ type: "instance_reference" });
 
-    this.sourceGraph.addEdge(left, keyExpr, 'key_expression');
+    this.sourceGraph.addEdge(left, keyExpr, "key_expression");
     let right = null;
 
     const operator = this.peekNextToken();
     if (operator instanceof OperatorToken) {
-      if (operator.value === '=') {
+      if (operator.value === "=") {
         this.getNextToken(); // consume operator
 
-        const opNode = this.sourceGraph.addNode({ type: 'assignment', operator: operator.value });
+        const opNode = this.sourceGraph.addNode({
+          type: "assignment",
+          operator: operator.value
+        });
 
         right = this.parseExpression();
 
-        this.sourceGraph.addEdge(opNode, left, 'left');
-        this.sourceGraph.addEdge(opNode, right, 'right');
+        this.sourceGraph.addEdge(opNode, left, "left");
+        this.sourceGraph.addEdge(opNode, right, "right");
 
         return opNode;
       } else {
@@ -595,19 +615,19 @@ class Parser {
   }
 
   // variables
-  parseVariableDeclaration () {
+  parseVariableDeclaration() {
     const declarationType = this.getNextToken();
 
-    if (declarationType.value === 'const') {
+    if (declarationType.value === "const") {
       return this.parseImmutable();
     } else {
       return this.parseMutable();
     }
   }
 
-  parseImmutable () {
+  parseImmutable() {
     let declareNode = null;
-    const nodeType = 'immutable_declaration';
+    const nodeType = "immutable_declaration";
     const identifier = this.parseIdentifier();
 
     // check for type annotation
@@ -627,18 +647,18 @@ class Parser {
     }
 
     // const requires an assignment
-    this.validateNextToken('=');
+    this.validateNextToken("=");
 
     const assignmentExpr = this.parsePrimaryExpression();
 
-    this.sourceGraph.addEdge(declareNode, assignmentExpr, 'expression');
+    this.sourceGraph.addEdge(declareNode, assignmentExpr, "expression");
 
     return declareNode;
   }
 
-  parseMutable () {
+  parseMutable() {
     let declareNode = null;
-    const nodeType = 'mutable_declaration';
+    const nodeType = "mutable_declaration";
     const identifier = this.parseIdentifier();
 
     // require for type annotation, but can also be inferred
@@ -646,8 +666,8 @@ class Parser {
 
     // assignment is optional
     const token = this.peekNextToken();
-    if (token instanceof OperatorToken && token.value === '=') {
-      this.validateNextToken('=');
+    if (token instanceof OperatorToken && token.value === "=") {
+      this.validateNextToken("=");
 
       if (kind) {
         declareNode = this.sourceGraph.addNode({
@@ -663,7 +683,7 @@ class Parser {
       }
 
       const assignmentExpr = this.parsePrimaryExpression();
-      this.sourceGraph.addEdge(declareNode, assignmentExpr, 'expression');
+      this.sourceGraph.addEdge(declareNode, assignmentExpr, "expression");
 
       return declareNode;
     }
@@ -675,11 +695,11 @@ class Parser {
     });
   }
 
-  parseType () {
+  parseType() {
     const token = this.peekNextToken();
 
-    if (token instanceof PunctuatorToken && token.value === ':') {
-      this.validateNextToken(':');
+    if (token instanceof PunctuatorToken && token.value === ":") {
+      this.validateNextToken(":");
       const typeToken = this.getNextToken();
 
       return typeToken.value;
@@ -688,22 +708,22 @@ class Parser {
     return null;
   }
 
-  parseExternalType () {
+  parseExternalType() {
     const token = this.peekNextToken();
 
-    if (token instanceof PunctuatorToken && token.value === ':') {
-      this.validateNextToken(':');
+    if (token instanceof PunctuatorToken && token.value === ":") {
+      this.validateNextToken(":");
       const typeToken = this.getNextToken();
 
-      if (typeToken instanceof OperatorToken && typeToken.value === '...') {
-        return 'variadic';
+      if (typeToken instanceof OperatorToken && typeToken.value === "...") {
+        return "variadic";
       }
 
       // check for indirection
       const pointerTok = this.peekNextToken();
       if (pointerTok instanceof OperatorToken) {
         return {
-          type: 'pointer',
+          type: "pointer",
           kind: typeToken.value,
           indirection: pointerTok.value.length
         };
@@ -716,22 +736,22 @@ class Parser {
   }
 
   // classes
-  parseClassDefinition () {
-    this.validateNextToken('class');
+  parseClassDefinition() {
+    this.validateNextToken("class");
     const className = this.getNextToken();
 
     // super class
     let superClass = null;
     const token = this.peekNextToken();
-    if (token instanceof KeywordToken && token.value === 'extends') {
-      this.validateNextToken('extends');
+    if (token instanceof KeywordToken && token.value === "extends") {
+      this.validateNextToken("extends");
       superClass = this.getNextToken().value;
     }
 
-    this.validateNextToken('{');
+    this.validateNextToken("{");
 
     const classDef = this.sourceGraph.addNode({
-      type: 'class_definition',
+      type: "class_definition",
       identifier: className.value,
       kind: className.value,
       super_class: superClass
@@ -740,40 +760,40 @@ class Parser {
     // class body (constructor and methods)
     let tok = this.peekNextToken();
 
-    while (tok.value !== '}') {
+    while (tok.value !== "}") {
       if (tok instanceof KeywordToken) {
-        if (tok.value === 'const' || tok.value === 'let') {
+        if (tok.value === "const" || tok.value === "let") {
           const ivarExpr = this.parseInstanceVariable();
-          this.sourceGraph.addEdge(classDef, ivarExpr, 'instance_variables');
-        } else if (tok.value === 'constructor') {
+          this.sourceGraph.addEdge(classDef, ivarExpr, "instance_variables");
+        } else if (tok.value === "constructor") {
           const bodyExpr = this.parseClassMethod();
-          this.sourceGraph.addEdge(classDef, bodyExpr, 'body');
+          this.sourceGraph.addEdge(classDef, bodyExpr, "body");
         }
       } else {
         const bodyExpr = this.parseClassMethod();
-        this.sourceGraph.addEdge(classDef, bodyExpr, 'body');
+        this.sourceGraph.addEdge(classDef, bodyExpr, "body");
       }
 
       tok = this.peekNextToken();
     }
 
-    this.validateNextToken('}');
+    this.validateNextToken("}");
 
     return classDef;
   }
 
-  parseInstanceVariable () {
+  parseInstanceVariable() {
     return this.parseVariableDeclaration();
   }
 
-  parseClassMethod () {
+  parseClassMethod() {
     const methodIdentifier = this.getNextToken();
     let methodType = null;
 
     if (methodIdentifier instanceof KeywordToken) {
-      methodType = 'constructor';
+      methodType = "constructor";
     } else if (methodIdentifier instanceof IdentifierToken) {
-      methodType = 'method';
+      methodType = "method";
     } else {
       return null;
     }
@@ -796,11 +816,11 @@ class Parser {
       });
     }
 
-    args.forEach((a) => {
-      this.sourceGraph.addEdge(methodNode, a, 'arguments');
+    args.forEach(a => {
+      this.sourceGraph.addEdge(methodNode, a, "arguments");
     });
 
-    this.validateNextToken('{');
+    this.validateNextToken("{");
 
     while (true) {
       const bodyNode = this.parsePrimaryExpression();
@@ -808,35 +828,35 @@ class Parser {
         break;
       }
 
-      this.sourceGraph.addEdge(methodNode, bodyNode, 'body');
+      this.sourceGraph.addEdge(methodNode, bodyNode, "body");
     }
 
-    this.validateNextToken('}');
+    this.validateNextToken("}");
 
     return methodNode;
   }
 
-  parseInstantiation () {
-    this.validateNextToken('new');
+  parseInstantiation() {
+    this.validateNextToken("new");
     const classInstance = this.parseIdentifier();
 
     const instance = this.sourceGraph.addNode({
-      type: 'instantiation',
+      type: "instantiation",
       identifier: classInstance
     });
 
     const instanceArgs = this.parseInvocationArguments();
-    instanceArgs.forEach((a) => {
-      this.sourceGraph.addEdge(instance, a, 'arguments');
+    instanceArgs.forEach(a => {
+      this.sourceGraph.addEdge(instance, a, "arguments");
     });
 
     return instance;
   }
 
-  parseFunctionArguments () {
+  parseFunctionArguments() {
     const args = [];
 
-    this.validateNextToken('(');
+    this.validateNextToken("(");
 
     let tok = null;
 
@@ -849,9 +869,16 @@ class Parser {
         const kind = this.parseType();
 
         if (kind) {
-          expr = this.sourceGraph.addNode({ type: 'function_argument', kind, identifier });
+          expr = this.sourceGraph.addNode({
+            type: "function_argument",
+            kind,
+            identifier
+          });
         } else {
-          expr = this.sourceGraph.addNode({ type: 'function_argument', identifier });
+          expr = this.sourceGraph.addNode({
+            type: "function_argument",
+            identifier
+          });
         }
       }
 
@@ -860,15 +887,15 @@ class Parser {
       }
 
       tok = this.getNextToken();
-    } while (tok.value !== ')');
+    } while (tok.value !== ")");
 
     return args;
   }
 
-  parseExternalFunctionArguments () {
+  parseExternalFunctionArguments() {
     const args = [];
 
-    this.validateNextToken('(');
+    this.validateNextToken("(");
 
     let tok = null;
 
@@ -882,7 +909,7 @@ class Parser {
 
         if (kind) {
           expr = this.sourceGraph.addNode({
-            type: 'function_argument',
+            type: "function_argument",
             kind,
             identifier
           });
@@ -896,15 +923,15 @@ class Parser {
       }
 
       tok = this.getNextToken();
-    } while (tok.value !== ')');
+    } while (tok.value !== ")");
 
     return args;
   }
 
-  parseInvocationArguments () {
+  parseInvocationArguments() {
     const args = [];
 
-    this.validateNextToken('(');
+    this.validateNextToken("(");
 
     // array with members
     let tok = null;
@@ -916,27 +943,27 @@ class Parser {
       }
 
       tok = this.getNextToken();
-    } while (tok.value !== ')');
+    } while (tok.value !== ")");
 
     return args;
   }
 
   // return expression
-  parseReturnExpression () {
-    this.validateNextToken('return');
+  parseReturnExpression() {
+    this.validateNextToken("return");
 
-    const returnExpr = this.sourceGraph.addNode({ type: 'return_statement' });
+    const returnExpr = this.sourceGraph.addNode({ type: "return_statement" });
     const expr = this.parseExpression();
 
-    this.sourceGraph.addEdge(returnExpr, expr, 'expression');
+    this.sourceGraph.addEdge(returnExpr, expr, "expression");
 
     return returnExpr;
   }
 
   // modules
 
-  parseImport () {
-    this.validateNextToken('import');
+  parseImport() {
+    this.validateNextToken("import");
 
     const imports = [];
     let tok = null;
@@ -945,118 +972,134 @@ class Parser {
       let expr;
 
       const identifier = this.parseIdentifier();
-      expr = this.sourceGraph.addNode({ type: 'import_declaration', identifier });
+      expr = this.sourceGraph.addNode({
+        type: "import_declaration",
+        identifier
+      });
 
       imports.push(expr);
 
       tok = this.getNextToken();
-    } while (tok.value !== 'from');
+    } while (tok.value !== "from");
 
     const modName = this.parseIdentifier();
-    const importNode = this.sourceGraph.addNode({ type: 'import_statement', identifier: modName });
+    const importNode = this.sourceGraph.addNode({
+      type: "import_statement",
+      identifier: modName
+    });
 
-    imports.forEach((i) => {
-      this.sourceGraph.addEdge(importNode, i, 'import');
+    imports.forEach(i => {
+      this.sourceGraph.addEdge(importNode, i, "import");
     });
 
     return importNode;
   }
 
-  parseExport () {
-    this.validateNextToken('export');
+  parseExport() {
+    this.validateNextToken("export");
     const expr = this.parsePrimaryExpression();
 
-    const exportNode = this.sourceGraph.addNode({ type: 'export_statement' });
-    this.sourceGraph.addEdge(exportNode, expr, 'expression');
+    const exportNode = this.sourceGraph.addNode({ type: "export_statement" });
+    this.sourceGraph.addEdge(exportNode, expr, "expression");
 
     return exportNode;
   }
 
   // atomics and literals
-  parseIdentifier () {
+  parseIdentifier() {
     const identifier = this.getNextToken();
     return identifier.value;
   }
 
-  parseBooleanLiteral () {
+  parseBooleanLiteral() {
     const literal = this.getNextToken();
     return this.sourceGraph.addNode({
-      type: 'boolean_literal',
-      kind: 'Boolean',
+      type: "boolean_literal",
+      kind: "Boolean",
       value: literal.value
     });
   }
 
-  parseNumberLiteral () {
+  parseNumberLiteral() {
     const literal = this.getNextToken();
     return this.sourceGraph.addNode({
-      type: 'number_literal',
+      type: "number_literal",
       kind: literal.options.kind,
       value: literal.value
     });
   }
 
-  parseStringLiteral () {
+  parseStringLiteral() {
     const literal = this.getNextToken();
     return this.sourceGraph.addNode({
-      type: 'string_literal',
-      kind: 'String',
+      type: "string_literal",
+      kind: "String",
       value: literal.value
     });
   }
 
-  parseIdentifierExpression () {
+  parseIdentifierExpression() {
     const identifier = this.parseIdentifier();
 
     const token = this.peekNextToken();
 
     // is an invocation
-    if (token instanceof PunctuatorToken && token.value === '(') {
+    if (token instanceof PunctuatorToken && token.value === "(") {
       return this.parseFunctionInvocation(identifier);
-    } else if (token instanceof OperatorToken && token.value === '.') {
-      this.validateNextToken('.');
+    } else if (token instanceof OperatorToken && token.value === ".") {
+      this.validateNextToken(".");
       const keyExpr = this.parseKeyPath();
-      const refExpr = this.sourceGraph.addNode({ type: 'object_reference', identifier });
+      const refExpr = this.sourceGraph.addNode({
+        type: "object_reference",
+        identifier
+      });
 
-      this.sourceGraph.addEdge(refExpr, keyExpr, 'key_expression');
+      this.sourceGraph.addEdge(refExpr, keyExpr, "key_expression");
 
       return refExpr;
-    } else if (token instanceof OperatorToken && token.value === '[') {
-      this.validateNextToken('[');
+    } else if (token instanceof OperatorToken && token.value === "[") {
+      this.validateNextToken("[");
       const index = this.parseIdentifier();
 
-      this.validateNextToken(']');
+      this.validateNextToken("]");
 
-      return this.sourceGraph.addNode({ type: 'array_reference', identifier, index });
+      return this.sourceGraph.addNode({
+        type: "array_reference",
+        identifier,
+        index
+      });
     }
 
-    return this.sourceGraph.addNode({ type: 'variable_reference', identifier });
+    return this.sourceGraph.addNode({ type: "variable_reference", identifier });
   }
 
-  parseKeyPath () {
+  parseKeyPath() {
     const identifier = this.parseIdentifier();
 
     const token = this.peekNextToken();
 
     // is an invocation of an object key val
-    if (token instanceof PunctuatorToken && token.value === '(') {
+    if (token instanceof PunctuatorToken && token.value === "(") {
       return this.parseFunctionInvocation(identifier);
-    } else if (token instanceof OperatorToken && token.value === '.') {
-      this.validateNextToken('.');
+    } else if (token instanceof OperatorToken && token.value === ".") {
+      this.validateNextToken(".");
       const keyExpr = this.parseKeyPath();
-      const refExpr = this.sourceGraph.addNode({ type: 'object_reference', identifier });
+      const refExpr = this.sourceGraph.addNode({
+        type: "object_reference",
+        identifier
+      });
 
-      this.sourceGraph.addEdge(refExpr, keyExpr, 'key_expression');
+      this.sourceGraph.addEdge(refExpr, keyExpr, "key_expression");
 
       return refExpr;
     }
 
-    return this.sourceGraph.addNode({ type: 'key_reference', identifier });
+    return this.sourceGraph.addNode({ type: "key_reference", identifier });
   }
 
   // Helper
 
-  getTokenPrecedence () {
+  getTokenPrecedence() {
     const operator = this.peekNextToken();
     if (operator) {
       return OP_PRECEDENCE[operator.value] || -1;
@@ -1065,27 +1108,27 @@ class Parser {
     return -1;
   }
 
-  toAST (node) {
+  toAST(node) {
     return this.sourceGraph.treeFromNode(node);
   }
 
   // Tokenizer
 
-  validateNextToken (tokenValue) {
+  validateNextToken(tokenValue) {
     // interput parsing execution if we find a syntax error
     if (this.getNextToken().value !== tokenValue) {
       throw new Error(`Expected \`${tokenValue}\``);
     }
   }
 
-  getNextToken () {
+  getNextToken() {
     const tok = this.tokens[this.pos];
     this.pos++;
 
     return tok;
   }
 
-  peekNextToken () {
+  peekNextToken() {
     if (this.pos < this.tokens.length) {
       return this.tokens[this.pos];
     }
@@ -1093,7 +1136,7 @@ class Parser {
     return null;
   }
 
-  readTokens () {
+  readTokens() {
     this.tokens = this.lexer.tokenize();
     this.pos = 0;
   }

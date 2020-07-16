@@ -1,4 +1,4 @@
-const Scanner = require('../util/scanner');
+const Scanner = require("../util/scanner");
 
 const {
   BooleanToken,
@@ -8,80 +8,77 @@ const {
   OperatorToken,
   PunctuatorToken,
   StringToken
-} = require('./tokens');
+} = require("./tokens");
 
 const DIGIT = new RegExp(/[0-9.]+/);
 const FLOATING_POINT_DIGIT = new RegExp(/\d+\.\d+/);
-const OPERATOR = new RegExp(/[[\]+\-/*.><=!]+/);
+const OPERATOR = new RegExp(/[[\]+\-/*.><=!%]+/);
 const PUNCTUATOR = new RegExp(/[{},;:()]+/);
 const STRING = new RegExp(/['"]+/);
 const WHITE_SPACE = new RegExp(/^\s+$/);
 
-const BOOLEAN = [
-  'true',
-  'false'
-];
+const BOOLEAN = ["true", "false"];
 
 const KEYWORDS = [
-  'class',
-  'const',
-  'constructor',
-  'do',
-  'else',
-  'export',
-  'extends',
-  'external',
-  'from',
-  'function',
-  'if',
-  'import',
-  'let',
-  'new',
-  'return',
-  'this',
-  'while'
+  "class",
+  "const",
+  "constructor",
+  "do",
+  "else",
+  "export",
+  "extends",
+  "external",
+  "from",
+  "function",
+  "if",
+  "import",
+  "let",
+  "new",
+  "return",
+  "this",
+  "while"
 ];
 
 class Lexer {
-  constructor (input) {
+  constructor(input) {
     this.scanner = new Scanner(input);
 
     this.currentToken = null;
   }
 
-  isNull () {
+  isNull() {
     return this.currentToken === null;
   }
 
-  isWhiteSpace () {
+  isWhiteSpace() {
     return WHITE_SPACE.test(this.currentToken) === true;
   }
 
-  isOperator () {
+  isOperator() {
     return OPERATOR.test(this.currentToken) === true;
   }
 
-  isPunctuator () {
+  isPunctuator() {
     return PUNCTUATOR.test(this.currentToken) === true;
   }
 
-  isDigit () {
+  isDigit() {
     return DIGIT.test(this.currentToken) === true;
   }
 
-  isIdentifier () {
+  isIdentifier() {
     return !this.isNull() && !this.isOperator() && !this.isPunctuator();
   }
 
-  isString () {
+  isString() {
     // denotes the begining of a string
     return STRING.test(this.currentToken) === true;
   }
 
   // tokenization
 
-  readOperator () {
-    let token = '';
+  readOperator() {
+    let token = "";
 
     while (this.isOperator() && !this.scanner.eof()) {
       token += this.currentToken;
@@ -91,7 +88,7 @@ class Lexer {
     return new OperatorToken(token);
   }
 
-  readPunctuator () {
+  readPunctuator() {
     let token = this.currentToken;
 
     this.nextCharacter();
@@ -99,9 +96,9 @@ class Lexer {
     return new PunctuatorToken(token);
   }
 
-  readDigit () {
-    let token = '';
-    let kind = 'Int';
+  readDigit() {
+    let token = "";
+    let kind = "Int";
 
     while (this.isDigit() && !this.scanner.eof()) {
       token += this.currentToken;
@@ -109,14 +106,14 @@ class Lexer {
     }
 
     if (FLOATING_POINT_DIGIT.test(token) === true) {
-      kind = 'Float';
+      kind = "Float";
     }
 
     return new NumberToken(token, { kind });
   }
 
-  readKeywordOrIdentifier () {
-    let token = '';
+  readKeywordOrIdentifier() {
+    let token = "";
 
     if (this.isNull()) {
       return null;
@@ -138,8 +135,8 @@ class Lexer {
     return new IdentifierToken(token);
   }
 
-  readString () {
-    let token = '';
+  readString() {
+    let token = "";
     this.nextCharacter();
 
     while (!this.isString()) {
@@ -152,7 +149,7 @@ class Lexer {
     return new StringToken(token);
   }
 
-  nextToken () {
+  nextToken() {
     if (!this.scanner.eof()) {
       if (this.isNull()) {
         this.nextCharacter();
@@ -186,7 +183,7 @@ class Lexer {
     return null;
   }
 
-  tokenize () {
+  tokenize() {
     const tokens = [];
 
     do {
@@ -199,7 +196,7 @@ class Lexer {
     return tokens;
   }
 
-  nextCharacter () {
+  nextCharacter() {
     this.currentToken = this.scanner.getChar();
   }
 }
