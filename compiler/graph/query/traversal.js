@@ -1,7 +1,7 @@
-const Path = require('./path');
+const Path = require("./path");
 
 class Traversal {
-  constructor () {
+  constructor() {
     this.matchedNodes = {};
     this.matchedPaths = [];
 
@@ -10,35 +10,35 @@ class Traversal {
     };
   }
 
-  configure (options) {
+  configure(options) {
     this.options = { ...this.options, ...options };
   }
 
-  start (node) {
+  start(node) {
     this.startNode = node;
   }
 
-  direction (options) {
+  direction(options) {
     this.degree = options.degree;
     this.edgeLabel = options.label;
   }
 
-  filter (criteria) {
+  filter(criteria) {
     this.filters = criteria;
   }
 
   // Modified BFS collecting all paths
-  run (graph, q) {
+  run(graph, q) {
     while (q.length > 0) {
       const path = q.shift();
       const endNode = path.last();
 
-      if (path.currentDepth > this.options.maxDepth) {
-        continue;
-      }
+      // if (path.currentDepth > this.options.maxDepth) {
+      //   continue;
+      // }
 
       const neighborsList = graph.adjacencyList[endNode.id].edges;
-      neighborsList.forEach((edge) => {
+      neighborsList.forEach(edge => {
         const neighborNode = this.nextMatchingEdge(edge);
 
         if (!neighborNode) {
@@ -48,6 +48,11 @@ class Traversal {
         if (!path.contains(neighborNode)) {
           const newPath = path.clone();
           newPath.append(neighborNode);
+          newPath.currentDepth++;
+
+          if (newPath.currentDepth > this.options.maxDepth) {
+            return;
+          }
 
           if (this.isDestination(neighborNode)) {
             this.matchedPaths.push(newPath);
@@ -59,12 +64,10 @@ class Traversal {
           q.unshift(newPath);
         }
       });
-
-      path.currentDepth++;
     }
   }
 
-  isDestination (node) {
+  isDestination(node) {
     if (!this.filters) {
       return true;
     }
@@ -74,21 +77,21 @@ class Traversal {
     });
   }
 
-  findNodes (graph) {
-    const nodes = graph.nodes.filter((node) => {
+  findNodes(graph) {
+    const nodes = graph.nodes.filter(node => {
       return this.isDestination(node);
     });
 
     this.matchedNodes = nodes;
-    this.matchedPaths = nodes.map((node) => new Path(node, this.options));
+    this.matchedPaths = nodes.map(node => new Path(node, this.options));
   }
 
-  nextMatchingEdge (edge) {
+  nextMatchingEdge(edge) {
     if (this.edgeLabel && this.edgeLabel !== edge.label) {
       return null;
     }
 
-    return this.degree === 'out' ? edge.target : edge.source;
+    return this.degree === "out" ? edge.target : edge.source;
   }
 }
 

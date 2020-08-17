@@ -1,55 +1,95 @@
-const QueryPlanner = require('./planner');
+const QueryPlanner = require("./planner");
+const QueryEngine = require("../execution/engine");
 
 class QueryBuilder {
-  constructor (graph, options) {
+  constructor(graph, options) {
     this.graph = graph;
     this.planner = new QueryPlanner(graph);
   }
 
-  begin (startNode) {
-    this.planner.addStep('start', startNode);
+  // basic executions
+  match(conditions) {
+    this.planner.addNodeFilter(conditions);
 
     return this;
   }
 
-  outgoing (label) {
-    this.planner.addStep('direction', { degree: 'out', label });
+  begin(startNode) {}
+
+  matchAll() {
+    this.planner.addNodeFilter(null); // no filter
 
     return this;
   }
 
-  match (conditions) {
-    this.planner.addStep('filter', conditions);
+  // path finding
+  outgoing(relation) {
+    this.planner.addEdgeFilter(relation);
 
     return this;
   }
 
-  matchAll () {
-    this.planner.addStep('match_all');
+  // execution
 
-    return this;
+  execute() {
+    const engine = new QueryEngine(this.graph, this.planner.ast);
+    this.result = engine.executeQuery();
   }
 
-  any (options) {
-    this.planner.addStep('traversal', options);
+  nodes() {
+    let nodes = [];
 
-    return this;
+    this.result.paths.forEach(p => {
+      p.nodes.forEach(n => nodes.push(n));
+    });
+
+    return nodes;
   }
 
-  nodes () {
-    return this.planner.nodes;
-  }
-
-  paths () {
-    return this.planner.paths;
-  }
-
-  execute () {
-    this.planner.compile();
-    this.planner.execute();
-
-    return this;
-  }
+  // begin (startNode) {
+  //   this.planner.addStep('start', startNode);
+  //
+  //   return this;
+  // }
+  //
+  // outgoing (label) {
+  //   this.planner.addStep('direction', { degree: 'out', label });
+  //
+  //   return this;
+  // }
+  //
+  // match (conditions) {
+  //   this.planner.addStep('filter', conditions);
+  //
+  //   return this;
+  // }
+  //
+  // matchAll () {
+  //   this.planner.addStep('match_all');
+  //
+  //   return this;
+  // }
+  //
+  // any (options) {
+  //   this.planner.addStep('traversal', options);
+  //
+  //   return this;
+  // }
+  //
+  // nodes () {
+  //   return this.planner.nodes;
+  // }
+  //
+  // paths () {
+  //   return this.planner.paths;
+  // }
+  //
+  // execute () {
+  //   this.planner.compile();
+  //   this.planner.execute();
+  //
+  //   return this;
+  // }
 }
 
 module.exports = QueryBuilder;
