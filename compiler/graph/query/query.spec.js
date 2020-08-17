@@ -92,11 +92,9 @@ describe("Graph Query", () => {
 
       q.begin(node1)
         .outgoing()
-        .any()
-        .match({ name: "node 4" })
         .execute();
 
-      expect(q.paths()).toEqual([[node1, node2, node3, node4]]);
+      expect(q.paths()).toEqual([[node1, node2]]);
     });
 
     it("finds all paths from a start node to an end node", () => {

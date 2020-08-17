@@ -14,7 +14,11 @@ class QueryBuilder {
     return this;
   }
 
-  begin(startNode) {}
+  begin(startNode) {
+    this.planner.addStartNode(startNode);
+
+    return this;
+  }
 
   matchAll() {
     this.planner.addNodeFilter(null); // no filter

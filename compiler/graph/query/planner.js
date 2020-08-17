@@ -4,10 +4,11 @@ const Path = require("./path");
 // ////////////////////////////////////////////////////////////////////////////
 
 class MatchNode {
-  constructor() {
+  constructor(node) {
     this.algorithm = "search";
     this.children = [];
     this.nodeFilters = {};
+    this.startNode = node || null;
   }
 
   filterNodes(attrs) {
@@ -29,8 +30,8 @@ class TraversalNode {
 // ////////////////////////////////////////////////////////////////////////////
 
 class QueryAST {
-  createSearchRoot() {
-    this.head = new MatchNode();
+  createSearchRoot(node) {
+    this.head = new MatchNode(node);
 
     return this.head;
   }
@@ -46,6 +47,10 @@ class QueryPlanner {
   constructor() {
     this.ast = new QueryAST();
     this.current = this.ast.head;
+  }
+
+  addStartNode(node) {
+    this.current = this.ast.createSearchRoot(node);
   }
 
   addNodeFilter(conditions) {

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Graph Query Planner language plans basic queries 1`] = `
+exports[`Graph Query Planner API plans basic queries 1`] = `
 QueryAST {
   "head": MatchNode {
     "algorithm": "search",
@@ -8,11 +8,12 @@ QueryAST {
     "nodeFilters": Object {
       "type": "person",
     },
+    "startNode": null,
   },
 }
 `;
 
-exports[`Graph Query Planner language plans basic queries to traverse nodes 1`] = `
+exports[`Graph Query Planner API plans basic queries to traverse nodes 1`] = `
 QueryAST {
   "head": MatchNode {
     "algorithm": "search",
@@ -20,13 +21,34 @@ QueryAST {
       TraversalNode {
         "algorithm": "bfs",
         "children": Array [],
-        "edgeFilters": Array [
-          "friends",
-        ],
+        "edgeFilter": "friends",
       },
     ],
     "nodeFilters": Object {
       "type": "person",
+    },
+    "startNode": null,
+  },
+}
+`;
+
+exports[`Graph Query Planner API plans basic queries with start node 1`] = `
+QueryAST {
+  "head": MatchNode {
+    "algorithm": "search",
+    "children": Array [
+      TraversalNode {
+        "algorithm": "bfs",
+        "children": Array [],
+        "edgeFilter": "friends",
+      },
+    ],
+    "nodeFilters": Object {},
+    "startNode": Node {
+      "attributes": Object {
+        "type": "temp",
+      },
+      "id": "cf8f7830-737b-4987-a7b0-49f8f35f3c48",
     },
   },
 }
