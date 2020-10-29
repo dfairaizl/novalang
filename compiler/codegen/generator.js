@@ -138,15 +138,15 @@ class Generator {
   }
 
   codegenAssignment(node) {
-    const assign = this.sourceGraph.relationFromNode(node, "left")[0];
-    const expr = this.sourceGraph.relationFromNode(node, "right")[0];
+    const assign = this.sourceGraph.outgoing(node, "left")[0];
+    const expr = this.sourceGraph.outgoing(node, "right")[0];
 
     const exprRef = this.codegenNode(expr);
 
     if (assign.attributes.type === "instance_reference") {
       const thisVal = this.builder.namedValues["this"];
 
-      const ivar = this.sourceGraph.relationFromNode(assign, "binding")[0];
+      const ivar = this.sourceGraph.outgoing(assign, "binding")[0];
       const ivarRef = libLLVM.LLVMBuildStructGEP(
         this.builder.builderRef,
         thisVal,
@@ -648,8 +648,8 @@ class Generator {
   }
 
   codegenDoWhileLoop(node) {
-    const testNode = this.sourceGraph.relationFromNode(node, "test")[0];
-    const bodyNodes = this.sourceGraph.relationFromNode(node, "body");
+    const testNode = this.sourceGraph.outgoing(node, "test")[0];
+    const bodyNodes = this.sourceGraph.outgoing(node, "body");
 
     const finalBlock = this.builder.insertBlock("finalBlock");
 

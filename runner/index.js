@@ -3,10 +3,10 @@ const { resolve } = require("path");
 
 const Compiler = require("../compiler");
 
-const sourceFile = resolve(__dirname, "..", "examples", "calculator.nv");
+const sourceFile = resolve(__dirname, "..", "examples", "dowhile.nv");
 
 const novaCompier = new Compiler(
   sourceFile,
-  "calculator" /*, { debugGraph: true } */
+  "dowhile" /*, { debugGraph: true } */
 );
 novaCompier.compile();
