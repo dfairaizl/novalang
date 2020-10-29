@@ -2,6 +2,8 @@ const { basename, resolve } = require('path');
 const { readFileSync } = require('fs');
 const { spawn } = require('child_process');
 
+const { Query } = require('@novalang/graph');
+
 const Parser = require('./parser');
 const SemanticAnalyzer = require('./semantic');
 const CodeGenerator = require('./codegen');
@@ -54,7 +56,9 @@ class Compiler {
 
     while (this.sources.length > 0) {
       const currentSource = this.sources.pop();
+
       console.log(' - ', currentSource.fileName());
+
       const sourceGraph = this.parse(currentSource);
 
       if (!this.sourceGraph) {
@@ -63,8 +67,10 @@ class Compiler {
         this.sourceGraph.merge(sourceGraph);
       }
 
-      const dependantModules = sourceGraph.search('import_statement');
-      dependantModules.forEach((m) => {
+      const q = new Query(sourceGraph);
+      const results = q.match({ type: 'import_statement' }, { name: 'deps' }).returns('deps');
+
+      results.deps.forEach((m) => {
         const importSource = this.createSource(m);
         this.sources.push(importSource);
       });

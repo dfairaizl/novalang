@@ -1,3 +1,5 @@
+const { Query } = require('@novalang/graph');
+
 const Builder = require("./llvm/builder");
 const BuildUnit = require("./build-unit");
 const Func = require("./llvm/function");
@@ -29,15 +31,13 @@ class Generator {
   }
 
   generate() {
-    const sourceQuery = this.sourceGraph.query();
-    const sources = sourceQuery
-      .begin(this.codeModule)
-      .outgoing()
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const sourceQuery = new Query(this.sourceGraph)
+    const result = sourceQuery
+      .find(this.codeModule)
+      .out(null, { name: 'sources' })
+      .returns('sources');
 
-    sources.nodes().forEach(source => {
+    result.sources.forEach(source => {
       this.codegenNode(source);
     });
 
@@ -339,15 +339,13 @@ class Generator {
     const retType = this.getType(node);
 
     // build argument type list
-    const query = this.sourceGraph.query();
-    query
-      .begin(node)
-      .outgoing("arguments")
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const query = new Query(this.sourceGraph);
+    const result = query
+      .find(node)
+      .out("arguments", { name: 'args' })
+      .returns('args');
 
-    const args = query.nodes();
+    const args = result.args;
 
     const variadic = args.find(a => a.attributes.kind === "variadic");
     const argTypes = args
@@ -370,18 +368,15 @@ class Generator {
   }
 
   codeGenImports(node) {
-    const importQuery = this.sourceGraph.query();
-    importQuery
-      .begin(node)
-      .outgoing()
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .outgoing()
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const importQuery = new Query(this.sourceGraph)
+    const result = importQuery
+      .find(node)
+      .out('import')
+      .out(null, { name: 'imports' })
+      .returns('imports');
 
-    const nodes = importQuery.nodes();
+    const nodes = result.imports;
+
     const importedBinding = nodes[nodes.length - 1];
 
     if (importedBinding) {
@@ -390,13 +385,13 @@ class Generator {
   }
 
   codeGenExport(node) {
-    const exportExpr = this.sourceGraph.relationFromNode(node, "expression")[0];
+    const exportExpr = this.sourceGraph.outgoing(node, "expression")[0];
     return this.codegenNode(exportExpr);
   }
 
   codegenReturn(node) {
     // get the return expression
-    const retNode = this.sourceGraph.relationFromNode(node, "expression")[0];
+    const retNode = this.sourceGraph.outgoing(node, "expression")[0];
 
     // code gen expression
     const expr = this.codegenNode(retNode);
@@ -470,8 +465,8 @@ class Generator {
   }
 
   codegenVar(node) {
-    const typeNode = this.sourceGraph.relationFromNode(node, "type")[0];
-    const exprNode = this.sourceGraph.relationFromNode(node, "expression")[0];
+    const typeNode = this.sourceGraph.outgoing(node, "type")[0];
+    const exprNode = this.sourceGraph.outgoing(node, "expression")[0];
 
     if (exprNode.attributes.type === "instantiation") {
       const currentClass = this.sourceGraph.relationFromNode(
@@ -511,7 +506,7 @@ class Generator {
   }
 
   codegenReference(node) {
-    const binding = this.sourceGraph.relationFromNode(node, "binding")[0];
+    const binding = this.sourceGraph.outgoing(node, "binding")[0];
 
     if (binding.attributes.type === "function_argument") {
       return this.builder.namedValues[binding.attributes.identifier];
@@ -558,7 +553,7 @@ class Generator {
 
   codegenInvocation(node, identifier = "") {
     // look up function in module
-    const boundNode = this.sourceGraph.relationFromNode(node, "binding")[0];
+    const boundNode = this.sourceGraph.outgoing(node, "binding")[0];
 
     let name = null;
     if (boundNode.attributes.type === "method") {
@@ -572,7 +567,7 @@ class Generator {
 
     // build argument type list
     const argTypes = this.sourceGraph
-      .relationFromNode(node, "arguments")
+      .outgoing(node, "arguments")
       .map(n => {
         return this.codegenNode(n);
       });
@@ -582,8 +577,8 @@ class Generator {
 
   codegenBinop(node) {
     const op = node.attributes.operator;
-    const lhs = this.sourceGraph.relationFromNode(node, "left")[0];
-    const rhs = this.sourceGraph.relationFromNode(node, "right")[0];
+    const lhs = this.sourceGraph.outgoing(node, "left")[0];
+    const rhs = this.sourceGraph.outgoing(node, "right")[0];
 
     // codegen both sides
     const lhsRef = this.codegenNode(lhs);

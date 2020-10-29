@@ -1,3 +1,4 @@
+const { Query } = require('@novalang/graph');
 const {
   FunctionNotFoundError,
   ImportNotFoundError,
@@ -11,27 +12,26 @@ class BindingAnalyzer {
   }
 
   analyze () {
-    const sourceQuery = this.sourceGraph.query();
-    const sources = sourceQuery
-      .match({ type: 'module', identifier: 'main_module' })
-      .execute();
+    const sourceQuery = new Query(this.sourceGraph);
+    const result = sourceQuery
+      .match({ type: 'module', identifier: 'main_module' }, { name: 'sources' })
+      .returns('sources');
 
-    if (sources.nodes()[0]) {
-      this.codeModule = sources.nodes()[0];
+    if (result.sources) {
+      this.codeModule = result.sources[0];
+
       this.bindSources(this.codeModule);
     }
   }
 
   bindSources (sourceNode) {
-    const sourceQuery = this.sourceGraph.query();
-    const sources = sourceQuery
-      .begin(sourceNode)
-      .outgoing()
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const sourceQuery = new Query(this.sourceGraph);
+    const result = sourceQuery
+      .find(sourceNode)
+      .out(null, { name: 'sources' })
+      .returns('sources');
 
-    sources.nodes().forEach((source) => {
+    result.sources.forEach((source) => {
       const binding = this.checkBinding(source);
       if (binding) {
         return binding;
@@ -74,64 +74,61 @@ class BindingAnalyzer {
   }
 
   bindFunction (functionNode) {
-    const sourceQuery = this.sourceGraph.query();
+    const sourceQuery = new Query(this.sourceGraph);
 
-    const sources = sourceQuery
-      .begin(functionNode)
-      .outgoing()
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const result = sourceQuery
+      .match(functionNode)
+      .out(null, { name: 'sources' })
+      .returns('sources');
 
-    sources.nodes().forEach((source) => {
+    result.sources.forEach((source) => {
       this.analyzeNode(source);
     });
   }
 
   bindImport (importNode) {
-    const sourceQuery = this.sourceGraph.query();
+    const sourceQuery = new Query(this.sourceGraph);
 
     const sources = sourceQuery
-      .match({ type: 'module', identifier: importNode.attributes.identifier })
-      .execute();
+      .match({ type: 'module', identifier: importNode.attributes.identifier }, { name: 'mod' })
+      .returns('mod');
 
-    const modules = sources.nodes();
+    const modules = sources.mod;
 
     if (modules[0]) {
       const sourceModule = modules[0];
 
       // extract exports from module
-      const sourceQuery = this.sourceGraph.query();
-      const sources = sourceQuery
-        .begin(sourceModule)
-        .outgoing()
-        .any({ maxDepth: 1 })
-        .match({ type: 'export_statement' })
-        .outgoing()
-        .any({ maxDepth: 1 })
-        .matchAll()
-        .execute();
+      const sourceQuery = new Query(this.sourceGraph);
+
+      const result = sourceQuery
+        .find(sourceModule)
+        .out()
+        .collect({ type: 'export_statement' })
+        .out()
+        .collect(null, { name: 'deps'})
+        .returns('deps');
 
       const moduleExports = [];
-      sources.paths().forEach((path) => {
-        const exported = path[path.length - 1];
 
+      result.deps.forEach((exported) => {
         if (this.isExport(exported)) {
           moduleExports.push(exported);
         }
       });
 
       // now go get the import declarations
-      const importQuery = this.sourceGraph.query();
-      importQuery
-        .begin(importNode)
-        .outgoing()
-        .any({ maxDepth: 1 })
-        .match({ type: 'import_declaration' })
-        .execute();
+      const importQuery = new Query(this.sourceGraph);
 
-      importQuery.nodes().forEach((node) => {
+      const iresult = importQuery
+        .find(importNode)
+        .out()
+        .collect({ type: 'import_declaration' }, { name: 'imports'})
+        .returns('imports');
+
+      iresult.imports.forEach((node) => {
         const bindingExport = moduleExports.find((e) => e.attributes.identifier === node.attributes.identifier);
+
         if (bindingExport) {
           this.sourceGraph.addEdge(node, bindingExport, 'binding');
           return;
@@ -148,42 +145,40 @@ class BindingAnalyzer {
 
   checkBinding (node) {
     // check if this node has an already computed type
-    const typeQuery = this.sourceGraph.query();
-    typeQuery.begin(node)
-      .outgoing('binding')
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const typeQuery = new Query(this.sourceGraph);
+    const result = typeQuery.match(node)
+      .out('binding', { name: 'binding' })
+      .returns('binding');
 
-    if (typeQuery.nodes().length === 1) {
-      return typeQuery.nodes()[0];
+    if (result.binding.length === 1) {
+      return result.binding()[0];
     }
 
     return null;
   }
 
   bindInvocation (invocationNode) {
-    const q1 = this.sourceGraph.query();
-    const q2 = this.sourceGraph.query();
+    const q1 = new Query(this.sourceGraph);
+    const q2 = new Query(this.sourceGraph);
+    debugger;
+    const importResults = q1
+      .find(this.codeModule)
+      .out()
+      .collect({ type: 'import_statement' })
+      .out('import', { name: 'imports'} )
+      .returns('imports');
 
-    const imports = q1.begin(this.codeModule)
-      .outgoing()
-      .any()
-      .match({ type: 'import_declaration' })
-      .execute()
-      .nodes();
-
-    const functions = q2.begin(this.codeModule)
-      .outgoing()
-      .any()
-      .match({ type: 'function' })
-      .execute()
-      .nodes();
+    // NOTE: - BUG - THIS DOES NOT ACCOUNT FOR NESTED SCOPES OF FUNCTIONS
+    const functionResults = q2
+      .find(this.codeModule)
+      .out()
+      .collect({ type: 'function' }, { name: 'functions' })
+      .returns('functions');
 
     const ident = invocationNode.attributes.identifier;
 
-    const matchingFunc = functions.find((i) => i.attributes.identifier === ident);
-    const matchingImport = imports.find((i) => i.attributes.identifier === ident);
+    const matchingFunc = functionResults.functions.find((i) => i.attributes.identifier === ident);
+    const matchingImport = importResults.imports.find((i) => i.attributes.identifier === ident);
 
     // lexical scope, prioritize local functions over imports
 
@@ -201,50 +196,20 @@ class BindingAnalyzer {
   }
 
   bindReference (referenceNode) {
-    const query = this.sourceGraph.query();
-    query.begin(this.codeModule)
-      .outgoing()
-      .any()
-      .match(referenceNode.attributes)
-      .execute();
+    const query = new Query(this.sourceGraph);
+    const result = query.find(this.codeModule)
+      .out()
+      .until(referenceNode.attributes, { name: 'scope' })
+      .returns('scope');
 
-    const codePaths = query.paths();
+    const scopeNode = result.scope.reverse().find((n) => {
+      return this.isReferenceDeclaration(n) && n.attributes.identifier === referenceNode.attributes.identifier
+    });
 
-    // giving the path from the module to this node, build up a scope
-    if (codePaths.length > 0) {
-      const scope = [];
+    if (scopeNode) {
+      this.sourceGraph.addEdge(referenceNode, scopeNode, 'binding');
 
-      codePaths.forEach((path) => {
-        path.forEach((node) => {
-          const query = this.sourceGraph.query();
-          query.begin(node)
-            .outgoing()
-            .any({ maxDepth: 1 })
-            .matchAll()
-            .execute();
-
-          const lexicalNodes = query.nodes().filter((n) => this.isReferenceDeclaration(n));
-          if (lexicalNodes.length > 0) {
-            scope.push(lexicalNodes);
-          }
-        });
-      });
-
-      // find the last instance of a matching node
-      const scoped = scope.reverse().find((s) => {
-        const n = s.find((n) => this.isReferenceDeclaration(n) && n.attributes.identifier === referenceNode.attributes.identifier);
-
-        if (n) {
-          this.sourceGraph.addEdge(referenceNode, n, 'binding');
-          return true;
-        }
-
-        return false;
-      });
-
-      if (scoped) {
-        return;
-      }
+      return true;
     }
 
     // no matching delcaration found!

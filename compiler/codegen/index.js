@@ -1,3 +1,4 @@
+const { Query } = require('@novalang/graph');
 const Generator = require('./generator');
 
 class CodeGenerator {
@@ -7,12 +8,12 @@ class CodeGenerator {
   }
 
   codegen () {
-    const sourceQuery = this.sourceGraph.query();
-    const sources = sourceQuery
-      .match({ type: 'module' })
-      .execute();
+    const sourceQuery = new Query(this.sourceGraph);
+    const results = sourceQuery
+      .match({ type: 'module' }, { name: 'modules' })
+      .returns('modules');
 
-    const buildUnits = sources.nodes().map((codeModule) => {
+    const buildUnits = results.modules.map((codeModule) => {
       const generator = new Generator(this.buildDir, this.sourceGraph, codeModule);
 
       return generator.generate();

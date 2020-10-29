@@ -1,3 +1,4 @@
+const { Query } = require('@novalang/graph');
 const {
   InvalidExportError,
   ReassignImmutableError
@@ -9,27 +10,25 @@ class ExpressionAnalyzer {
   }
 
   analyze () {
-    const sourceQuery = this.sourceGraph.query();
-    const sources = sourceQuery
-      .match({ type: 'module', identifier: 'main_module' })
-      .execute();
+    const sourceQuery = new Query(this.sourceGraph);
+    const result = sourceQuery
+      .match({ type: 'module', identifier: 'main_module' }, { name: 'sources' })
+      .returns('sources');
 
-    if (sources.nodes()[0]) {
-      this.codeModule = sources.nodes()[0];
+    if (result.sources) {
+      this.codeModule = result.sources[0];
       this.analyzeSources(this.codeModule);
     }
   }
 
   analyzeSources (sourceNode) {
-    const sourceQuery = this.sourceGraph.query();
-    const sources = sourceQuery
-      .begin(sourceNode)
-      .outgoing()
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const sourceQuery = new Query(this.sourceGraph);
+    const result = sourceQuery
+      .find(sourceNode)
+      .out(null, { name: 'sources'})
+      .returns('sources')
 
-    sources.nodes().forEach((source) => {
+    result.sources.forEach((source) => {
       this.analyzeNode(source);
     });
   }

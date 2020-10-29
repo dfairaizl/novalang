@@ -1,3 +1,4 @@
+const { Query } = require('@novalang/graph');
 const {
   MissingTypeAnnotationError,
   TypeMismatchError,
@@ -13,26 +14,24 @@ class TypeAnalyzer {
   analyze () {
     // TODO: Install the build in types so we don't need to create them via strings
 
-    const sourceQuery = this.sourceGraph.query();
-    const modules = sourceQuery
-      .match({ type: 'module' })
-      .execute();
+    const sourceQuery = new Query(this.sourceGraph);
+    const results = sourceQuery
+      .match({ type: 'module' }, { name: 'modules'})
+      .returns('modules');
 
-    modules.nodes().forEach((n) => {
+    results.modules.forEach((n) => {
       this.analyzeModule(n);
     });
   }
 
   analyzeModule (node) {
-    const query = this.sourceGraph.query();
-    query
-      .begin(node)
-      .outgoing('sources')
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const query = new Query(this.sourceGraph);
+    const result = query
+      .find(node)
+      .out('sources', { name: 'sources' })
+      .returns('sources');
 
-    query.nodes().forEach((n) => {
+    result.sources.forEach((n) => {
       this.analyzeType(n);
     });
   }
@@ -71,16 +70,15 @@ class TypeAnalyzer {
 
     const annotatedType = this.associateType(declNode);
 
-    const expressionQuery = this.sourceGraph.query();
-    expressionQuery.begin(declNode)
-      .outgoing('expression')
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const expressionQuery = new Query(this.sourceGraph);
+    const result = expressionQuery
+      .find(declNode)
+      .out('expression', { name: 'expression' })
+      .returns('expression');
 
-    if (expressionQuery.nodes().length) {
+    if (result.expression) {
       // resolve expression type
-      const inferredType = this.analyzeType(expressionQuery.nodes()[0]);
+      const inferredType = this.analyzeType(result.expression[0]);
 
       // type match annotated to inferred
       if (annotatedType) {
@@ -125,24 +123,20 @@ class TypeAnalyzer {
   }
 
   analyzeBinop (binopNode) {
-    let binopQuery = this.sourceGraph.query();
-    binopQuery.begin(binopNode)
-      .outgoing('left')
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    let binopQuery = new Query(this.sourceGraph)
+    const leftResult = binopQuery.find(binopNode)
+      .out('left', { name: 'leftExpression' })
+      .returns('leftExpression');
 
-    const leftNode = binopQuery.nodes()[0];
+    const leftNode = leftResult.leftExpression[0];
     const leftResolved = this.analyzeType(leftNode);
 
-    binopQuery = this.sourceGraph.query();
-    binopQuery.begin(binopNode)
-      .outgoing('right')
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    binopQuery = new Query(this.sourceGraph)
+    const rightResult = binopQuery.find(binopNode)
+      .out('right', { name: 'rightExpression'})
+      .returns('rightExpression');
 
-    const rightNode = binopQuery.nodes()[0];
+    const rightNode = rightResult.rightExpression[0];
     const rightResolved = this.analyzeType(rightNode);
 
     const resolvedType = this.reconcileTypes(leftResolved, rightResolved);
@@ -255,29 +249,26 @@ class TypeAnalyzer {
       return resolvedType;
     }
 
-    const invokeQuery = this.sourceGraph.query();
-    invokeQuery
-      .begin(invokeNode)
-      .outgoing('binding')
-      .any()
-      .matchAll()
-      .execute();
+    const invokeQuery = new Query(this.sourceGraph);
+    const result = invokeQuery
+      .find(invokeNode)
+      .out('binding', { name: 'binding' })
+      .returns('binding');
 
-    const funcNode = invokeQuery.nodes()[0];
+    const funcNode = result.binding[0];
     if (funcNode) {
       return this.analyzeType(funcNode);
     }
   }
 
   analyzeExport (exportNode) {
-    const query = this.sourceGraph.query();
-    query.begin(exportNode)
-      .outgoing()
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const query = new Query(this.sourceGraph);
+    const result = query
+      .find(exportNode)
+      .out(null, { name: 'export' })
+      .returns('export');
 
-    const funcNode = query.nodes()[0];
+    const funcNode = result.export[0];
     if (funcNode) {
       return this.analyzeType(funcNode);
     }
@@ -295,15 +286,14 @@ class TypeAnalyzer {
 
   resolveType (typedNode) {
     // check if this node has an already computed type
-    const typeQuery = this.sourceGraph.query();
-    typeQuery.begin(typedNode)
-      .outgoing('type')
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const typeQuery = new Query(this.sourceGraph)
+    const result = typeQuery
+      .find(typedNode)
+      .out('type', { name: 'resolvedType' })
+      .returns('resolveType');
 
-    if (typeQuery.nodes().length === 1) {
-      return typeQuery.nodes()[0];
+    if (result.resolvedType) {
+      return result.resolvedType[0];
     }
 
     return null;
@@ -327,13 +317,13 @@ class TypeAnalyzer {
       return null;
     }
 
-    const typeQuery = this.sourceGraph.query();
-    typeQuery
-      .match({ type: 'type', kind: typeClass })
-      .execute();
+    const typeQuery = new Query(this.sourceGraph);
+    const result = typeQuery
+      .match({ type: 'type', kind: typeClass }, { name: 'type' })
+      .returns('type');
 
-    if (typeQuery.nodes()[0]) {
-      return typeQuery.nodes()[0];
+    if (result.type && result.type[0]) {
+      return result.type[0];
     } else {
       const buildType = this.sourceGraph.addNode({ type: 'type', kind: typeClass });
       return buildType;
