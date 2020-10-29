@@ -402,10 +402,10 @@ class Generator {
   codegenConditional(node) {
     const finalBlock = this.builder.insertBlock("finalBlock");
 
-    const conditions = this.sourceGraph.relationFromNode(node, "conditions");
+    const conditions = this.sourceGraph.outgoing(node, "conditions");
     conditions.forEach((cond, index) => {
       const last = index === conditions.length - 1;
-      const testNode = this.sourceGraph.relationFromNode(cond, "test")[0];
+      const testNode = this.sourceGraph.outgoing(cond, "test")[0];
       const testExpr = this.codegenNode(testNode);
 
       // gen then and else blocks
@@ -426,14 +426,14 @@ class Generator {
 
       // gen then
       this.builder.positionAt(thenBlock);
-      const thenNode = this.sourceGraph.relationFromNode(cond, "body")[0];
+      const thenNode = this.sourceGraph.outgoing(cond, "body")[0];
       this.codegenNode(thenNode);
       this.builder.buildBranch(finalBlock);
 
       if (last) {
         // last branch in the condition is always the else (if one is defined)
         this.builder.positionAt(elseBlock);
-        const elseNode = this.sourceGraph.relationFromNode(node, "else")[0];
+        const elseNode = this.sourceGraph.outgoing(node, "else")[0];
         if (elseNode) {
           this.codegenNode(elseNode);
         }

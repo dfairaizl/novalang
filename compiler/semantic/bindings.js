@@ -146,12 +146,12 @@ class BindingAnalyzer {
   checkBinding (node) {
     // check if this node has an already computed type
     const typeQuery = new Query(this.sourceGraph);
-    const result = typeQuery.match(node)
+    const result = typeQuery.find(node)
       .out('binding', { name: 'binding' })
       .returns('binding');
 
     if (result.binding.length === 1) {
-      return result.binding()[0];
+      return result.binding[0];
     }
 
     return null;

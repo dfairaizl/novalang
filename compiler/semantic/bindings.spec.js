@@ -1,5 +1,7 @@
 /* global describe, it, expect */
 
+const { Query } = require('@novalang/graph');
+
 const Parser = require('../parser');
 const BindingAnalyzer = require('./bindings');
 const {
@@ -351,17 +353,18 @@ describe('Binding Analyzer', () => {
       ]);
     });
 
-    it('binds functions to invocations with recursion', () => {
+    it.only('binds functions to invocations with recursion', () => {
       const parser = new Parser(`function addOne(x: Int) -> Int { return addOne(x + 1) };`);
 
       const sourceGraph = parser.parse();
 
-      const binding = sourceGraph.search('invocation');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'invocation' }, { name: 'binding' }).returns('binding');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.binding[0], 'binding')).toMatchObject([
         { attributes: { type: 'function' } }
       ]);
     });
