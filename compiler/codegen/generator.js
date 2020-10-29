@@ -216,14 +216,14 @@ class Generator {
 
   codeGenFunction(funcNode) {
     const funcName = funcNode.attributes.identifier;
-    const typeNode = this.sourceGraph.relationFromNode(funcNode, "type")[0];
+    const typeNode = this.sourceGraph.outgoing(funcNode, "type")[0];
     const retType = this.getType(typeNode);
 
     // build argument type list
     const argTypes = this.sourceGraph
-      .relationFromNode(funcNode, "arguments")
+      .outgoing(funcNode, "arguments")
       .map(n => {
-        const typeNode = this.sourceGraph.relationFromNode(n, "type")[0];
+        const typeNode = this.sourceGraph.outgoing(n, "type")[0];
         return new Parameter(n.attributes.identifier, this.getType(typeNode));
       });
 
@@ -235,7 +235,7 @@ class Generator {
     });
 
     // build function body
-    const bodyNodes = this.sourceGraph.relationFromNode(funcNode, "body");
+    const bodyNodes = this.sourceGraph.outgoing(funcNode, "body");
     bodyNodes.forEach(n => this.codegenNode(n));
 
     // check for return

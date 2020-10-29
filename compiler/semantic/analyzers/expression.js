@@ -70,14 +70,12 @@ class ExpressionAnalyzer {
   }
 
   checkExport (node) {
-    const exportQuery = this.sourceGraph.query();
-    exportQuery.begin(node)
-      .outgoing('expression')
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const exportQuery = new Query(this.sourceGraph);
+    const result = exportQuery.find(node)
+      .out('expression', { name: 'expression' })
+      .returns('expression');
 
-    const exportExpr = exportQuery.nodes()[0];
+    const exportExpr = result.expression[0];
 
     if (exportExpr.attributes.type !== 'function' && exportExpr.attributes.type !== 'external_function') {
       throw new InvalidExportError('Only functions are allowed to be exported from modules.');

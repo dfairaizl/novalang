@@ -71,14 +71,15 @@ class TypeAnalyzer {
     const annotatedType = this.associateType(declNode);
 
     const expressionQuery = new Query(this.sourceGraph);
+
     const result = expressionQuery
       .find(declNode)
-      .out('expression', { name: 'expression' })
-      .returns('expression');
+      .out('expression', { name: 'expr' })
+      .returns('expr');
 
-    if (result.expression) {
+    if (result.expr.length) {
       // resolve expression type
-      const inferredType = this.analyzeType(result.expression[0]);
+      const inferredType = this.analyzeType(result.expr[0]);
 
       // type match annotated to inferred
       if (annotatedType) {
@@ -109,20 +110,20 @@ class TypeAnalyzer {
 
   analyzeReference (refNode) {
     // resolve the type of this refs binding
-    const bindingQuery = this.sourceGraph.query();
-    bindingQuery.begin(refNode)
-      .outgoing('binding')
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const bindingQuery = new Query(this.sourceGraph);
+    const result = bindingQuery.find(refNode)
+      .out('binding', { name: 'binding' })
+      .returns('binding');
 
-    const binding = bindingQuery.nodes()[0];
+    const binding = result.binding[0];
+
     if (binding) {
       return this.analyzeType(binding);
     }
   }
 
   analyzeBinop (binopNode) {
+    debugger;
     let binopQuery = new Query(this.sourceGraph)
     const leftResult = binopQuery.find(binopNode)
       .out('left', { name: 'leftExpression' })
@@ -156,15 +157,13 @@ class TypeAnalyzer {
     }
 
     // analyze function parameters
-    const funcArgs = this.sourceGraph.query();
-    funcArgs
-      .begin(funcNode)
-      .outgoing('arguments')
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const funcArgs = new Query(this.sourceGraph);
+    const argResult = funcArgs
+      .find(funcNode)
+      .out('arguments', { name: 'args' })
+      .returns('args');
 
-    funcArgs.nodes().forEach((n) => {
+    argResult.args.forEach((n) => {
       if (!n.attributes.kind) {
         throw new MissingTypeAnnotationError(`Parameter \`${n.attributes.identifier}\` in function \`${funcNode.attributes.identifier}\` must have a declared type`);
       }
@@ -185,28 +184,25 @@ class TypeAnalyzer {
     this.sourceGraph.addEdge(funcNode, funcType, 'type');
 
     // analyze function body statements
-    const funcBodyQuery = this.sourceGraph.query();
-    funcBodyQuery
-      .begin(funcNode)
-      .outgoing('body')
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const funcBodyQuery = new Query(this.sourceGraph);
+    const funcResult = funcBodyQuery
+      .find(funcNode)
+      .out('body', { name: 'bodySource' })
+      .returns('bodySource');
 
-    funcBodyQuery.nodes().forEach((n) => {
+    funcResult.bodySource.forEach((n) => {
       this.analyzeType(n);
     });
 
     // check the return statements type
-    const retQuery = this.sourceGraph.query();
-    retQuery.begin(funcNode)
-      .outgoing()
-      .any({ maxDepth: 1 })
-      .match({ type: 'return_statement' })
-      .execute();
+    const retQuery = new Query(this.sourceGraph);
+    const retResult = retQuery.find(funcNode)
+      .out()
+      .collect({ type: 'return_statement' }, { name: 'returnStatements' })
+      .returns('returnStatements');
 
     // reconsile types of all return statements in the func body
-    retQuery.nodes().reduce((finalType, retNode) => {
+    retResult.returnStatements.reduce((finalType, retNode) => {
       const retType = this.analyzeType(retNode);
 
       if (!this.reconcileTypes(finalType, retType)) {
@@ -229,15 +225,13 @@ class TypeAnalyzer {
       return resolvedType;
     }
 
-    const retTypeQuery = this.sourceGraph.query();
-    retTypeQuery
-      .begin(retNode)
-      .outgoing()
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const retTypeQuery = new Query(this.sourceGraph);
+    const result = retTypeQuery
+      .find(retNode)
+      .out(null, { name: 'statement' })
+      .returns('statement');
 
-    const retStatement = retTypeQuery.nodes()[0];
+    const retStatement = result.statement[0];
     if (retStatement) {
       return this.analyzeType(retStatement);
     }
@@ -290,9 +284,9 @@ class TypeAnalyzer {
     const result = typeQuery
       .find(typedNode)
       .out('type', { name: 'resolvedType' })
-      .returns('resolveType');
+      .returns('resolvedType');
 
-    if (result.resolvedType) {
+    if (result.resolvedType.length) {
       return result.resolvedType[0];
     }
 
