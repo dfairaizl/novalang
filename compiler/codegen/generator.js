@@ -613,8 +613,8 @@ class Generator {
   }
 
   codegenWhileLoop(node) {
-    const testNode = this.sourceGraph.relationFromNode(node, "test")[0];
-    const bodyNodes = this.sourceGraph.relationFromNode(node, "body");
+    const testNode = this.sourceGraph.outgoing(node, "test")[0];
+    const bodyNodes = this.sourceGraph.outgoing(node, "body");
 
     const finalBlock = this.builder.insertBlock("finalBlock");
 
