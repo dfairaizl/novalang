@@ -160,7 +160,7 @@ class BindingAnalyzer {
   bindInvocation (invocationNode) {
     const q1 = new Query(this.sourceGraph);
     const q2 = new Query(this.sourceGraph);
-    debugger;
+
     const importResults = q1
       .find(this.codeModule)
       .out()

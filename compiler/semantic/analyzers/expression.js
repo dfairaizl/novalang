@@ -46,23 +46,13 @@ class ExpressionAnalyzer {
   }
 
   checkAssignment (node) {
-    const leftQuery = this.sourceGraph.query();
-    leftQuery.begin(node)
-      .outgoing('left')
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
+    const leftQuery = new Query(this.sourceGraph);
+    const result = leftQuery.find(node)
+      .out('left')
+      .out('binding', { name: "binding" })
+      .returns('binding');
 
-    const left = leftQuery.nodes()[0];
-
-    const bindingQuery = this.sourceGraph.query();
-    bindingQuery.begin(left)
-      .outgoing('binding')
-      .any({ maxDepth: 1 })
-      .matchAll()
-      .execute();
-
-    const declNode = bindingQuery.nodes()[0];
+    const declNode = result.binding[0];
 
     if (declNode && declNode.attributes.type === 'immutable_declaration') {
       throw new ReassignImmutableError(`Cannot reassign value to const \`${declNode.attributes.identifier}\``);

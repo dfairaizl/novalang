@@ -3,10 +3,10 @@ const { resolve } = require("path");
 
 const Compiler = require("../compiler");
 
-const sourceFile = resolve(__dirname, "..", "examples", "if.nv");
+const sourceFile = resolve(__dirname, "..", "examples", "mutate.nv");
 
 const novaCompier = new Compiler(
   sourceFile,
-  "if" /*, { debugGraph: true } */
+  "mutate" /*, { debugGraph: true } */
 );
 novaCompier.compile();
