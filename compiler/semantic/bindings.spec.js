@@ -37,12 +37,13 @@ describe('Binding Analyzer', () => {
       const sourceGraph = parser.parse();
       sourceGraph.merge(stdLibGraph);
 
-      const binding = sourceGraph.search('invocation');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'invocation' }, { name: 'binding' }).returns('binding');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.binding[0], 'binding')).toMatchObject([
         { attributes: { type: 'import_declaration' } }
       ]);
     });
@@ -59,12 +60,13 @@ describe('Binding Analyzer', () => {
       const sourceGraph = parser.parse();
       sourceGraph.merge(stdLibGraph);
 
-      const binding = sourceGraph.search('invocation');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'invocation' }, { name: 'binding' }).returns('binding');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.binding[0], 'binding')).toMatchObject([
         { attributes: { type: 'import_declaration' } }
       ]);
     });
@@ -90,16 +92,17 @@ describe('Binding Analyzer', () => {
       const sourceGraph = parser.parse();
       sourceGraph.merge(stdLibGraph);
 
-      const binding = sourceGraph.search('import_declaration');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'import_declaration' }, { name: 'binding' }).returns('binding');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.binding[0], 'binding')).toMatchObject([
         { attributes: { type: 'external_function', identifier: 'printf' } }
       ]);
 
-      expect(sourceGraph.relationFromNode(binding[1], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.binding[1], 'binding')).toMatchObject([
         { attributes: { type: 'external_function', identifier: 'scanf' } }
       ]);
     });
@@ -111,12 +114,13 @@ describe('Binding Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const binding = sourceGraph.search('variable_reference');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'variable_reference' }, { name: 'ref' }).returns('ref');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[0], 'binding')).toMatchObject([
         { attributes: { type: 'function_argument' } }
       ]);
     });
@@ -139,12 +143,13 @@ describe('Binding Analyzer', () => {
       const sourceGraph = parser.parse();
       sourceGraph.merge(stdLibGraph);
 
-      const binding = sourceGraph.search('invocation');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'invocation' }, { name: 'binding' }).returns('binding');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.binding[0], 'binding')).toMatchObject([
         { attributes: { type: 'function' } }
       ]);
     });
@@ -154,12 +159,13 @@ describe('Binding Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const binding = sourceGraph.search('variable_reference');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'variable_reference' }, { name: 'ref' }).returns('ref');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[0], 'binding')).toMatchObject([
         { attributes: { type: 'function_argument' } }
       ]);
     });
@@ -196,12 +202,13 @@ describe('Binding Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const binding = sourceGraph.search('variable_reference');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'variable_reference' }, { name: 'ref' }).returns('ref');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[0], 'binding')).toMatchObject([
         { attributes: { type: 'immutable_declaration' } }
       ]);
     });
@@ -211,12 +218,13 @@ describe('Binding Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const binding = sourceGraph.search('variable_reference');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'variable_reference' }, { name: 'ref' }).returns('ref');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[0], 'binding')).toMatchObject([
         { attributes: { type: 'immutable_declaration', identifier: 'x' } }
       ]);
     });
@@ -229,16 +237,17 @@ describe('Binding Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const binding = sourceGraph.search('variable_reference');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'variable_reference' }, { name: 'ref' }).returns('ref');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[0], 'binding')).toMatchObject([
         { attributes: { type: 'immutable_declaration', identifier: 'x' } }
       ]);
 
-      expect(sourceGraph.relationFromNode(binding[1], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[1], 'binding')).toMatchObject([
         { attributes: { type: 'immutable_declaration', identifier: 'y' } }
       ]);
     });
@@ -254,12 +263,13 @@ describe('Binding Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const binding = sourceGraph.search('variable_reference');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'variable_reference' }, { name: 'ref' }).returns('ref');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[0], 'binding')).toMatchObject([
         { attributes: { type: 'immutable_declaration', identifier: 'x' } }
       ]);
     });
@@ -275,12 +285,13 @@ describe('Binding Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const binding = sourceGraph.search('variable_reference');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'variable_reference' }, { name: 'ref' }).returns('ref');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[0], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration' } } // inner `z` is mutable in this case
       ]);
     });
@@ -290,12 +301,13 @@ describe('Binding Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const binding = sourceGraph.search('variable_reference');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'variable_reference' }, { name: 'ref' }).returns('ref');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[0], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration' } }
       ]);
     });
@@ -307,12 +319,13 @@ describe('Binding Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const binding = sourceGraph.search('invocation');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'invocation' }, { name: 'binding' }).returns('binding');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.binding[0], 'binding')).toMatchObject([
         { attributes: { type: 'function' } }
       ]);
     });
@@ -322,17 +335,18 @@ describe('Binding Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const binding = sourceGraph.search('invocation');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'invocation' }, { name: 'binding' }).returns('binding');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.binding[0], 'binding')).toMatchObject([
         { attributes: { type: 'function' } }
       ]);
     });
 
-    it('binds passed variable arguments to declarations', () => {
+    it('binds passed variable arguments to invocations', () => {
       const parser = new Parser(`
         function printf() {}
 
@@ -343,17 +357,18 @@ describe('Binding Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const binding = sourceGraph.search('variable_reference');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'variable_reference' }, { name: 'ref' }).returns('ref');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[0], 'binding')).toMatchObject([
         { attributes: { type: 'immutable_declaration', identifier: 'x' } }
       ]);
     });
 
-    it.only('binds functions to invocations with recursion', () => {
+    it('binds functions to invocations with recursion', () => {
       const parser = new Parser(`function addOne(x: Int) -> Int { return addOne(x + 1) };`);
 
       const sourceGraph = parser.parse();
@@ -383,12 +398,13 @@ describe('Binding Analyzer', () => {
       const sourceGraph = parser.parse();
       sourceGraph.merge(stdLibGraph);
 
-      const binding = sourceGraph.search('variable_reference');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'variable_reference' }, { name: 'ref' }).returns('ref');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[0], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration' } }
       ]);
     });
@@ -405,12 +421,13 @@ describe('Binding Analyzer', () => {
       const sourceGraph = parser.parse();
       sourceGraph.merge(stdLibGraph);
 
-      const binding = sourceGraph.search('variable_reference');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'variable_reference' }, { name: 'ref' }).returns('ref');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[0], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration' } }
       ]);
     });
@@ -428,12 +445,13 @@ describe('Binding Analyzer', () => {
       const sourceGraph = parser.parse();
       sourceGraph.merge(stdLibGraph);
 
-      const binding = sourceGraph.search('variable_reference');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'variable_reference' }, { name: 'ref' }).returns('ref');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[0], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration' } }
       ]);
     });
@@ -452,16 +470,17 @@ describe('Binding Analyzer', () => {
       const sourceGraph = parser.parse();
       sourceGraph.merge(stdLibGraph);
 
-      const binding = sourceGraph.search('variable_reference');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'variable_reference' }, { name: 'ref' }).returns('ref');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[0], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration' } }
       ]);
 
-      expect(sourceGraph.relationFromNode(binding[1], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[1], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration' } }
       ]);
     });
@@ -482,20 +501,21 @@ describe('Binding Analyzer', () => {
       const sourceGraph = parser.parse();
       sourceGraph.merge(stdLibGraph);
 
-      const binding = sourceGraph.search('variable_reference');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'variable_reference' }, { name: 'ref' }).returns('ref');
 
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(binding[0], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[0], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration' } }
       ]);
 
-      expect(sourceGraph.relationFromNode(binding[1], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[1], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration' } }
       ]);
 
-      expect(sourceGraph.relationFromNode(binding[2], 'binding')).toMatchObject([
+      expect(sourceGraph.outgoing(result.ref[2], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration' } }
       ]);
     });
