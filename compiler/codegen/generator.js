@@ -460,7 +460,7 @@ class Generator {
   }
 
   codegenElseCondition(node) {
-    const bodyNode = this.sourceGraph.relationFromNode(node, "body")[0];
+    const bodyNode = this.sourceGraph.outgoing(node, "body")[0];
     return this.codegenNode(bodyNode);
   }
 

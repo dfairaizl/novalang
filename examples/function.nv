@@ -1,4 +1,4 @@
-function addOne(x) {
+function addOne(x: Int) -> Int {
   return x + 1;
 }
 
