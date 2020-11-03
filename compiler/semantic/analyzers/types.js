@@ -198,12 +198,13 @@ class TypeAnalyzer {
     const retQuery = new Query(this.sourceGraph);
     const retResult = retQuery.find(funcNode)
       .out()
-      .collect({ type: 'return_statement' }, { name: 'returnStatements' })
+      .search({ type: 'return_statement' }, { name: 'returnStatements' })
       .returns('returnStatements');
 
     // reconsile types of all return statements in the func body
     retResult.returnStatements.reduce((finalType, retNode) => {
       const retType = this.analyzeType(retNode);
+
 
       if (!this.reconcileTypes(finalType, retType)) {
         if (funcType.attributes.kind === 'Void') {
@@ -228,7 +229,7 @@ class TypeAnalyzer {
     const retTypeQuery = new Query(this.sourceGraph);
     const result = retTypeQuery
       .find(retNode)
-      .out(null, { name: 'statement' })
+      .out('expression', { name: 'statement' })
       .returns('statement');
 
     const retStatement = result.statement[0];

@@ -104,9 +104,9 @@ class BindingAnalyzer {
       const result = sourceQuery
         .find(sourceModule)
         .out()
-        .collect({ type: 'export_statement' })
+        .where({ type: 'export_statement' })
         .out()
-        .collect(null, { name: 'deps'})
+        .where(null, { name: 'deps'})
         .returns('deps');
 
       const moduleExports = [];
@@ -123,7 +123,7 @@ class BindingAnalyzer {
       const iresult = importQuery
         .find(importNode)
         .out()
-        .collect({ type: 'import_declaration' }, { name: 'imports'})
+        .where({ type: 'import_declaration' }, { name: 'imports'})
         .returns('imports');
 
       iresult.imports.forEach((node) => {
@@ -164,7 +164,7 @@ class BindingAnalyzer {
     const importResults = q1
       .find(this.codeModule)
       .out()
-      .collect({ type: 'import_statement' })
+      .where({ type: 'import_statement' })
       .out('import', { name: 'imports'} )
       .returns('imports');
 
@@ -172,7 +172,7 @@ class BindingAnalyzer {
     const functionResults = q2
       .find(this.codeModule)
       .out()
-      .collect({ type: 'function' }, { name: 'functions' })
+      .where({ type: 'function' }, { name: 'functions' })
       .returns('functions');
 
     const ident = invocationNode.attributes.identifier;

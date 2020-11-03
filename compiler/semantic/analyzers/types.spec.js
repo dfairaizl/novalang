@@ -1,5 +1,7 @@
 /* global describe, it, expect */
 
+const { Query } = require('@novalang/graph');
+
 const Parser = require('../../parser');
 const Analyzer = require('..');
 const {
@@ -17,12 +19,13 @@ describe('Type Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const typedNode = sourceGraph.search('immutable_declaration');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'immutable_declaration' }, { name: 'dec' }).returns('dec');
 
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(typedNode[0], 'type')).toMatchObject([
+      expect(sourceGraph.outgoing(result.dec[0], 'type')).toMatchObject([
         { attributes: { type: 'type', kind: 'Int' } }
       ]);
     });
@@ -32,12 +35,13 @@ describe('Type Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const typedNode = sourceGraph.search('immutable_declaration');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'immutable_declaration' }, { name: 'dec' }).returns('dec');
 
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(typedNode[0], 'type')).toMatchObject([
+      expect(sourceGraph.outgoing(result.dec[0], 'type')).toMatchObject([
         { attributes: { type: 'type', kind: 'Float' } }
       ]);
     });
@@ -47,12 +51,13 @@ describe('Type Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const typedNode = sourceGraph.search('immutable_declaration');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'immutable_declaration' }, { name: 'dec' }).returns('dec');
 
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(typedNode[0], 'type')).toMatchObject([
+      expect(sourceGraph.outgoing(result.dec[0], 'type')).toMatchObject([
         { attributes: { type: 'type', kind: 'Boolean' } }
       ]);
     });
@@ -62,12 +67,13 @@ describe('Type Analyzer', () => {
 
       const sourceGraph = parser.parse();
 
-      const typedNode = sourceGraph.search('immutable_declaration');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'immutable_declaration' }, { name: 'dec' }).returns('dec');
 
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      expect(sourceGraph.relationFromNode(typedNode[0], 'type')).toMatchObject([
+      expect(sourceGraph.outgoing(result.dec[0], 'type')).toMatchObject([
         { attributes: { type: 'type', kind: 'String' } }
       ]);
     });
@@ -82,7 +88,10 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      expect(sourceGraph.search('type')[0].attributes).toMatchObject({
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'mutable_declaration' }, { name: 'mut' }).returns('mut');
+
+      expect(sourceGraph.outgoing(result.mut[0], 'type')[0].attributes).toMatchObject({
         kind: 'Int'
       });
     });
@@ -95,7 +104,10 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      expect(sourceGraph.search('type')[0].attributes).toMatchObject({
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'mutable_declaration' }, { name: 'mut' }).returns('mut');
+
+      expect(sourceGraph.outgoing(result.mut[0], 'type')[0].attributes).toMatchObject({
         kind: 'Int'
       });
     });
@@ -108,7 +120,10 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      expect(sourceGraph.search('type')[0].attributes).toMatchObject({
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'mutable_declaration' }, { name: 'mut' }).returns('mut');
+
+      expect(sourceGraph.outgoing(result.mut[0], 'type')[0].attributes).toMatchObject({
         kind: 'Int'
       });
     });
@@ -150,7 +165,10 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      expect(sourceGraph.search('type')[0].attributes).toMatchObject({
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'immutable_declaration' }, { name: 'immutable' }).returns('immutable');
+
+      expect(sourceGraph.outgoing(result.immutable[0], 'type')[0].attributes).toMatchObject({
         kind: 'Int'
       });
     });
@@ -165,8 +183,11 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const yNode = sourceGraph.search('mutable_declaration')[0];
-      const type = sourceGraph.relationFromNode(yNode, 'type');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'mutable_declaration' }, { name: 'ref' }).returns('ref');
+
+      const yNode = result.ref[0];
+      const type = sourceGraph.outgoing(yNode, 'type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
       });
@@ -180,8 +201,11 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const yNode = sourceGraph.search('mutable_declaration')[0];
-      const type = sourceGraph.relationFromNode(yNode, 'type');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'mutable_declaration' }, { name: 'ref' }).returns('ref');
+
+      const yNode = result.ref[0];
+      const type = sourceGraph.outgoing(yNode, 'type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
       });
@@ -195,8 +219,11 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const yNode = sourceGraph.search('mutable_declaration')[0];
-      const type = sourceGraph.relationFromNode(yNode, 'type');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'mutable_declaration' }, { name: 'ref' }).returns('ref');
+
+      const yNode = result.ref[0];
+      const type = sourceGraph.outgoing(yNode, 'type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
       });
@@ -210,8 +237,11 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const yNode = sourceGraph.search('mutable_declaration')[0];
-      const type = sourceGraph.relationFromNode(yNode, 'type');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'mutable_declaration' }, { name: 'ref' }).returns('ref');
+
+      const yNode = result.ref[0];
+      const type = sourceGraph.outgoing(yNode, 'type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
       });
@@ -236,13 +266,8 @@ describe('Type Analyzer', () => {
       const sourceGraph = parser.parse();
 
       const semanticAnalyzer = new Analyzer(sourceGraph);
-      semanticAnalyzer.analyze();
 
-      const yNode = sourceGraph.search('function')[0];
-      const type = sourceGraph.relationFromNode(yNode, 'type');
-      expect(type[0].attributes).toMatchObject({
-        kind: 'Void'
-      });
+      expect(() => semanticAnalyzer.analyze()).not.toThrowError(MismatchedReturnTypeError);
     });
 
     it('checks return statements against return type', () => {
@@ -251,13 +276,8 @@ describe('Type Analyzer', () => {
       const sourceGraph = parser.parse();
 
       const semanticAnalyzer = new Analyzer(sourceGraph);
-      semanticAnalyzer.analyze();
 
-      const yNode = sourceGraph.search('function')[0];
-      const type = sourceGraph.relationFromNode(yNode, 'type');
-      expect(type[0].attributes).toMatchObject({
-        kind: 'Int'
-      });
+      expect(() => semanticAnalyzer.analyze()).not.toThrowError(MismatchedReturnTypeError);
     });
 
     it('checks return statements against return type expressions', () => {
@@ -271,13 +291,8 @@ describe('Type Analyzer', () => {
       const sourceGraph = parser.parse();
 
       const semanticAnalyzer = new Analyzer(sourceGraph);
-      semanticAnalyzer.analyze();
 
-      const yNode = sourceGraph.search('function')[0];
-      const type = sourceGraph.relationFromNode(yNode, 'type');
-      expect(type[0].attributes).toMatchObject({
-        kind: 'Int'
-      });
+      expect(() => semanticAnalyzer.analyze()).not.toThrowError(MismatchedReturnTypeError);
     });
 
     it('infers return type for functions with arguments used in body expressions', () => {
@@ -291,13 +306,8 @@ describe('Type Analyzer', () => {
       const sourceGraph = parser.parse();
 
       const semanticAnalyzer = new Analyzer(sourceGraph);
-      semanticAnalyzer.analyze();
 
-      const yNode = sourceGraph.search('function_argument')[0];
-      const type = sourceGraph.relationFromNode(yNode, 'type');
-      expect(type[0].attributes).toMatchObject({
-        kind: 'Int'
-      });
+      expect(() => semanticAnalyzer.analyze()).not.toThrowError(MismatchedReturnTypeError);
     });
 
     it('checks functions with multiple return statements', () => {
@@ -363,8 +373,12 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const yNode = sourceGraph.search('function_argument')[0];
-      const type = sourceGraph.relationFromNode(yNode, 'type');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'function_argument' }, { name: 'arg' }).returns('arg');
+
+      const argNode = result.arg[0];
+
+      const type = sourceGraph.outgoing(argNode, 'type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
       });
@@ -378,11 +392,14 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const xNode = sourceGraph.search('function_argument')[0];
-      const yNode = sourceGraph.search('function_argument')[1];
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'function_argument' }, { name: 'arg' }).returns('arg');
 
-      const xType = sourceGraph.relationFromNode(xNode, 'type')[0];
-      const yType = sourceGraph.relationFromNode(yNode, 'type')[0];
+      const argNode1 = result.arg[0];
+      const argNode2 = result.arg[1];
+
+      const xType = sourceGraph.outgoing(argNode1, 'type')[0];
+      const yType = sourceGraph.outgoing(argNode2, 'type')[0];
 
       expect(xType.attributes).toMatchObject({
         kind: 'Int'
@@ -406,8 +423,11 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const yNode = sourceGraph.search('immutable_declaration')[0];
-      const type = sourceGraph.relationFromNode(yNode, 'type');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'immutable_declaration' }, { name: 'decl' }).returns('decl');
+
+      const declNode = result.decl[0];
+      const type = sourceGraph.outgoing(declNode, 'type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
       });
@@ -423,8 +443,11 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const yNode = sourceGraph.search('function')[0];
-      const type = sourceGraph.relationFromNode(yNode, 'type');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'function' }, { name: 'func' }).returns('func');
+
+      const funcNode = result.func[0];
+      const type = sourceGraph.outgoing(funcNode, 'type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
       });
@@ -440,8 +463,12 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const funcNode = sourceGraph.search('function')[0];
-      const type = sourceGraph.relationFromNode(funcNode, 'type');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'function' }, { name: 'func' }).returns('func');
+
+      const funcNode = result.func[0];
+      
+      const type = sourceGraph.outgoing(funcNode, 'type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
       });
@@ -458,7 +485,7 @@ describe('Type Analyzer', () => {
       semanticAnalyzer.analyze();
 
       const yNode = sourceGraph.search('class_definition')[0];
-      const type = sourceGraph.relationFromNode(yNode, 'type');
+      const type = sourceGraph.outgoing(yNode, 'type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Calculator'
       });
@@ -488,7 +515,7 @@ describe('Type Analyzer', () => {
       semanticAnalyzer.analyze();
 
       const yNode = sourceGraph.search('method')[0];
-      const type = sourceGraph.relationFromNode(yNode, 'return_type');
+      const type = sourceGraph.outgoing(yNode, 'return_type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Bool'
       });
@@ -507,7 +534,7 @@ describe('Type Analyzer', () => {
       semanticAnalyzer.analyze();
 
       const yNode = sourceGraph.search('method')[0];
-      const type = sourceGraph.relationFromNode(yNode, 'return_type');
+      const type = sourceGraph.outgoing(yNode, 'return_type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Void'
       });
@@ -526,7 +553,7 @@ describe('Type Analyzer', () => {
       semanticAnalyzer.analyze();
 
       const yNode = sourceGraph.search('function_argument')[0];
-      const type = sourceGraph.relationFromNode(yNode, 'type');
+      const type = sourceGraph.outgoing(yNode, 'type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
       });
@@ -545,8 +572,8 @@ describe('Type Analyzer', () => {
       semanticAnalyzer.analyze();
 
       const args = sourceGraph.search('function_argument');
-      const typeX = sourceGraph.relationFromNode(args[0], 'type');
-      const typeY = sourceGraph.relationFromNode(args[1], 'type');
+      const typeX = sourceGraph.outgoing(args[0], 'type');
+      const typeY = sourceGraph.outgoing(args[1], 'type');
 
       expect(typeX[0].attributes).toMatchObject({
         kind: 'Int'
@@ -571,7 +598,7 @@ describe('Type Analyzer', () => {
       semanticAnalyzer.analyze();
 
       const xNode = sourceGraph.search('immutable_declaration')[0];
-      const type = sourceGraph.relationFromNode(xNode, 'type');
+      const type = sourceGraph.outgoing(xNode, 'type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Calculator'
       });
@@ -597,8 +624,8 @@ describe('Type Analyzer', () => {
       semanticAnalyzer.analyze();
 
       const xNode = sourceGraph.search('key_reference')[0];
-      const binding = sourceGraph.relationFromNode(xNode, 'binding')[0];
-      const type = sourceGraph.relationFromNode(binding, 'type');
+      const binding = sourceGraph.outgoing(xNode, 'binding')[0];
+      const type = sourceGraph.outgoing(binding, 'type');
 
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
@@ -626,7 +653,7 @@ describe('Type Analyzer', () => {
       analyzer.analyze();
 
       const zNode = sourceGraph.search('import_declaration')[0];
-      const type = sourceGraph.relationFromNode(zNode, 'type');
+      const type = sourceGraph.outgoing(zNode, 'type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
       });
