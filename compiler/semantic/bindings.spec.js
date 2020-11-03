@@ -43,6 +43,7 @@ describe('Binding Analyzer', () => {
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
       bindingAnalyzer.analyze();
 
+
       expect(sourceGraph.outgoing(result.binding[0], 'binding')).toMatchObject([
         { attributes: { type: 'import_declaration' } }
       ]);

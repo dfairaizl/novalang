@@ -105,8 +105,7 @@ class BindingAnalyzer {
         .find(sourceModule)
         .out()
         .where({ type: 'export_statement' })
-        .out()
-        .where(null, { name: 'deps'})
+        .out(null, { name: 'deps'})
         .returns('deps');
 
       const moduleExports = [];
