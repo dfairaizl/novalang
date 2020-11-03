@@ -17,11 +17,8 @@ class BindingAnalyzer {
       .match({ type: 'module', identifier: 'main_module' }, { name: 'sources' })
       .returns('sources');
 
-    if (result.sources) {
-      this.codeModule = result.sources[0];
-
-      this.bindSources(this.codeModule);
-    }
+    this.codeModule = result.sources[0];
+    this.bindSources(this.codeModule);
   }
 
   bindSources (sourceNode) {
@@ -73,19 +70,6 @@ class BindingAnalyzer {
     }
   }
 
-  bindFunction (functionNode) {
-    const sourceQuery = new Query(this.sourceGraph);
-
-    const result = sourceQuery
-      .match(functionNode)
-      .out(null, { name: 'sources' })
-      .returns('sources');
-
-    result.sources.forEach((source) => {
-      this.analyzeNode(source);
-    });
-  }
-
   bindImport (importNode) {
     const sourceQuery = new Query(this.sourceGraph);
 
@@ -111,9 +95,7 @@ class BindingAnalyzer {
       const moduleExports = [];
 
       result.deps.forEach((exported) => {
-        if (this.isExport(exported)) {
-          moduleExports.push(exported);
-        }
+        moduleExports.push(exported);
       });
 
       // now go get the import declarations
@@ -221,11 +203,6 @@ class BindingAnalyzer {
     return n.attributes.type === 'immutable_declaration' ||
       n.attributes.type === 'mutable_declaration' ||
       n.attributes.type === 'function_argument';
-  }
-
-  isExport (n) {
-    return n.attributes.type === 'external_function' ||
-      n.attributes.type === 'function';
   }
 }
 

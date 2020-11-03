@@ -15,10 +15,8 @@ class ExpressionAnalyzer {
       .match({ type: 'module', identifier: 'main_module' }, { name: 'sources' })
       .returns('sources');
 
-    if (result.sources) {
-      this.codeModule = result.sources[0];
-      this.analyzeSources(this.codeModule);
-    }
+    this.codeModule = result.sources[0];
+    this.analyzeSources(this.codeModule);
   }
 
   analyzeSources (sourceNode) {

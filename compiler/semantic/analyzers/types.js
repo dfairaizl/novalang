@@ -91,10 +91,9 @@ class TypeAnalyzer {
         throw new TypeMismatchError(`Variable \`${declNode.attributes.identifier}\` has expected type ${annotatedType.attributes.kind} but resolved to ${inferredType.attributes.kind}`);
       }
 
-      if (inferredType) {
-        this.sourceGraph.addEdge(declNode, inferredType, 'type');
-        return inferredType;
-      }
+      this.sourceGraph.addEdge(declNode, inferredType, 'type');
+
+      return inferredType;
     } else {
       // no expression, enforce annotated type
       if (annotatedType) {
@@ -104,8 +103,6 @@ class TypeAnalyzer {
 
       throw new MissingTypeAnnotationError(`Declaration of variable \`${declNode.attributes.identifier}\` requires a type annotation`);
     }
-
-    throw new Error('Incomplete type implementation');
   }
 
   analyzeReference (refNode) {
@@ -117,9 +114,7 @@ class TypeAnalyzer {
 
     const binding = result.binding[0];
 
-    if (binding) {
-      return this.analyzeType(binding);
-    }
+    return this.analyzeType(binding);
   }
 
   analyzeBinop (binopNode) {
@@ -221,11 +216,6 @@ class TypeAnalyzer {
   }
 
   analyzeReturn (retNode) {
-    const resolvedType = this.resolveType(retNode);
-    if (resolvedType) {
-      return resolvedType;
-    }
-
     const retTypeQuery = new Query(this.sourceGraph);
     const result = retTypeQuery
       .find(retNode)
@@ -233,17 +223,11 @@ class TypeAnalyzer {
       .returns('statement');
 
     const retStatement = result.statement[0];
-    if (retStatement) {
-      return this.analyzeType(retStatement);
-    }
+
+    return this.analyzeType(retStatement);
   }
 
   analyzeInvocation (invokeNode) {
-    const resolvedType = this.resolveType(invokeNode);
-    if (resolvedType) {
-      return resolvedType;
-    }
-
     const invokeQuery = new Query(this.sourceGraph);
     const result = invokeQuery
       .find(invokeNode)
@@ -251,9 +235,8 @@ class TypeAnalyzer {
       .returns('binding');
 
     const funcNode = result.binding[0];
-    if (funcNode) {
-      return this.analyzeType(funcNode);
-    }
+
+    return this.analyzeType(funcNode);
   }
 
   analyzeExport (exportNode) {
@@ -264,9 +247,8 @@ class TypeAnalyzer {
       .returns('export');
 
     const funcNode = result.export[0];
-    if (funcNode) {
-      return this.analyzeType(funcNode);
-    }
+
+    return this.analyzeType(funcNode);
   }
 
   analyzeLiteral (literalNode) {
