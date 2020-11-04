@@ -22,6 +22,8 @@ class TypeAnalyzer {
     results.modules.forEach((n) => {
       this.analyzeModule(n);
     });
+
+    this.sourceGraph.debug();
   }
 
   analyzeModule (node) {
@@ -31,6 +33,7 @@ class TypeAnalyzer {
       .out('sources', { name: 'sources' })
       .returns('sources');
 
+    debugger;
     result.sources.forEach((n) => {
       this.analyzeType(n);
     });
@@ -47,6 +50,7 @@ class TypeAnalyzer {
       case 'bin_op':
         return this.analyzeBinop(node);
       case 'function':
+      case 'method':
         return this.analyzeFunction(node);
       case 'return_statement':
         return this.analyzeReturn(node);
@@ -54,6 +58,10 @@ class TypeAnalyzer {
         return this.analyzeInvocation(node);
       case 'export_statement':
         return this.analyzeExport(node);
+      case 'export_statement':
+        return this.analyzeExport(node);
+      case 'class_definition':
+        return this.analyzeClass(node);
       case 'boolean_literal':
       case 'number_literal':
       case 'string_literal':
@@ -249,6 +257,29 @@ class TypeAnalyzer {
     const funcNode = result.export[0];
 
     return this.analyzeType(funcNode);
+  }
+
+  analyzeClass (classNode) {
+    debugger;
+    // check if this node already has a declared type (we've already seen it)
+    const resolvedType = this.resolveType(classNode);
+    if (resolvedType) {
+      return resolvedType;
+    }
+
+    // analyze function parameters
+    const methodsQuery = new Query(this.sourceGraph);
+    const methodResult = methodsQuery
+      .find(classNode)
+      .out('body')
+      .where({ type: 'method' }, { name: 'methods' })
+      .returns('methods');
+
+    console.log(require('util').inspect(methodResult, { depth: null }));
+
+    methodResult.methods.forEach((methodNode) => {
+      this.analyzeType(methodNode);
+    });
   }
 
   analyzeLiteral (literalNode) {

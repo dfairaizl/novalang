@@ -167,10 +167,10 @@ class Generator {
 
     // build the type
     const classType = new Struct(node.attributes.kind);
-    const ivars = this.sourceGraph.relationFromNode(node, "instance_variables");
+    const ivars = this.sourceGraph.outgoing(node, "instance_variables");
 
     const structTypes = ivars.map(t => {
-      const type = this.sourceGraph.relationFromNode(t, "type")[0];
+      const type = this.sourceGraph.outgoing(t, "type")[0];
       return this.getType(type);
     });
 
@@ -190,7 +190,7 @@ class Generator {
     // setup any initial ivar values such as constants for each instance (before main constructor)
     ivars.forEach((v, index) => {
       if (v.attributes.type === "immutable_declaration") {
-        const exprNode = this.sourceGraph.relationFromNode(v, "expression")[0];
+        const exprNode = this.sourceGraph.outgoing(v, "expression")[0];
         const val = this.codegenNode(exprNode);
 
         const structMember = libLLVM.LLVMBuildStructGEP(
@@ -205,7 +205,7 @@ class Generator {
     });
 
     // build function body
-    const bodyNodes = this.sourceGraph.relationFromNode(node, "body");
+    const bodyNodes = this.sourceGraph.outgoing(node, "body");
     bodyNodes.forEach(n => this.codegenNode(n));
 
     this.builder.buildVoidRet();
@@ -257,7 +257,8 @@ class Generator {
 
     const methodName = `${currentClass.name}_${node.attributes.identifier}`;
 
-    const typeNode = this.sourceGraph.relationFromNode(node, "return_type")[0];
+    console.log(node);
+    const typeNode = this.sourceGraph.outgoing(node, "type")[0];
     const retType = this.getType(typeNode);
 
     // add implicit `this` parameter first
@@ -267,9 +268,9 @@ class Generator {
 
     // build argument type list
     const argTypes = this.sourceGraph
-      .relationFromNode(node, "arguments")
+      .outgoing(node, "arguments")
       .map(n => {
-        const typeNode = this.sourceGraph.relationFromNode(n, "type")[0];
+        const typeNode = this.sourceGraph.outgoing(n, "type")[0];
         return new Parameter(n.attributes.identifier, this.getType(typeNode));
       });
 
@@ -292,7 +293,7 @@ class Generator {
     });
 
     // build function body
-    const bodyNodes = this.sourceGraph.relationFromNode(node, "body");
+    const bodyNodes = this.sourceGraph.outgoing(node, "body");
     bodyNodes.forEach(n => this.codegenNode(n));
 
     // check for return

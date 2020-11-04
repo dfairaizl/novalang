@@ -12,6 +12,7 @@ class BindingAnalyzer {
   }
 
   analyze () {
+
     const sourceQuery = new Query(this.sourceGraph);
     const result = sourceQuery
       .match({ type: 'module', identifier: 'main_module' }, { name: 'sources' })

@@ -16,12 +16,12 @@
     <script type="text/javascript">
         // create an array with nodes
         var nodes = new vis.DataSet(
-          [{"id":"186cc802-dcb1-4780-a759-f6882ffa5c7b","label":"module"},{"id":"09ff121d-5ae8-456a-9ea3-755da1af7da6","label":"immutable_declaration"},{"id":"601935c9-c9fc-422d-bd25-0197236469a1","label":"number_literal"},{"id":"3f35743f-de0a-4158-908e-57555d4e0b7c","label":"export_statement"}]
+          [{"id":"a1faaff1-a8de-4ade-83b9-df287ceaa7fa","label":"module"},{"id":"7f821261-7e37-4321-86d7-1c42ac5b4a76","label":"class_definition"},{"id":"73e5e4a6-cc0c-44be-a6a6-5aedf4e6ceee","label":"function_argument"},{"id":"5db57606-69e8-4a0f-8748-6e9c29351c2b","label":"function_argument"},{"id":"1e2ccf94-383a-4045-aa05-8a8a908fdf1a","label":"method"},{"id":"1d842acb-a294-496f-8cbd-fd48b3ac66af","label":"return_statement"},{"id":"ae3af989-1bfd-428e-ba59-a80801b2fd15","label":"variable_reference"},{"id":"ff94c4dd-b2bd-4749-84d6-1027055f28c0","label":"variable_reference"},{"id":"6e6076e6-3321-4db8-880c-992045bc897f","label":"bin_op"}]
         );
 
         // create an array with edges
         var edges = new vis.DataSet(
-          [{"from":"186cc802-dcb1-4780-a759-f6882ffa5c7b","to":"3f35743f-de0a-4158-908e-57555d4e0b7c","label":"sources","arrows":"to"},{"from":"09ff121d-5ae8-456a-9ea3-755da1af7da6","to":"601935c9-c9fc-422d-bd25-0197236469a1","label":"expression","arrows":"to"},{"from":"3f35743f-de0a-4158-908e-57555d4e0b7c","to":"09ff121d-5ae8-456a-9ea3-755da1af7da6","label":"expression","arrows":"to"}]
+          [{"from":"a1faaff1-a8de-4ade-83b9-df287ceaa7fa","to":"7f821261-7e37-4321-86d7-1c42ac5b4a76","label":"sources","arrows":"to"},{"from":"7f821261-7e37-4321-86d7-1c42ac5b4a76","to":"1e2ccf94-383a-4045-aa05-8a8a908fdf1a","label":"body","arrows":"to"},{"from":"1e2ccf94-383a-4045-aa05-8a8a908fdf1a","to":"73e5e4a6-cc0c-44be-a6a6-5aedf4e6ceee","label":"arguments","arrows":"to"},{"from":"1e2ccf94-383a-4045-aa05-8a8a908fdf1a","to":"5db57606-69e8-4a0f-8748-6e9c29351c2b","label":"arguments","arrows":"to"},{"from":"1e2ccf94-383a-4045-aa05-8a8a908fdf1a","to":"1d842acb-a294-496f-8cbd-fd48b3ac66af","label":"body","arrows":"to"},{"from":"1d842acb-a294-496f-8cbd-fd48b3ac66af","to":"6e6076e6-3321-4db8-880c-992045bc897f","label":"expression","arrows":"to"},{"from":"6e6076e6-3321-4db8-880c-992045bc897f","to":"ae3af989-1bfd-428e-ba59-a80801b2fd15","label":"left","arrows":"to"},{"from":"6e6076e6-3321-4db8-880c-992045bc897f","to":"ff94c4dd-b2bd-4749-84d6-1027055f28c0","label":"right","arrows":"to"}]
         );
 
         // create a network
