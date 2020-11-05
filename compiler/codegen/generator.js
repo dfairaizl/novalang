@@ -466,6 +466,7 @@ class Generator {
   }
 
   codegenVar(node) {
+    debugger;
     const exprNode = this.sourceGraph.outgoing(node, "expression")[0];
 
     if (exprNode.attributes.type === "instantiation") {
@@ -500,6 +501,8 @@ class Generator {
       // now call the constructor wtih argTypes if one is defined
       // TODO: CONSTRUCTOR
     } else {
+      const typeNode = this.sourceGraph.outgoing(node, 'type')[0];
+
       this.builder.buildAlloc(
         this.getType(typeNode),
         node.attributes.identifier
@@ -522,31 +525,20 @@ class Generator {
   }
 
   codegenObjectReference(node) {
-    const keyPathNode = this.sourceGraph.relationFromNode(
-      node,
-      "key_expression"
-    )[0];
-    const defNode = this.sourceGraph.relationFromNode(node, "definition")[0];
-    const bindingObject = this.sourceGraph.relationFromNode(node, "binding")[0];
+    debugger;
+    const keyPathNode = this.sourceGraph.outgoing(node, "key_expression")[0];
+    const bindingObject = this.sourceGraph.outgoing(node, "binding")[0];
 
-    // find the key in the class definition
-    const ivars = this.sourceGraph.relationFromNode(
-      defNode,
-      "instance_variables"
-    );
+    return this.codegenNode(keyPathNode);
 
-    const index = ivars.findIndex(
-      v => v.attributes.identifier === keyPathNode.attributes.identifier
-    );
+    // const instance = libLLVM.LLVMBuildStructGEP(
+    //   this.builder.builderRef,
+    //   this.builder.namedValues[bindingObject.attributes.identifier].storage,
+    //   0,
+    //   bindingObject.attributes.identifier
+    // );
 
-    const instance = libLLVM.LLVMBuildStructGEP(
-      this.builder.builderRef,
-      this.builder.namedValues[bindingObject.attributes.identifier].storage,
-      index,
-      bindingObject.attributes.identifier
-    );
-
-    return libLLVM.LLVMBuildLoad(this.builder.builderRef, instance, "ref");
+    // return libLLVM.LLVMBuildLoad(this.builder.builderRef, res, "ref");
   }
 
   codegenKeyReference(node) {
@@ -557,14 +549,15 @@ class Generator {
     return this.codegenNode(keyPathNode);
   }
 
-  codegenInvocation(node, identifier = "") {
+  codegenInvocation(node) {
     // look up function in module
     const boundNode = this.sourceGraph.outgoing(node, "binding")[0];
 
     let name = null;
     if (boundNode.attributes.type === "method") {
+      const classContainer = this.sourceGraph.incoming(boundNode, 'body')[0];
       // const currentClass = this.builder.currentClass;
-      // name = `Calculator_${boundNode.attributes.name}`;
+      name = `${classContainer.attributes.identifier}_${boundNode.attributes.identifier}`;
     } else {
       name = boundNode.attributes.identifier;
     }
@@ -578,7 +571,7 @@ class Generator {
         return this.codegenNode(n);
       });
 
-    return this.builder.buildCall(funcRef, argTypes, identifier);
+    return this.builder.buildCall(funcRef, argTypes, "");
   }
 
   codegenBinop(node) {

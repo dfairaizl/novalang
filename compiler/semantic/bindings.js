@@ -66,11 +66,14 @@ class BindingAnalyzer {
       case 'variable_reference':
         this.bindReference(sourceNode);
         break;
+      case 'object_reference':
+        this.bindObjectReference(sourceNode);
+        break;
       case 'import_statement':
         this.bindImport(sourceNode);
         break;
       case 'instantiation':
-        this.bindIinstantiation(sourceNode);
+        this.bindInstantiation(sourceNode);
         break;
     }
   }
@@ -202,7 +205,50 @@ class BindingAnalyzer {
     throw new UndeclaredVariableError(`Unknown variable \`${referenceNode.attributes.identifier}\``);
   }
 
-  bindIinstantiation(instNode) {
+  bindObjectReference (referenceNode) {
+    const query = new Query(this.sourceGraph);
+    const result = query.find(this.codeModule)
+      .out()
+      .until(referenceNode.attributes, { name: 'scope' })
+      .returns('scope');
+
+    const scopeNode = result.scope.reverse().find((n) => {
+      return this.isReferenceDeclaration(n) && n.attributes.identifier === referenceNode.attributes.identifier
+    });
+
+    if (scopeNode) {
+      this.sourceGraph.addEdge(referenceNode, scopeNode, 'binding');
+    } else {
+      // no matching delcaration found!
+      throw new UndeclaredVariableError(`Unknown variable \`${referenceNode.attributes.identifier}\``);
+    }
+
+    // bind the keypath
+    const keyExprNode = this.sourceGraph.outgoing(referenceNode, 'key_expression')[0];
+
+    if (keyExprNode) {
+      const keyQuery = new Query(this.sourceGraph);
+      const keyResult = keyQuery
+        .find(scopeNode)
+        .out('expression')
+        .out('binding')
+        .out('body')
+        .where({ type: 'method' }, { name: 'classMethod' })
+        .returns('classMethod');
+
+      const bindMethod = keyResult.classMethod[0];
+
+      if (bindMethod) {
+        this.sourceGraph.addEdge(keyExprNode, bindMethod, 'binding');
+
+        return;
+      }
+
+      throw new Error('Unknown key expression');
+    }
+  }
+
+  bindInstantiation(instNode) {
     const query = new Query(this.sourceGraph);
 
     const results = query

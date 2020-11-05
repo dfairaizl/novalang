@@ -1,7 +1,12 @@
+import printf from 'io';
+
 class Calculator {
-  add(x: Int, y: Int) -> Int {
-    return x + y
+  add() -> Int {
+    return 42
   }
 }
 
-const x = new Calculator()
+const a = new Calculator()
+const b = a.add()
+
+printf("The answer is %d", b);

@@ -19,6 +19,7 @@ class TypeAnalyzer {
       .returns('modules');
 
     results.modules.forEach((n) => {
+      this.codeModule = n;
       this.analyzeModule(n);
     });
   }
@@ -60,6 +61,8 @@ class TypeAnalyzer {
         return this.analyzeExport(node);
       case 'class_definition':
         return this.analyzeClass(node);
+      case 'object_reference':
+        return this.analyzeObjectReference(node);
       case 'boolean_literal':
       case 'number_literal':
       case 'string_literal':
@@ -205,7 +208,6 @@ class TypeAnalyzer {
     retResult.returnStatements.reduce((finalType, retNode) => {
       const retType = this.analyzeType(retNode);
 
-
       if (!this.reconcileTypes(finalType, retType)) {
         if (funcType.attributes.kind === 'Void') {
           throw new VoidFunctionReturnError(`Void function \`${funcNode.attributes.identifier}\` is not allowed to return a value`);
@@ -245,8 +247,15 @@ class TypeAnalyzer {
   }
 
   analyzeInstantiation(instNode) {
-    console.log('type inst');
-    console.log(instNode);
+    const instQuery = new Query(this.sourceGraph);
+    const result = instQuery
+      .find(instNode)
+      .out('binding', { name: 'binding' })
+      .returns('binding');
+
+    const classNode = result.binding[0];
+
+    return this.analyzeType(classNode);
   }
 
   analyzeExport (exportNode) {
@@ -282,6 +291,19 @@ class TypeAnalyzer {
     methodResult.methods.forEach((methodNode) => {
       this.analyzeType(methodNode);
     });
+  }
+
+  analyzeObjectReference(refNode) {
+    const keyExprNode = this.sourceGraph.outgoing(refNode, 'key_expression');
+    const keyNode = keyExprNode[0];
+
+    const refType = this.analyzeType(keyNode);
+
+    if (refType) {
+      this.sourceGraph.addEdge(keyNode, refType, 'type');
+
+      return refType;
+    }
   }
 
   analyzeLiteral (literalNode) {
