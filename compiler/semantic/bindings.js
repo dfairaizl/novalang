@@ -12,7 +12,6 @@ class BindingAnalyzer {
   }
 
   analyze () {
-
     const sourceQuery = new Query(this.sourceGraph);
     const result = sourceQuery
       .match({ type: 'module', identifier: 'main_module' }, { name: 'sources' })
@@ -42,7 +41,9 @@ class BindingAnalyzer {
         case 'do_while_loop':
         case 'else_expression':
         case 'export_statement':
+        case 'class_definition':
         case 'function':
+        case 'method':
         case 'if_conditional':
         case 'immutable_declaration':
         case 'mutable_declaration':
@@ -67,6 +68,9 @@ class BindingAnalyzer {
         break;
       case 'import_statement':
         this.bindImport(sourceNode);
+        break;
+      case 'instantiation':
+        this.bindIinstantiation(sourceNode);
         break;
     }
   }
@@ -196,6 +200,26 @@ class BindingAnalyzer {
 
     // no matching delcaration found!
     throw new UndeclaredVariableError(`Unknown variable \`${referenceNode.attributes.identifier}\``);
+  }
+
+  bindIinstantiation(instNode) {
+    const query = new Query(this.sourceGraph);
+
+    const results = query
+      .find(this.codeModule)
+      .out()
+      .where({ type: 'class_definition', name: instNode.identifier }, { name: 'classDef'})
+      .returns('classDef');
+
+    const classDefinition = results.classDef[0];
+
+    if (classDefinition) {
+      this.sourceGraph.addEdge(instNode, classDefinition, 'binding');
+      return;
+    }
+
+    // no matching class definition found!
+    throw new UndeclaredVariableError(`Unknown class \`${referenceNode.attributes.identifier}\``);
   }
 
   // helpers

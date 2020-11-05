@@ -466,15 +466,20 @@ class Generator {
   }
 
   codegenVar(node) {
-    const typeNode = this.sourceGraph.outgoing(node, "type")[0];
     const exprNode = this.sourceGraph.outgoing(node, "expression")[0];
 
     if (exprNode.attributes.type === "instantiation") {
-      const currentClass = this.sourceGraph.relationFromNode(
-        exprNode,
-        "binding"
-      )[0];
-      const classConstructor = `${currentClass.attributes.identifier}`;
+      const typeQuery = new Query(this.sourceGraph);
+      const result = typeQuery
+        .find(exprNode)
+        .out('binding', { name: 'classDef' })
+        .out('type', { name: 'classType' })
+        .returns(['classDef', 'classType']);
+
+      const classNode = result.classDef[0];
+      const typeNode = result.classType[0];
+
+      const classConstructor = `${classNode.attributes.identifier}`;
 
       const funcRef = this.module.getNamedFunction(classConstructor);
 

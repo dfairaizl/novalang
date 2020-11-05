@@ -13,7 +13,6 @@ class TypeAnalyzer {
 
   analyze () {
     // TODO: Install the build in types so we don't need to create them via strings
-
     const sourceQuery = new Query(this.sourceGraph);
     const results = sourceQuery
       .match({ type: 'module' }, { name: 'modules'})
@@ -22,8 +21,6 @@ class TypeAnalyzer {
     results.modules.forEach((n) => {
       this.analyzeModule(n);
     });
-
-    this.sourceGraph.debug();
   }
 
   analyzeModule (node) {
@@ -33,7 +30,6 @@ class TypeAnalyzer {
       .out('sources', { name: 'sources' })
       .returns('sources');
 
-    debugger;
     result.sources.forEach((n) => {
       this.analyzeType(n);
     });
@@ -56,6 +52,8 @@ class TypeAnalyzer {
         return this.analyzeReturn(node);
       case 'invocation':
         return this.analyzeInvocation(node);
+      case 'instantiation':
+        return this.analyzeInstantiation(node);
       case 'export_statement':
         return this.analyzeExport(node);
       case 'export_statement':
@@ -126,7 +124,6 @@ class TypeAnalyzer {
   }
 
   analyzeBinop (binopNode) {
-    debugger;
     let binopQuery = new Query(this.sourceGraph)
     const leftResult = binopQuery.find(binopNode)
       .out('left', { name: 'leftExpression' })
@@ -247,6 +244,11 @@ class TypeAnalyzer {
     return this.analyzeType(funcNode);
   }
 
+  analyzeInstantiation(instNode) {
+    console.log('type inst');
+    console.log(instNode);
+  }
+
   analyzeExport (exportNode) {
     const query = new Query(this.sourceGraph);
     const result = query
@@ -260,22 +262,22 @@ class TypeAnalyzer {
   }
 
   analyzeClass (classNode) {
-    debugger;
     // check if this node already has a declared type (we've already seen it)
     const resolvedType = this.resolveType(classNode);
     if (resolvedType) {
       return resolvedType;
     }
 
-    // analyze function parameters
+    const classType = this.buildType(classNode.attributes.kind);
+    this.sourceGraph.addEdge(classNode, classType, 'type');
+
+    // analyze methods
     const methodsQuery = new Query(this.sourceGraph);
     const methodResult = methodsQuery
       .find(classNode)
       .out('body')
       .where({ type: 'method' }, { name: 'methods' })
       .returns('methods');
-
-    console.log(require('util').inspect(methodResult, { depth: null }));
 
     methodResult.methods.forEach((methodNode) => {
       this.analyzeType(methodNode);
