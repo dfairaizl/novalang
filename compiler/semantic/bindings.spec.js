@@ -5,8 +5,10 @@ const { Query } = require('@novalang/graph');
 const Parser = require('../parser');
 const BindingAnalyzer = require('./bindings');
 const {
+  ClassNotFoundError,
   FunctionNotFoundError,
   ImportNotFoundError,
+  MethodNotFoundError,
   UndeclaredModuleError,
   UndeclaredVariableError
 } = require('./errors');
@@ -519,6 +521,133 @@ describe('Binding Analyzer', () => {
       expect(sourceGraph.outgoing(result.ref[2], 'binding')).toMatchObject([
         { attributes: { type: 'mutable_declaration' } }
       ]);
+    });
+  });
+
+  describe('class instantiation', () => {
+    it('binds instantiations to class definitions', () => {
+      const parser = new Parser(`
+        class Calculator {}
+        const x = new Calculator();
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'instantiation' }, { name: 'inst' }).returns('inst');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+      bindingAnalyzer.analyze();
+
+      expect(sourceGraph.outgoing(result.inst[0], 'binding')).toMatchObject([
+        { attributes: { type: 'class_definition' } }
+      ]);
+    });
+
+    it('throws an error instantiating an undefined class', () => {
+      const parser = new Parser(`
+        class Calculator {}
+
+        const x = new Math();
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+
+      expect(() => bindingAnalyzer.analyze()).toThrowError(ClassNotFoundError);
+    });
+  });
+
+  describe('class instances', () => {
+    it('binds invocations to class methods', () => {
+      const parser = new Parser(`
+        class Calculator {
+          getNumber() -> Int {
+            return 42;
+          }
+        }
+
+        const x = new Calculator();
+        x.getNumber();
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'invocation' }, { name: 'invoke' }).returns('invoke');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+      bindingAnalyzer.analyze();
+
+      expect(sourceGraph.outgoing(result.invoke[0], 'binding')).toMatchObject([
+        { attributes: { type: 'method' } }
+      ]);
+    });
+
+    it('binds separate invocations to class methods', () => {
+      const parser = new Parser(`
+        class Calculator {
+          getNumber() -> Int {
+            return 42;
+          }
+
+          getFloat() -> Float {
+            return 10.0
+          }
+        }
+
+        const x = new Calculator();
+        x.getNumber();
+        x.getFloat();
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'invocation' }, { name: 'invoke' }).returns('invoke');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+      bindingAnalyzer.analyze();
+
+      expect(sourceGraph.outgoing(result.invoke[0], 'binding')).toMatchObject([
+        { attributes: { type: 'method', identifier: 'getNumber' } }
+      ]);
+
+      expect(sourceGraph.outgoing(result.invoke[1], 'binding')).toMatchObject([
+        { attributes: { type: 'method', identifier: 'getFloat' } }
+      ]);
+    });
+
+    it('throws an error trying to reference an unknown instance', () => {
+      const parser = new Parser(`
+        class Calculator {}
+
+        const x = new Calculator();
+        a.unknown();
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+
+
+      expect(() => bindingAnalyzer.analyze()).toThrowError(UndeclaredVariableError);
+    });
+
+    it('throws an error trying to bind an unknown method', () => {
+      const parser = new Parser(`
+        class Calculator {}
+
+        const x = new Calculator();
+        x.unknown();
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+
+      expect(() => bindingAnalyzer.analyze()).toThrowError(MethodNotFoundError);
     });
   });
 });

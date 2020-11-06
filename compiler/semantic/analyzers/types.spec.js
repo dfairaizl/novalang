@@ -467,7 +467,7 @@ describe('Type Analyzer', () => {
       const result = q.match({ type: 'function' }, { name: 'func' }).returns('func');
 
       const funcNode = result.func[0];
-      
+
       const type = sourceGraph.outgoing(funcNode, 'type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
@@ -475,7 +475,7 @@ describe('Type Analyzer', () => {
     });
   });
 
-  describe.skip('class definitions', () => {
+  describe('class definitions', () => {
     it('builds types for class definitions', () => {
       const parser = new Parser('class Calculator {}');
 
@@ -484,14 +484,17 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const yNode = sourceGraph.search('class_definition')[0];
-      const type = sourceGraph.outgoing(yNode, 'type');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'class_definition' }, { name: 'classDef' }).returns('classDef');
+
+      const type = sourceGraph.outgoing(result.classDef[0], 'type');
+
       expect(type[0].attributes).toMatchObject({
         kind: 'Calculator'
       });
     });
 
-    it('throws and error if classes are defined more than once', () => {
+    it.skip('throws and error if classes are defined more than once', () => {
       const parser = new Parser('class Calculator {}; class Calculator {}');
 
       const sourceGraph = parser.parse();
@@ -501,7 +504,7 @@ describe('Type Analyzer', () => {
     });
   });
 
-  describe.skip('class methods', () => {
+  describe('class methods', () => {
     it('builds method return types', () => {
       const parser = new Parser(`
         class Calculator {
@@ -514,8 +517,10 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const yNode = sourceGraph.search('method')[0];
-      const type = sourceGraph.outgoing(yNode, 'return_type');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'method' }, { name: 'methods' }).returns('methods');
+
+      const type = sourceGraph.outgoing(result.methods[0], 'type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Bool'
       });
@@ -533,8 +538,10 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const yNode = sourceGraph.search('method')[0];
-      const type = sourceGraph.outgoing(yNode, 'return_type');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'method' }, { name: 'methods' }).returns('methods');
+
+      const type = sourceGraph.outgoing(result.methods[0], 'type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Void'
       });
@@ -552,8 +559,10 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const yNode = sourceGraph.search('function_argument')[0];
-      const type = sourceGraph.outgoing(yNode, 'type');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'function_argument' }, { name: 'args' }).returns('args');
+
+      const type = sourceGraph.outgoing(result.args[0], 'type');
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
       });
@@ -571,21 +580,20 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const args = sourceGraph.search('function_argument');
-      const typeX = sourceGraph.outgoing(args[0], 'type');
-      const typeY = sourceGraph.outgoing(args[1], 'type');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'function_argument' }, { name: 'args' }).returns('args');
 
-      expect(typeX[0].attributes).toMatchObject({
+      expect(sourceGraph.outgoing(result.args[0], 'type')[0].attributes).toMatchObject({
         kind: 'Int'
       });
 
-      expect(typeY[0].attributes).toMatchObject({
+      expect(sourceGraph.outgoing(result.args[1], 'type')[0].attributes).toMatchObject({
         kind: 'Int'
       });
     });
   });
 
-  describe.skip('class instantiation', () => {
+  describe('class instantiation', () => {
     it('builds types for class definitions', () => {
       const parser = new Parser(`
         class Calculator {}
@@ -597,10 +605,41 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const xNode = sourceGraph.search('immutable_declaration')[0];
-      const type = sourceGraph.outgoing(xNode, 'type');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'immutable_declaration' }, { name: 'decl' }).returns('decl');
+
+      const type = sourceGraph.outgoing(result.decl[0], 'type');
+
       expect(type[0].attributes).toMatchObject({
         kind: 'Calculator'
+      });
+    });
+  });
+
+  describe('class instances', () => {
+    it('builds types for invoked methods', () => {
+      const parser = new Parser(`
+        class Calculator {
+          turnOn() {
+          }
+        }
+
+        const x = new Calculator();
+        x.turnOn();
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'invocation' }, { name: 'invoke' }).returns('invoke');
+
+      const type = sourceGraph.outgoing(result.invoke[0], 'type');
+
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Void'
       });
     });
   });

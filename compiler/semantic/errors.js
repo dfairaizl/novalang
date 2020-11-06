@@ -2,6 +2,7 @@ class ClassNotFoundError extends Error {}
 class FunctionNotFoundError extends Error {}
 class ImportNotFoundError extends Error {}
 class InvalidExportError extends Error {}
+class MethodNotFoundError extends Error {}
 class MismatchedReturnTypeError extends Error {}
 class MissingTypeAnnotationError extends Error {}
 class ModuleNotFound extends Error {}
@@ -17,6 +18,7 @@ module.exports = {
   FunctionNotFoundError,
   ImportNotFoundError,
   InvalidExportError,
+  MethodNotFoundError,
   MismatchedReturnTypeError,
   MissingTypeAnnotationError,
   ModuleNotFound,

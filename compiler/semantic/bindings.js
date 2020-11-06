@@ -1,7 +1,9 @@
 const { Query } = require('@novalang/graph');
 const {
+  ClassNotFoundError,
   FunctionNotFoundError,
   ImportNotFoundError,
+  MethodNotFoundError,
   UndeclaredModuleError,
   UndeclaredVariableError
 } = require('./errors');
@@ -226,26 +228,24 @@ class BindingAnalyzer {
     // bind the keypath
     const keyExprNode = this.sourceGraph.outgoing(referenceNode, 'key_expression')[0];
 
-    if (keyExprNode) {
-      const keyQuery = new Query(this.sourceGraph);
-      const keyResult = keyQuery
-        .find(scopeNode)
-        .out('expression')
-        .out('binding')
-        .out('body')
-        .where({ type: 'method', identifier: keyExprNode.attributes.identifier  }, { name: 'classMethod' })
-        .returns('classMethod');
+    const keyQuery = new Query(this.sourceGraph);
+    const keyResult = keyQuery
+      .find(scopeNode)
+      .out('expression')
+      .out('binding', { name: 'classDef' })
+      .out('body')
+      .where({ type: 'method', identifier: keyExprNode.attributes.identifier  }, { name: 'classMethod' })
+      .returns(['classDef', 'classMethod']);
 
-      const bindMethod = keyResult.classMethod[0];
+    const bindMethod = keyResult.classMethod[0];
 
-      if (bindMethod) {
-        this.sourceGraph.addEdge(keyExprNode, bindMethod, 'binding');
+    if (bindMethod) {
+      this.sourceGraph.addEdge(keyExprNode, bindMethod, 'binding');
 
-        return;
-      }
-
-      throw new Error('Unknown key expression');
+      return;
     }
+
+    throw new MethodNotFoundError(`Method \`${keyExprNode.attributes.identifier}\` is not defined on class ${keyResult.classDef[0].attributes.identifier}`);
   }
 
   bindInstantiation(instNode) {
@@ -254,7 +254,7 @@ class BindingAnalyzer {
     const results = query
       .find(this.codeModule)
       .out()
-      .where({ type: 'class_definition', name: instNode.identifier }, { name: 'classDef'})
+      .where({ type: 'class_definition', identifier: instNode.attributes.identifier }, { name: 'classDef'})
       .returns('classDef');
 
     const classDefinition = results.classDef[0];
@@ -265,7 +265,7 @@ class BindingAnalyzer {
     }
 
     // no matching class definition found!
-    throw new UndeclaredVariableError(`Unknown class \`${referenceNode.attributes.identifier}\``);
+    throw new ClassNotFoundError(`Unknown class \`${instNode.attributes.identifier}\``);
   }
 
   // helpers
