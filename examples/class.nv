@@ -1,12 +1,18 @@
 import printf from 'io';
 
 class Calculator {
-  add() -> Int {
-    return 42
+  add(x: Int, y: Int) -> Int {
+    return x + y;
+  }
+
+  sub(x: Int, y: Int) -> Int {
+    return x - y
   }
 }
 
-const a = new Calculator()
-const b = a.add()
+const a = new Calculator();
+const b = a.add(1, 1);
+const c = a.sub(1, 1);
 
-printf("The answer is %d", b);
+printf("The answer b %d", b);
+printf("The answer c %d", c);

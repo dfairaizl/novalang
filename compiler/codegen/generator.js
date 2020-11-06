@@ -257,7 +257,6 @@ class Generator {
 
     const methodName = `${currentClass.name}_${node.attributes.identifier}`;
 
-    console.log(node);
     const typeNode = this.sourceGraph.outgoing(node, "type")[0];
     const retType = this.getType(typeNode);
 
@@ -550,28 +549,47 @@ class Generator {
   }
 
   codegenInvocation(node) {
+    debugger;
     // look up function in module
     const boundNode = this.sourceGraph.outgoing(node, "binding")[0];
 
-    let name = null;
     if (boundNode.attributes.type === "method") {
       const classContainer = this.sourceGraph.incoming(boundNode, 'body')[0];
-      // const currentClass = this.builder.currentClass;
-      name = `${classContainer.attributes.identifier}_${boundNode.attributes.identifier}`;
+      const name = `${classContainer.attributes.identifier}_${boundNode.attributes.identifier}`;
+
+      // build argument type list
+      let argTypes = this.sourceGraph
+        .outgoing(node, "arguments")
+        .map(n => {
+          return this.codegenNode(n);
+        });
+
+      const typeQuery = new Query(this.sourceGraph);
+      const result = typeQuery.find(node)
+        .in('key_expression')
+        .out('binding', { name: 'ref' })
+        .returns('ref');
+
+      const thisValue = this.buildValue(result.ref[0]);
+      argTypes.unshift(thisValue);
+
+      const funcRef = this.module.getNamedFunction(name);
+
+      return this.builder.buildCall(funcRef, argTypes, "");
     } else {
-      name = boundNode.attributes.identifier;
+      const name = boundNode.attributes.identifier;
+
+      const funcRef = this.module.getNamedFunction(name);
+
+      // build argument type list
+      const argTypes = this.sourceGraph
+        .outgoing(node, "arguments")
+        .map(n => {
+          return this.codegenNode(n);
+        });
+
+      return this.builder.buildCall(funcRef, argTypes, "");
     }
-
-    const funcRef = this.module.getNamedFunction(name);
-
-    // build argument type list
-    const argTypes = this.sourceGraph
-      .outgoing(node, "arguments")
-      .map(n => {
-        return this.codegenNode(n);
-      });
-
-    return this.builder.buildCall(funcRef, argTypes, "");
   }
 
   codegenBinop(node) {
@@ -697,6 +715,11 @@ class Generator {
       case "String":
         return this.builder.buildGlobalString("format", node.attributes.value);
     }
+
+    // see if the value we want is in the scope
+    const val = this.builder.namedValues[node.attributes.identifier];
+
+    return val.storage;
   }
 
   getType(typeNode) {

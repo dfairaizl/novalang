@@ -233,7 +233,7 @@ class BindingAnalyzer {
         .out('expression')
         .out('binding')
         .out('body')
-        .where({ type: 'method' }, { name: 'classMethod' })
+        .where({ type: 'method', identifier: keyExprNode.attributes.identifier  }, { name: 'classMethod' })
         .returns('classMethod');
 
       const bindMethod = keyResult.classMethod[0];
