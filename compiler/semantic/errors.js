@@ -9,6 +9,7 @@ class ModuleNotFound extends Error {}
 class NoMatchingModuleExport extends Error {}
 class ReassignImmutableError extends Error {}
 class TypeMismatchError extends Error {}
+class UndeclaredInstanceVariableError extends Error {}
 class UndeclaredModuleError extends Error {}
 class UndeclaredVariableError extends Error {}
 class VoidFunctionReturnError extends Error {}
@@ -25,6 +26,7 @@ module.exports = {
   NoMatchingModuleExport,
   ReassignImmutableError,
   TypeMismatchError,
+  UndeclaredInstanceVariableError,
   UndeclaredModuleError,
   UndeclaredVariableError,
   VoidFunctionReturnError

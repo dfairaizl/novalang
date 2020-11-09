@@ -304,6 +304,40 @@ describe('Parser', () => {
       });
     });
 
+    it('parses `this` in return statements', () => {
+      const parser = new Parser(`
+        class Calculator {
+          getX () {
+            return this.x;
+          }
+        }
+      `);
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'class_definition',
+        identifier: 'Calculator',
+        kind: 'Calculator',
+        super_class: null,
+        body: [{
+          type: 'method',
+          identifier: 'getX',
+          body: [{
+            type: 'return_statement',
+            expression: [{
+              type: 'instance_reference',
+              identifier: 'this',
+              key_expression: [{
+                type: 'key_reference',
+                identifier: 'x'
+              }]
+            }]
+          }]
+        }]
+      });
+    });
+
     it('parses `this` in binop expressions', () => {
       const parser = new Parser(`
         class Calculator {

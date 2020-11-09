@@ -1,0 +1,5 @@
+class Calculator {
+  isTurnedOn() {
+    return this.on;
+  }
+}

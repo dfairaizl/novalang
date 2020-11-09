@@ -4,6 +4,7 @@ const {
   FunctionNotFoundError,
   ImportNotFoundError,
   MethodNotFoundError,
+  UndeclaredInstanceVariableError,
   UndeclaredModuleError,
   UndeclaredVariableError
 } = require('./errors');
@@ -70,6 +71,9 @@ class BindingAnalyzer {
         break;
       case 'object_reference':
         this.bindObjectReference(sourceNode);
+        break;
+      case 'instance_reference':
+        this.bindInstanceReference(sourceNode);
         break;
       case 'import_statement':
         this.bindImport(sourceNode);
@@ -246,6 +250,37 @@ class BindingAnalyzer {
     }
 
     throw new MethodNotFoundError(`Method \`${keyExprNode.attributes.identifier}\` is not defined on class ${keyResult.classDef[0].attributes.identifier}`);
+  }
+
+  bindInstanceReference(refNode) {
+    const query = new Query(this.sourceGraph);
+    const result = query.find(refNode)
+      .in()
+      .until({ type: 'class_definition' }, { name: 'classDef' })
+      .returns('classDef');
+
+    const scopeClass = result.classDef.reverse().find((n) => {
+      return n.attributes.type === 'class_definition';
+    });
+
+    // find instance reference key expression and look it up agains the class def
+    const keyExprNode = this.sourceGraph.outgoing(refNode, 'key_expression')[0];
+
+    if (keyExprNode.attributes.type === 'key_reference') {
+      const ivarQuery = new Query(this.sourceGraph);
+      const result = ivarQuery.find(scopeClass)
+        .out('instance_variables', { name: 'ivars' })
+        .returns('ivars');
+
+      const refVar = result.ivars.find((i) => i.attributes.identifier === keyExprNode.attributes.identifier);
+
+      if (refVar) {
+        this.sourceGraph.addEdge(keyExprNode, refVar, 'binding');
+        return;
+      }
+
+      throw new UndeclaredInstanceVariableError(`Instance variable \`${keyExprNode.attributes.identifier}\` is not defined in class \`${scopeClass.attributes.identifier}\``)
+    }
   }
 
   bindInstantiation(instNode) {

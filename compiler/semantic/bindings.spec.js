@@ -9,6 +9,7 @@ const {
   FunctionNotFoundError,
   ImportNotFoundError,
   MethodNotFoundError,
+  UndeclaredInstanceVariableError,
   UndeclaredModuleError,
   UndeclaredVariableError
 } = require('./errors');
@@ -648,6 +649,72 @@ describe('Binding Analyzer', () => {
       const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
 
       expect(() => bindingAnalyzer.analyze()).toThrowError(MethodNotFoundError);
+    });
+  });
+
+  describe('class instance variables', () => {
+    it('throws an error when referencing an unknown instance variable', () => {
+      const parser = new Parser(`
+        class Calculator {
+          isTurnedOn() {
+            return this.on;
+          }
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+
+      expect(() => bindingAnalyzer.analyze()).toThrowError(UndeclaredInstanceVariableError);
+    });
+
+    it('binds instance references to class constants', () => {
+      const parser = new Parser(`
+        class Calculator {
+          const PI = 3.14
+
+          getPI() -> Float {
+            return this.PI;
+          }
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'key_reference' }, { name: 'keyRef' }).returns('keyRef');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+      bindingAnalyzer.analyze();
+
+      expect(sourceGraph.outgoing(result.keyRef[0], 'binding')).toMatchObject([
+        { attributes: { type: 'immutable_declaration' } }
+      ]);
+    });
+
+    it('binds instance references to class instance variables', () => {
+      const parser = new Parser(`
+        class Calculator {
+          let x = 0.0
+
+          getX() -> Float {
+            return this.x;
+          }
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'key_reference' }, { name: 'keyRef' }).returns('keyRef');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+      bindingAnalyzer.analyze();
+
+      expect(sourceGraph.outgoing(result.keyRef[0], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration' } }
+      ]);
     });
   });
 });

@@ -3,10 +3,11 @@ const { resolve } = require("path");
 
 const Compiler = require("../compiler");
 
-const sourceFile = resolve(__dirname, "..", "examples", "class.nv");
+const sourceFile = resolve(__dirname, "..", "examples", "ivars.nv");
 
-const novaCompier = new Compiler(
+const novaCompiler = new Compiler(
   sourceFile,
-  "class" /*, { debugGraph: true } */
+  "ivars" /*, { debugGraph: true } */
 );
-novaCompier.compile();
+
+novaCompiler.compile();

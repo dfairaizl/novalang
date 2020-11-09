@@ -59,6 +59,7 @@ class Compiler {
 
       console.log(' - ', currentSource.fileName());
 
+      debugger;
       const sourceGraph = this.parse(currentSource);
 
       if (!this.sourceGraph) {
@@ -75,6 +76,7 @@ class Compiler {
         this.sources.push(importSource);
       });
     }
+
 
     const analyzer = new SemanticAnalyzer(this.sourceGraph);
     analyzer.analyze();

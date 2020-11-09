@@ -1048,9 +1048,17 @@ class Parser {
       return this.parseFunctionInvocation(identifier);
     } else if (token instanceof OperatorToken && token.value === ".") {
       this.validateNextToken(".");
+
+      let type = null;
+      if (identifier === 'this') {
+        type = 'instance_reference';
+      } else {
+        type = 'object_reference'
+      }
+
       const keyExpr = this.parseKeyPath();
       const refExpr = this.sourceGraph.addNode({
-        type: "object_reference",
+        type: type,
         identifier
       });
 
