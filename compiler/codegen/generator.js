@@ -95,6 +95,8 @@ class Generator {
         return this.codegenReference(node);
       case "object_reference":
         return this.codegenObjectReference(node);
+      case "instance_reference":
+        return this.codegenInstanceReference(node);
       case "key_reference":
         return this.codegenKeyReference(node);
       case "return_statement":
@@ -144,9 +146,10 @@ class Generator {
     const exprRef = this.codegenNode(expr);
 
     if (assign.attributes.type === "instance_reference") {
+      debugger;
       const thisVal = this.builder.namedValues["this"];
 
-      const ivar = this.sourceGraph.outgoing(assign, "binding")[0];
+      const ivar = this.sourceGraph.outgoing(assign, "key_expression")[0];
       const ivarRef = libLLVM.LLVMBuildStructGEP(
         this.builder.builderRef,
         thisVal,
@@ -189,8 +192,9 @@ class Generator {
 
     // setup any initial ivar values such as constants for each instance (before main constructor)
     ivars.forEach((v, index) => {
-      if (v.attributes.type === "immutable_declaration") {
-        const exprNode = this.sourceGraph.outgoing(v, "expression")[0];
+      const exprNode = this.sourceGraph.outgoing(v, "expression")[0];
+
+      if (exprNode) {
         const val = this.codegenNode(exprNode);
 
         const structMember = libLLVM.LLVMBuildStructGEP(
@@ -393,6 +397,7 @@ class Generator {
     // get the return expression
     const retNode = this.sourceGraph.outgoing(node, "expression")[0];
 
+    debugger;
     // code gen expression
     const expr = this.codegenNode(retNode);
 
@@ -413,10 +418,12 @@ class Generator {
         finalBlock,
         "thenBlock"
       );
+
       const elseBlock = this.builder.insertBlockBeforeBlock(
         finalBlock,
         "elseBlock"
       );
+
       const mergeBlock = this.builder.insertBlockBeforeBlock(
         finalBlock,
         "mergeBlock"
@@ -529,27 +536,35 @@ class Generator {
     const bindingObject = this.sourceGraph.outgoing(node, "binding")[0];
 
     return this.codegenNode(keyPathNode);
+  }
 
-    // const instance = libLLVM.LLVMBuildStructGEP(
-    //   this.builder.builderRef,
-    //   this.builder.namedValues[bindingObject.attributes.identifier].storage,
-    //   0,
-    //   bindingObject.attributes.identifier
-    // );
+  codegenInstanceReference(node) {
+    debugger;
+    const keyPathNode = this.sourceGraph.outgoing(node, "key_expression")[0];
+    const bindingObject = this.sourceGraph.outgoing(keyPathNode, "binding")[0];
 
-    // return libLLVM.LLVMBuildLoad(this.builder.builderRef, res, "ref");
+    if (keyPathNode.attributes.type === 'key_reference') {
+      const instance = libLLVM.LLVMBuildStructGEP(
+        this.builder.builderRef,
+        this.builder.namedValues[node.attributes.identifier],
+        0,
+        bindingObject.attributes.identifier
+      );
+
+      return libLLVM.LLVMBuildLoad(this.builder.builderRef, instance, "ref");
+    }
+
+    // const val = this.codegenNode(keyPathNode);
+
+    console.log(bindingObject);
   }
 
   codegenKeyReference(node) {
-    const keyPathNode = this.sourceGraph.relationFromNode(
-      node,
-      "key_expression"
-    )[0];
+    const keyPathNode = this.sourceGraph.outgoing(node, "key_expression")[0];
     return this.codegenNode(keyPathNode);
   }
 
   codegenInvocation(node) {
-    debugger;
     // look up function in module
     const boundNode = this.sourceGraph.outgoing(node, "binding")[0];
 

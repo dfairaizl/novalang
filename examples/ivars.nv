@@ -1,5 +1,20 @@
+import printf from 'io';
+
 class Calculator {
-  isTurnedOn() {
+  let on = false
+
+  isTurnedOn() -> Boolean {
     return this.on;
   }
+
+  turnOn() {
+    this.on = true;
+  }
 }
+
+const c = new Calculator();
+
+c.turnOn();
+const isOn = c.isTurnedOn();
+
+printf("Calculator is %d", isOn);
