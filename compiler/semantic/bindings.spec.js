@@ -561,6 +561,28 @@ describe('Binding Analyzer', () => {
   });
 
   describe('class instances', () => {
+    it('throws an error when invoking an unknown method', () => {
+      const parser = new Parser(`
+        class Calculator {
+          getNumber() -> Int {
+            return 42;
+          }
+        }
+
+        const x = new Calculator();
+        x.getFloat();
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'invocation' }, { name: 'invoke' }).returns('invoke');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+
+      expect(() => bindingAnalyzer.analyze()).toThrow(MethodNotFoundError);
+    });
+
     it('binds invocations to class methods', () => {
       const parser = new Parser(`
         class Calculator {
@@ -717,7 +739,7 @@ describe('Binding Analyzer', () => {
       ]);
     });
 
-    it.only('binds instance references to class instance variables in constructor', () => {
+    it('binds instance references to class instance variables in constructor', () => {
       const parser = new Parser(`
         class Calculator {
           let x: Int
