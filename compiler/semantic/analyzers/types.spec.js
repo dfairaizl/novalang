@@ -246,6 +246,16 @@ describe('Type Analyzer', () => {
         kind: 'Int'
       });
     });
+
+    it('resolves types of variables reassignment', () => {
+      const parser = new Parser('let x = 1; x = 1.0;');
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+
+      expect(() => semanticAnalyzer.analyze()).toThrowError(TypeMismatchError);
+    });
   });
 
   describe('binary expressions', () => {
@@ -644,8 +654,67 @@ describe('Type Analyzer', () => {
     });
   });
 
-  describe.skip('class instance variables', () => {
+  describe('class instance variables', () => {
     it('types instance variables', () => {
+      const parser = new Parser(`
+        class Calculator {
+          let x: Int
+          const PI = 3.14;
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'class_definition' })
+        .out('instance_variables', { name: 'ivars' })
+        .returns('ivars');
+
+      expect(sourceGraph.outgoing(result.ivars[0], 'type')[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+
+      expect(sourceGraph.outgoing(result.ivars[1], 'type')[0].attributes).toMatchObject({
+        kind: 'Float'
+      });
+    });
+
+    it('throws an error when type of instance variables does not match', () => {
+      const parser = new Parser(`
+        class Calculator {
+          let x: Int = false
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+
+      expect(() => semanticAnalyzer.analyze()).toThrowError(TypeMismatchError);
+    });
+
+    it('throws an error when type of instance variables does not match return type', () => {
+      const parser = new Parser(`
+        class Calculator {
+          let x = 10
+
+          getX() -> Float {
+            return x;
+          }
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+
+      expect(() => semanticAnalyzer.analyze()).toThrowError(MismatchedReturnTypeError);
+    });
+
+    it('checks type of instance variables in constructor', () => {
       const parser = new Parser(`
         class Calculator {
           let x: Int
@@ -662,9 +731,39 @@ describe('Type Analyzer', () => {
       const semanticAnalyzer = new Analyzer(sourceGraph);
       semanticAnalyzer.analyze();
 
-      const xNode = sourceGraph.search('key_reference')[0];
-      const binding = sourceGraph.outgoing(xNode, 'binding')[0];
-      const type = sourceGraph.outgoing(binding, 'type');
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'key_reference' }, { name: 'ref' }).returns('ref');
+
+      const binding = sourceGraph.outgoing(result.ref[0], 'binding');
+      const type = sourceGraph.outgoing(binding[0], 'type');
+
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+    });
+
+    it('checks type of instance variables in expressions', () => {
+      const parser = new Parser(`
+        class Calculator {
+          let x: Int
+          const PI = 3.14
+
+          setX () {
+            this.x = 1
+          }
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'key_reference' }, { name: 'ref' }).returns('ref');
+
+      const binding = sourceGraph.outgoing(result.ref[0], 'binding');
+      const type = sourceGraph.outgoing(binding[0], 'type');
 
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'

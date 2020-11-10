@@ -45,9 +45,11 @@ class TypeAnalyzer {
       case 'variable_reference':
         return this.analyzeReference(node);
       case 'bin_op':
+      case 'assignment':
         return this.analyzeBinop(node);
       case 'function':
       case 'method':
+      case 'constructor':
         return this.analyzeFunction(node);
       case 'return_statement':
         return this.analyzeReturn(node);
@@ -63,6 +65,10 @@ class TypeAnalyzer {
         return this.analyzeClass(node);
       case 'object_reference':
         return this.analyzeObjectReference(node);
+      case 'key_reference':
+        return this.analyzeKeyReference(node);
+      case 'instance_reference':
+        return this.analyzeInstanceReference(node);
       case 'boolean_literal':
       case 'number_literal':
       case 'string_literal':
@@ -280,6 +286,26 @@ class TypeAnalyzer {
     const classType = this.buildType(classNode.attributes.kind);
     this.sourceGraph.addEdge(classNode, classType, 'type');
 
+    const ivarQuery = new Query(this.sourceGraph);
+    const ivarResult = ivarQuery.find(classNode)
+      .out('instance_variables', { name: 'ivars' })
+      .returns('ivars');
+
+    ivarResult.ivars.forEach((ivar) => this.analyzeType(ivar));
+
+    // analyze constructor if one is defined
+    const constructorQuery = new Query(this.sourceGraph);
+    const constructorResult = constructorQuery
+      .find(classNode)
+      .out('body')
+      .where({ type: 'constructor' }, { name: 'constructor' })
+      .returns('constructor');
+
+    const classConstructor = constructorResult.constructor[0];
+    if (classConstructor) {
+      this.analyzeType(classConstructor);
+    }
+
     // analyze methods
     const methodsQuery = new Query(this.sourceGraph);
     const methodResult = methodsQuery
@@ -304,6 +330,24 @@ class TypeAnalyzer {
 
       return refType;
     }
+  }
+
+  analyzeInstanceReference(instNode) {
+    const keyExprNode = this.sourceGraph.outgoing(instNode, 'key_expression');
+    const keyNode = keyExprNode[0];
+
+    const refType = this.analyzeType(keyNode);
+
+    if (refType) {
+      this.sourceGraph.addEdge(keyNode, refType, 'type');
+
+      return refType;
+    }
+  }
+
+  analyzeKeyReference(keyNode) {
+    const binding = this.sourceGraph.outgoing(keyNode, 'binding');
+    return this.resolveType(binding[0]);
   }
 
   analyzeLiteral (literalNode) {

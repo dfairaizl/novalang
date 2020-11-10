@@ -716,5 +716,30 @@ describe('Binding Analyzer', () => {
         { attributes: { type: 'mutable_declaration' } }
       ]);
     });
+
+    it.only('binds instance references to class instance variables in constructor', () => {
+      const parser = new Parser(`
+        class Calculator {
+          let x: Int
+          const PI = 3.14
+
+          constructor () {
+            this.x = 1
+          }
+        }
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'key_reference' }, { name: 'keyRef' }).returns('keyRef');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+      bindingAnalyzer.analyze();
+
+      expect(sourceGraph.outgoing(result.keyRef[0], 'binding')).toMatchObject([
+        { attributes: { type: 'mutable_declaration' } }
+      ]);
+    });
   });
 });

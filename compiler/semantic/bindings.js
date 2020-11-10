@@ -47,6 +47,7 @@ class BindingAnalyzer {
         case 'class_definition':
         case 'function':
         case 'method':
+        case 'constructor':
         case 'if_conditional':
         case 'immutable_declaration':
         case 'mutable_declaration':
