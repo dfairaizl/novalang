@@ -76,6 +76,19 @@ class LLVMBuilder {
     return libLLVM.LLVMBuildStore(this.builderRef, varRef, namedValue.storage);
   }
 
+  buildArray(arrayType, placeholder) {
+    const arrayRef = libLLVM.LLVMBuildArrayAlloca(
+      this.builderRef,
+      arrayType,
+      null,
+      placeholder
+    );
+
+    this.namedValues[placeholder] = new Value(arrayRef);
+
+    return arrayRef;
+  }
+
   buildAdd(lval, rval, placeholder) {
     return libLLVM.LLVMBuildAdd(this.builderRef, lval, rval, placeholder);
   }

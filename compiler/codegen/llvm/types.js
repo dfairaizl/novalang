@@ -1,5 +1,9 @@
 const { libLLVM } = require('llvm-ffi');
 
+function Array(ofType, length) {
+  return libLLVM.LLVMArrayType(ofType, length);
+}
+
 function Constant (ofType, value) {
   return libLLVM.LLVMConstInt(ofType, value);
 }
@@ -33,11 +37,11 @@ function Void () {
 }
 
 function Struct (name) {
-  console.log('Building struct', name);
   return libLLVM.LLVMStructCreateNamed(libLLVM.LLVMGetGlobalContext(), name);
 }
 
 module.exports = {
+  Array,
   Constant,
   Int1,
   Int8,

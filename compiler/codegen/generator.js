@@ -10,6 +10,7 @@ const Parameter = require("./llvm/parameter");
 const { libLLVM } = require("llvm-ffi");
 
 const {
+  Array,
   Constant,
   Int1,
   Int8,
@@ -506,17 +507,45 @@ class Generator {
 
       // now call the constructor wtih argTypes if one is defined
       // TODO: CONSTRUCTOR
-    } else {
-      const typeNode = this.sourceGraph.outgoing(node, 'type')[0];
+    } else if (exprNode.attributes.type === 'array_literal') {
+      const arrayMembers = this.sourceGraph.outgoing(exprNode, 'members');
 
-      this.builder.buildAlloc(
-        this.getType(typeNode),
+      const typeQuery = new Query(this.sourceGraph);
+      const result = typeQuery
+        .find(node)
+        .out('type', { name: 'arrayType' })
+        .returns('arrayType');
+
+      debugger;
+      const allocatedArray = this.builder.buildArray(
+        new Array(this.getType(result.arrayType[0]), arrayMembers.length),
         node.attributes.identifier
       );
 
+      const arrayValues = arrayMembers.map((member, index) => {
+        const val = this.codegenNode(member);
+
+        const ptr = libLLVM.LLVMBuildInBoundsGEP(
+          this.builder.builderRef,
+          allocatedArray,
+          [Constant(Int32(), 0), Constant(Int32(), index)],
+          2,
+          `${node.attributes.identifier}.${index}`
+        );
+
+        libLLVM.LLVMBuildStore(this.builder.builderRef, val, ptr);
+      });
+    } else {
+      // const typeNode = this.sourceGraph.outgoing(node, 'type')[0];
+      //
+      // this.builder.buildAlloc(
+      //   this.getType(typeNode),
+      //   node.attributes.identifier
+      // );
+      //
       const expr = this.codegenNode(exprNode);
 
-      this.builder.buildStore(node.attributes.identifier, expr);
+      // this.builder.buildStore(node.attributes.identifier, expr);
     }
   }
 
