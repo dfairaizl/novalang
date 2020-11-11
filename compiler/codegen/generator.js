@@ -516,7 +516,6 @@ class Generator {
         .out('type', { name: 'arrayType' })
         .returns('arrayType');
 
-      debugger;
       const allocatedArray = this.builder.buildArray(
         new Array(this.getType(result.arrayType[0]), arrayMembers.length),
         node.attributes.identifier
@@ -536,16 +535,16 @@ class Generator {
         libLLVM.LLVMBuildStore(this.builder.builderRef, val, ptr);
       });
     } else {
-      // const typeNode = this.sourceGraph.outgoing(node, 'type')[0];
-      //
-      // this.builder.buildAlloc(
-      //   this.getType(typeNode),
-      //   node.attributes.identifier
-      // );
-      //
+      const typeNode = this.sourceGraph.outgoing(node, 'type')[0];
+
+      this.builder.buildAlloc(
+        this.getType(typeNode),
+        node.attributes.identifier
+      );
+
       const expr = this.codegenNode(exprNode);
 
-      // this.builder.buildStore(node.attributes.identifier, expr);
+      this.builder.buildStore(node.attributes.identifier, expr);
     }
   }
 
