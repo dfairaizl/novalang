@@ -764,4 +764,25 @@ describe('Binding Analyzer', () => {
       ]);
     });
   });
+
+  describe('arrays', () => {
+    it('binds variables inside an array', () => {
+      const parser = new Parser(`
+        const x = 1;
+        const y = [x];
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'variable_reference' }, { name: 'ref' }).returns('ref');
+
+      const bindingAnalyzer = new BindingAnalyzer(sourceGraph);
+      bindingAnalyzer.analyze();
+
+      expect(sourceGraph.outgoing(result.ref[0], 'binding')).toMatchObject([
+        { attributes: { type: 'immutable_declaration' } }
+      ]);
+    });
+  });
 });

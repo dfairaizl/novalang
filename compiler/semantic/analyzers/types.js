@@ -69,6 +69,8 @@ class TypeAnalyzer {
         return this.analyzeKeyReference(node);
       case 'instance_reference':
         return this.analyzeInstanceReference(node);
+      case 'array_literal':
+        return this.analyzeArray(node);
       case 'boolean_literal':
       case 'number_literal':
       case 'string_literal':
@@ -348,6 +350,28 @@ class TypeAnalyzer {
   analyzeKeyReference(keyNode) {
     const binding = this.sourceGraph.outgoing(keyNode, 'binding');
     return this.resolveType(binding[0]);
+  }
+
+  analyzeArray(arrayNode) {
+    const members = this.sourceGraph.outgoing(arrayNode, 'members');
+
+    const arrayTypes = members.map((m) => this.analyzeType(m));
+
+    const type = arrayTypes.reduce((type, m) => {
+      if (!type) {
+        return m;
+      }
+
+      const recType = this.reconcileTypes(type, m);
+
+      if (!recType) {
+        throw new TypeMismatchError(`Arrays literals must have a consistent type`);
+      }
+
+      return recType;
+    }, null);
+
+    return type;
   }
 
   analyzeLiteral (literalNode) {

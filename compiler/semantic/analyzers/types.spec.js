@@ -504,7 +504,7 @@ describe('Type Analyzer', () => {
       });
     });
 
-    it.skip('throws and error if classes are defined more than once', () => {
+    it('throws and error if classes are defined more than once', () => {
       const parser = new Parser('class Calculator {}; class Calculator {}');
 
       const sourceGraph = parser.parse();
@@ -768,6 +768,121 @@ describe('Type Analyzer', () => {
       expect(type[0].attributes).toMatchObject({
         kind: 'Int'
       });
+    });
+  });
+
+  describe('arrays', () => {
+    it('checks for types in array literals', () => {
+      const parser = new Parser(`
+        const a = [1];
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'immutable_declaration' }, { name: 'decl' }).returns('decl');
+
+      const declNode = result.decl[0];
+      const type = sourceGraph.outgoing(declNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+    });
+
+    it('checks for types in array literals with expressions', () => {
+      const parser = new Parser(`
+        const a = [1 + 1];
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'immutable_declaration' }, { name: 'decl' }).returns('decl');
+
+      const declNode = result.decl[0];
+      const type = sourceGraph.outgoing(declNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+    });
+
+    it('checks for types in array literals with function invocations', () => {
+      const parser = new Parser(`
+        function getFloat() -> Float { return 1.9 }
+        const a = [getFloat()];
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'immutable_declaration' }, { name: 'decl' }).returns('decl');
+
+      const declNode = result.decl[0];
+      const type = sourceGraph.outgoing(declNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Float'
+      });
+    });
+
+    it('checks for types in arrays with annotated declaration', () => {
+      const parser = new Parser(`
+        const a: Int = [1];
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'immutable_declaration' }, { name: 'decl' }).returns('decl');
+
+      const declNode = result.decl[0];
+      const type = sourceGraph.outgoing(declNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+    });
+
+    it('checks for types in arrays with multiple members', () => {
+      const parser = new Parser(`
+        const a = [1, 2, 3];
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'immutable_declaration' }, { name: 'decl' }).returns('decl');
+
+      const declNode = result.decl[0];
+      const type = sourceGraph.outgoing(declNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: 'Int'
+      });
+    });
+
+    it('throws an error when arrays members are not a consistent type', () => {
+      const parser = new Parser(`
+        const a = [1, 2, true];
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+
+      expect(() =>  semanticAnalyzer.analyze()).toThrow(TypeMismatchError);
     });
   });
 
