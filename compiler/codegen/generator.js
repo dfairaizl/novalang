@@ -100,6 +100,8 @@ class Generator {
         return this.codegenInstanceReference(node);
       case "key_reference":
         return this.codegenKeyReference(node);
+      case "array_reference":
+        return this.codegenArrayReference(node);
       case "return_statement":
         return this.codegenReturn(node);
       case "immutable_declaration":
@@ -590,6 +592,24 @@ class Generator {
   codegenKeyReference(node) {
     const keyPathNode = this.sourceGraph.outgoing(node, "key_expression")[0];
     return this.codegenNode(keyPathNode);
+  }
+
+  codegenArrayReference (node) {
+    debugger;
+
+    const indexExprNode = this.sourceGraph.outgoing(node, "index_expression")[0];
+
+    const refExpr = this.codegenNode(indexExprNode);
+
+    const ptr = libLLVM.LLVMBuildInBoundsGEP(
+      this.builder.builderRef,
+      this.builder.namedValues[node.attributes.identifier].storage,
+      [Constant(Int32(), 0), refExpr],
+      2,
+      `${node.attributes.identifier}`
+    );
+
+    return libLLVM.LLVMBuildLoad(this.builder.builderRef, ptr, 'test');
   }
 
   codegenInvocation(node) {

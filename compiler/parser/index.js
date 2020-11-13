@@ -1067,15 +1067,18 @@ class Parser {
       return refExpr;
     } else if (token instanceof OperatorToken && token.value === "[") {
       this.validateNextToken("[");
-      const index = this.parseIdentifier();
+      const indexExpr = this.parseExpression();
 
       this.validateNextToken("]");
 
-      return this.sourceGraph.addNode({
+      const refNode = this.sourceGraph.addNode({
         type: "array_reference",
-        identifier,
-        index
+        identifier
       });
+
+      this.sourceGraph.addEdge(refNode, indexExpr, 'index_expression');
+
+      return refNode;
     }
 
     return this.sourceGraph.addNode({ type: "variable_reference", identifier });

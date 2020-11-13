@@ -134,7 +134,7 @@ describe('Parser', () => {
   });
 
   describe('array accessors', () => {
-    it('parses array indexing', () => {
+    it('parses array indexing in assignments', () => {
       const parser = new Parser('fib[0] = 1');
 
       const parsed = parser.parsePrimaryExpression();
@@ -145,12 +145,84 @@ describe('Parser', () => {
         left: [{
           type: 'array_reference',
           identifier: 'fib',
-          index: '0'
+          index_expression: [{
+            type: 'number_literal',
+            kind: 'Int',
+            value: '0'
+          }]
         }],
         right: [{
           type: 'number_literal',
           kind: 'Int',
           value: '1'
+        }]
+      });
+    });
+
+    it('parses array index references with literals', () => {
+      const parser = new Parser('const x = fib[0]');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'immutable_declaration',
+        identifier: 'x',
+        expression: [{
+          type: 'array_reference',
+          identifier: 'fib',
+          index_expression: [{
+            type: 'number_literal',
+            kind: 'Int',
+            value: '0'
+          }]
+        }]
+      });
+    });
+
+    it('parses array index references with variables', () => {
+      const parser = new Parser('const x = fib[y]');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'immutable_declaration',
+        identifier: 'x',
+        expression: [{
+          type: 'array_reference',
+          identifier: 'fib',
+          index_expression: [{
+            type: 'variable_reference',
+            identifier: 'y'
+          }]
+        }]
+      });
+    });
+
+    it('parses array index references with expressions', () => {
+      const parser = new Parser('const x = fib[1 + 1]');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'immutable_declaration',
+        identifier: 'x',
+        expression: [{
+          type: 'array_reference',
+          identifier: 'fib',
+          index_expression: [{
+            type: 'bin_op',
+            operator: '+',
+            left: [{
+              type: 'number_literal',
+              kind: 'Int',
+              value: '1'
+            }],
+            right: [{
+              type: 'number_literal',
+              kind: 'Int',
+              value: '1'
+            }]
+          }]
         }]
       });
     });

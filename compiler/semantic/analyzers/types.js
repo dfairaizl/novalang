@@ -1,5 +1,6 @@
 const { Query } = require('@novalang/graph');
 const {
+  InvalidArrayAccessError,
   MissingTypeAnnotationError,
   TypeMismatchError,
   MismatchedReturnTypeError,
@@ -69,6 +70,8 @@ class TypeAnalyzer {
         return this.analyzeKeyReference(node);
       case 'instance_reference':
         return this.analyzeInstanceReference(node);
+      case 'array_reference':
+        return this.analyzeArrayReference(node);
       case 'array_literal':
         return this.analyzeArray(node);
       case 'boolean_literal':
@@ -372,6 +375,18 @@ class TypeAnalyzer {
     }, null);
 
     return type;
+  }
+
+  analyzeArrayReference(refNode) {
+    const indexExpr = this.sourceGraph.outgoing(refNode, 'index_expression')[0];
+
+    const exprType = this.analyzeType(indexExpr);
+
+    if (exprType.attributes.kind !== 'Int') {
+      throw new InvalidArrayAccessError('Arrays can only be accessed with integer subscripts');
+    }
+
+    return exprType;
   }
 
   analyzeLiteral (literalNode) {

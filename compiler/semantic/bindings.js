@@ -39,6 +39,7 @@ class BindingAnalyzer {
 
       switch (source.attributes.type) {
         case 'array_literal':
+        case 'array_reference':
         case 'assignment':
         case 'bin_op':
         case 'class_definition':
