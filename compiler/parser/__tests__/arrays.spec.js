@@ -4,6 +4,18 @@ const Parser = require('..');
 
 describe('Parser', () => {
   describe('array literals', () => {
+    it('parses empty array type', () => {
+      const parser = new Parser('let x: [Int]');
+
+      const parsed = parser.parsePrimaryExpression();
+
+      expect(parser.toAST(parsed)).toEqual({
+        type: 'mutable_declaration',
+        identifier: 'x',
+        kind: '[Int]'
+      });
+    });
+
     it('parses empty array literals', () => {
       const parser = new Parser('let x = []');
 

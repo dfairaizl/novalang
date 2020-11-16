@@ -785,7 +785,7 @@ describe('Binding Analyzer', () => {
       ]);
     });
 
-    it.only('binds variables in array index', () => {
+    it('binds variables in array index', () => {
       const parser = new Parser(`
         const a = [1,2,3];
         const x = 1;

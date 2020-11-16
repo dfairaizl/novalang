@@ -59,7 +59,6 @@ class Compiler {
 
       console.log(' - ', currentSource.fileName());
 
-      debugger;
       const sourceGraph = this.parse(currentSource);
 
       if (!this.sourceGraph) {

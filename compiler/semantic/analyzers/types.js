@@ -374,7 +374,9 @@ class TypeAnalyzer {
       return recType;
     }, null);
 
-    return type;
+    const arrayType = this.buildType(`[${type.attributes.kind}]`);
+
+    return arrayType;
   }
 
   analyzeArrayReference(refNode) {

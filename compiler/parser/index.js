@@ -702,6 +702,15 @@ class Parser {
       this.validateNextToken(":");
       const typeToken = this.getNextToken();
 
+      // array type delcaration
+      if (typeToken instanceof OperatorToken && typeToken.value === '[') {
+        const arrayType = this.getNextToken();
+
+        this.validateNextToken(']');
+
+        return `[${arrayType.value}]`;
+      }
+
       return typeToken.value;
     }
 

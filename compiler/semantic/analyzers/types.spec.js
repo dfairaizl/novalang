@@ -773,6 +773,26 @@ describe('Type Analyzer', () => {
   });
 
   describe('arrays', () => {
+    it('checks for types in array declaration', () => {
+      const parser = new Parser(`
+        let a: [Int];
+      `);
+
+      const sourceGraph = parser.parse();
+
+      const semanticAnalyzer = new Analyzer(sourceGraph);
+      semanticAnalyzer.analyze();
+
+      const q = new Query(sourceGraph);
+      const result = q.match({ type: 'mutable_declaration' }, { name: 'decl' }).returns('decl');
+
+      const declNode = result.decl[0];
+      const type = sourceGraph.outgoing(declNode, 'type');
+      expect(type[0].attributes).toMatchObject({
+        kind: '[Int]'
+      });
+    });
+
     it('checks for types in array literals', () => {
       const parser = new Parser(`
         const a = [1];
@@ -789,7 +809,7 @@ describe('Type Analyzer', () => {
       const declNode = result.decl[0];
       const type = sourceGraph.outgoing(declNode, 'type');
       expect(type[0].attributes).toMatchObject({
-        kind: 'Int'
+        kind: '[Int]'
       });
     });
 
@@ -809,7 +829,7 @@ describe('Type Analyzer', () => {
       const declNode = result.decl[0];
       const type = sourceGraph.outgoing(declNode, 'type');
       expect(type[0].attributes).toMatchObject({
-        kind: 'Int'
+        kind: '[Int]'
       });
     });
 
@@ -830,13 +850,13 @@ describe('Type Analyzer', () => {
       const declNode = result.decl[0];
       const type = sourceGraph.outgoing(declNode, 'type');
       expect(type[0].attributes).toMatchObject({
-        kind: 'Float'
+        kind: '[Float]'
       });
     });
 
     it('checks for types in arrays with annotated declaration', () => {
       const parser = new Parser(`
-        const a: Int = [1];
+        const a: [Int] = [1];
       `);
 
       const sourceGraph = parser.parse();
@@ -850,7 +870,7 @@ describe('Type Analyzer', () => {
       const declNode = result.decl[0];
       const type = sourceGraph.outgoing(declNode, 'type');
       expect(type[0].attributes).toMatchObject({
-        kind: 'Int'
+        kind: '[Int]'
       });
     });
 
@@ -870,7 +890,7 @@ describe('Type Analyzer', () => {
       const declNode = result.decl[0];
       const type = sourceGraph.outgoing(declNode, 'type');
       expect(type[0].attributes).toMatchObject({
-        kind: 'Int'
+        kind: '[Int]'
       });
     });
 

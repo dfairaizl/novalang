@@ -595,8 +595,6 @@ class Generator {
   }
 
   codegenArrayReference (node) {
-    debugger;
-
     const indexExprNode = this.sourceGraph.outgoing(node, "index_expression")[0];
 
     const refExpr = this.codegenNode(indexExprNode);
@@ -609,7 +607,7 @@ class Generator {
       `${node.attributes.identifier}`
     );
 
-    return libLLVM.LLVMBuildLoad(this.builder.builderRef, ptr, 'test');
+    return libLLVM.LLVMBuildLoad(this.builder.builderRef, ptr, 'tmp');
   }
 
   codegenInvocation(node) {

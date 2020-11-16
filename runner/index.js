@@ -3,11 +3,11 @@ const { resolve } = require("path");
 
 const Compiler = require("../compiler");
 
-const sourceFile = resolve(__dirname, "..", "examples", "array.nv");
+const sourceFile = resolve(__dirname, "..", "examples", "max.nv");
 
 const novaCompiler = new Compiler(
   sourceFile,
-  "array" /*, { debugGraph: true } */
+  "max" /*, { debugGraph: true } */
 );
 
 novaCompiler.compile();
