@@ -1,4 +1,4 @@
-const { Query } = require('@novalang/graph');
+const { Query } = require('../../graph');
 const {
   InvalidExportError,
   ReassignImmutableError

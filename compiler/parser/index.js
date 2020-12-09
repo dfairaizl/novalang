@@ -9,7 +9,7 @@ const {
   StringToken
 } = require("../lexer/tokens");
 
-const Graph = require("@novalang/graph");
+const Graph = require("../graph");
 
 const OP_PRECEDENCE = {
   "+": 10,

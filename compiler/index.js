@@ -2,7 +2,7 @@ const { basename, resolve } = require('path');
 const { readFileSync } = require('fs');
 const { spawn } = require('child_process');
 
-const { Query } = require('@novalang/graph');
+const { Query } = require('./graph');
 
 const Parser = require('./parser');
 const SemanticAnalyzer = require('./semantic');

@@ -1,6 +1,6 @@
 /* global describe, it, expect */
 
-const { Query } = require('@novalang/graph');
+const { Query } = require('../../graph');
 
 const Parser = require('../../parser');
 const Analyzer = require('..');

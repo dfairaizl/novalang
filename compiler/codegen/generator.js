@@ -1,4 +1,4 @@
-const { Query } = require('@novalang/graph');
+const { Query } = require('../graph');
 
 const Builder = require("./llvm/builder");
 const BuildUnit = require("./build-unit");
