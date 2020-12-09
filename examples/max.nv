@@ -1,0 +1,11 @@
+import printf from 'io';
+
+const x = [1,2,3,4,5,6];
+
+function max(array: [Int]) -> Int {
+  return array[0];
+}
+
+const y = max(x);
+
+printf('Max is %d', y);

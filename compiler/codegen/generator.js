@@ -149,7 +149,6 @@ class Generator {
     const exprRef = this.codegenNode(expr);
 
     if (assign.attributes.type === "instance_reference") {
-      debugger;
       const thisVal = this.builder.namedValues["this"];
 
       const ivar = this.sourceGraph.outgoing(assign, "key_expression")[0];
@@ -400,7 +399,6 @@ class Generator {
     // get the return expression
     const retNode = this.sourceGraph.outgoing(node, "expression")[0];
 
-    debugger;
     // code gen expression
     const expr = this.codegenNode(retNode);
 
@@ -475,7 +473,6 @@ class Generator {
   }
 
   codegenVar(node) {
-    debugger;
     const exprNode = this.sourceGraph.outgoing(node, "expression")[0];
 
     if (exprNode.attributes.type === "instantiation") {
@@ -519,7 +516,7 @@ class Generator {
         .returns('arrayType');
 
       const allocatedArray = this.builder.buildArray(
-        new Array(this.getType(result.arrayType[0]), arrayMembers.length),
+        new Array(Int32(), arrayMembers.length),
         node.attributes.identifier
       );
 
@@ -552,16 +549,21 @@ class Generator {
 
   codegenReference(node) {
     const binding = this.sourceGraph.outgoing(node, "binding")[0];
+    const type = this.sourceGraph.outgoing(binding, "type")[0];
 
     if (binding.attributes.type === "function_argument") {
       return this.builder.namedValues[binding.attributes.identifier];
+    }
+
+    // check if we're referencing a pointer
+    if (type.attributes.dataType === 'array') {
+      return this.builder.namedValues[binding.attributes.identifier].storage;
     }
 
     return this.builder.buildLoad(node.attributes.identifier);
   }
 
   codegenObjectReference(node) {
-    debugger;
     const keyPathNode = this.sourceGraph.outgoing(node, "key_expression")[0];
     const bindingObject = this.sourceGraph.outgoing(node, "binding")[0];
 
@@ -569,7 +571,6 @@ class Generator {
   }
 
   codegenInstanceReference(node) {
-    debugger;
     const keyPathNode = this.sourceGraph.outgoing(node, "key_expression")[0];
     const bindingObject = this.sourceGraph.outgoing(keyPathNode, "binding")[0];
 
@@ -583,10 +584,6 @@ class Generator {
 
       return libLLVM.LLVMBuildLoad(this.builder.builderRef, instance, "ref");
     }
-
-    // const val = this.codegenNode(keyPathNode);
-
-    console.log(bindingObject);
   }
 
   codegenKeyReference(node) {
@@ -599,11 +596,13 @@ class Generator {
 
     const refExpr = this.codegenNode(indexExprNode);
 
+    const ref = libLLVM.LLVMBuildLoad(this.builder.builderRef, this.builder.namedValues[node.attributes.identifier], 'array');
+
     const ptr = libLLVM.LLVMBuildInBoundsGEP(
       this.builder.builderRef,
-      this.builder.namedValues[node.attributes.identifier].storage,
+      this.builder.namedValues[node.attributes.identifier],
       [Constant(Int32(), 0), refExpr],
-      2,
+      null,
       `${node.attributes.identifier}`
     );
 
@@ -642,11 +641,36 @@ class Generator {
 
       const funcRef = this.module.getNamedFunction(name);
 
+      // check function arg types against types passed to invocation
+      // to see if we need to cast
+
+      const q = new Query(this.sourceGraph);
+      const result = q.find(boundNode)
+        .out('arguments', { name: 'args'})
+        .returns('args');
+
       // build argument type list
       const argTypes = this.sourceGraph
         .outgoing(node, "arguments")
-        .map(n => {
-          return this.codegenNode(n);
+        .map((arg, index) => {
+          const q = new Query(this.sourceGraph);
+          const result = q.find(arg)
+            .out('binding')
+            .out('type', { name: 'type' })
+            .returns('type');
+
+          const boundType = result.type[0]
+
+          if (boundType && boundType.attributes.dataType === 'array') {
+            debugger;
+            const variable = this.codegenNode(arg);
+
+            // bitcast the array into a pointer
+            return libLLVM.LLVMBuildBitCast(this.builder.builderRef, variable, Pointer(Int32()), arg.attributes.identifier)
+
+          } else {
+            return this.codegenNode(arg);
+          }
         });
 
       return this.builder.buildCall(funcRef, argTypes, "");
@@ -784,6 +808,17 @@ class Generator {
   }
 
   getType(typeNode) {
+    if (typeNode.attributes.dataType === 'array') {
+      switch (typeNode.attributes.memberKind) {
+        case "Int":
+          return Pointer(Int32());
+        case "Boolean":
+          return Pointer(Int1());
+        case "Void":
+          return Void();
+      }
+    }
+
     switch (typeNode.attributes.kind) {
       case "Int":
         return Int32();
@@ -792,6 +827,7 @@ class Generator {
       case "Void":
         return Void();
     }
+
 
     if (this.typeMap[typeNode.attributes.kind]) {
       return this.typeMap[typeNode.attributes.kind];

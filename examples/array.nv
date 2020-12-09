@@ -1,8 +1,7 @@
 import printf from 'io';
 
-const numbers = [1,2,3,4];
+const numbers = [1,2,3,4,5];
 
-const y = 0;
-const x = numbers[y + 1];
+const x = numbers[0];
 
 printf("Index 0 is %d", x);

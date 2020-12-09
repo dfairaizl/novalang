@@ -7,6 +7,8 @@ const {
   VoidFunctionReturnError
 } = require('../errors');
 
+const ARRAY = new RegExp(/\[(.*)\]/);
+
 class TypeAnalyzer {
   constructor (sourceGraph) {
     this.sourceGraph = sourceGraph;
@@ -88,7 +90,7 @@ class TypeAnalyzer {
       return resolvedType;
     }
 
-    const annotatedType = this.associateType(declNode);
+    const annotatedType = this.buildType(declNode.attributes.kind);
 
     const expressionQuery = new Query(this.sourceGraph);
 
@@ -99,6 +101,7 @@ class TypeAnalyzer {
 
     if (result.expr.length) {
       // resolve expression type
+      debugger;
       const inferredType = this.analyzeType(result.expr[0]);
 
       // type match annotated to inferred
@@ -182,7 +185,7 @@ class TypeAnalyzer {
         throw new MissingTypeAnnotationError(`Parameter \`${n.attributes.identifier}\` in function \`${funcNode.attributes.identifier}\` must have a declared type`);
       }
 
-      const argType = this.associateType(n);
+      const argType = this.buildType(n.attributes.kind);
       this.sourceGraph.addEdge(n, argType, 'type');
     });
 
@@ -392,7 +395,7 @@ class TypeAnalyzer {
   }
 
   analyzeLiteral (literalNode) {
-    const type = this.associateType(literalNode);
+    const type = this.buildType(literalNode.attributes.kind);
 
     this.sourceGraph.addEdge(literalNode, type, 'type');
 
@@ -418,33 +421,63 @@ class TypeAnalyzer {
 
   reconcileTypes (type1, type2) {
     // check for equivilance (type precedence) or the ability to cast
-    if (type1.attributes.kind === type2.attributes.kind) {
+    if (type1.attributes.kind === type2.attributes.kind
+      && type1.attributes.dataType === type2.attributes.dataType) {
       return type1;
     }
 
     return null;
   }
 
-  associateType (node) {
-    return this.buildType(node.attributes.kind);
-  }
-
   buildType (typeClass) {
+    const dataType = this.buildDataType(typeClass);
+
     if (!typeClass) {
       return null;
     }
 
-    const typeQuery = new Query(this.sourceGraph);
-    const result = typeQuery
-      .match({ type: 'type', kind: typeClass }, { name: 'type' })
-      .returns('type');
+    if (!dataType) {
+      return null;
+    }
 
-    if (result.type && result.type[0]) {
-      return result.type[0];
-    } else {
-      const buildType = this.sourceGraph.addNode({ type: 'type', kind: typeClass });
+    if (this.isArray(typeClass)) {
+      const buildType = this.sourceGraph.addNode({
+        dataType: dataType,
+        type: 'type',
+        kind: typeClass,
+        memberKind: typeClass.match(ARRAY)[1]
+      });
+
       return buildType;
     }
+
+    const buildType = this.sourceGraph.addNode({
+      dataType: dataType,
+      type: 'type',
+      kind: typeClass
+    });
+
+    return buildType;
+  }
+
+  buildDataType(typeClass) {
+    if (this.isArray(typeClass)) {
+      return 'array';
+    }
+
+    switch(typeClass) {
+      case 'Int':
+      case 'Boolean':
+      case 'Float':
+      case 'Char':
+        return 'primitive';
+    }
+
+    return 'class';
+  }
+
+  isArray(typeClass) {
+    return ARRAY.test(typeClass) === true;
   }
 }
 
