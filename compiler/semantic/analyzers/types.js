@@ -90,7 +90,7 @@ class TypeAnalyzer {
       return resolvedType;
     }
 
-    const annotatedType = this.buildType(declNode.attributes.kind);
+    const annotatedType = this.validateType(declNode.attributes.kind);
 
     const expressionQuery = new Query(this.sourceGraph);
 
@@ -141,6 +141,7 @@ class TypeAnalyzer {
   }
 
   analyzeBinop (binopNode) {
+    debugger;
     let binopQuery = new Query(this.sourceGraph)
     const leftResult = binopQuery.find(binopNode)
       .out('left', { name: 'leftExpression' })
@@ -156,6 +157,8 @@ class TypeAnalyzer {
 
     const rightNode = rightResult.rightExpression[0];
     const rightResolved = this.analyzeType(rightNode);
+
+    console.log(leftResolved, rightResolved);
 
     const resolvedType = this.reconcileTypes(leftResolved, rightResolved);
 
@@ -185,7 +188,7 @@ class TypeAnalyzer {
         throw new MissingTypeAnnotationError(`Parameter \`${n.attributes.identifier}\` in function \`${funcNode.attributes.identifier}\` must have a declared type`);
       }
 
-      const argType = this.buildType(n.attributes.kind);
+      const argType = this.validateType(n.attributes.kind);
       this.sourceGraph.addEdge(n, argType, 'type');
     });
 
@@ -193,9 +196,9 @@ class TypeAnalyzer {
     let funcType;
 
     if (funcNode.attributes.kind) {
-      funcType = this.buildType(funcNode.attributes.kind);
+      funcType = this.validateType(funcNode.attributes.kind);
     } else {
-      funcType = this.buildType('Void');
+      funcType = this.validateType('Void');
     }
 
     this.sourceGraph.addEdge(funcNode, funcType, 'type');
@@ -291,7 +294,7 @@ class TypeAnalyzer {
       return resolvedType;
     }
 
-    const classType = this.buildType(classNode.attributes.kind);
+    const classType = this.validateType(classNode.attributes.kind);
     this.sourceGraph.addEdge(classNode, classType, 'type');
 
     const ivarQuery = new Query(this.sourceGraph);
@@ -377,7 +380,7 @@ class TypeAnalyzer {
       return recType;
     }, null);
 
-    const arrayType = this.buildType(`[${type.attributes.kind}]`);
+    const arrayType = this.validateType(`[${type.attributes.kind}]`);
 
     return arrayType;
   }
@@ -395,7 +398,7 @@ class TypeAnalyzer {
   }
 
   analyzeLiteral (literalNode) {
-    const type = this.buildType(literalNode.attributes.kind);
+    const type = this.validateType(literalNode.attributes.kind);
 
     this.sourceGraph.addEdge(literalNode, type, 'type');
 
@@ -429,55 +432,23 @@ class TypeAnalyzer {
     return null;
   }
 
-  buildType (typeClass) {
-    const dataType = this.buildDataType(typeClass);
+  validateType(typeClass) {
+    const typeQuery = new Query(this.sourceGraph)
+    const result = typeQuery
+      .match({ type: 'type_declaration', destinationType: typeClass }, { name: 'matchedType' })
+      .returns('matchedType')
 
-    if (!typeClass) {
-      return null;
-    }
+    if (result.matchedType) {
+      const typeDef = result.matchedType[0].attributes;
 
-    if (!dataType) {
-      return null;
-    }
-
-    if (this.isArray(typeClass)) {
       const buildType = this.sourceGraph.addNode({
-        dataType: dataType,
+        dataType: typeDef.dataType,
         type: 'type',
-        kind: typeClass,
-        memberKind: typeClass.match(ARRAY)[1]
+        kind: typeDef.destinationType
       });
 
       return buildType;
     }
-
-    const buildType = this.sourceGraph.addNode({
-      dataType: dataType,
-      type: 'type',
-      kind: typeClass
-    });
-
-    return buildType;
-  }
-
-  buildDataType(typeClass) {
-    if (this.isArray(typeClass)) {
-      return 'array';
-    }
-
-    switch(typeClass) {
-      case 'Int':
-      case 'Boolean':
-      case 'Float':
-      case 'Char':
-        return 'primitive';
-    }
-
-    return 'class';
-  }
-
-  isArray(typeClass) {
-    return ARRAY.test(typeClass) === true;
   }
 }
 

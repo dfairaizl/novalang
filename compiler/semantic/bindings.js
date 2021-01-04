@@ -9,12 +9,12 @@ const {
   UndeclaredVariableError
 } = require('./errors');
 
-class BindingAnalyzer {
+class Binder {
   constructor (sourceGraph) {
     this.sourceGraph = sourceGraph;
   }
 
-  analyze () {
+  bindModules () {
     const sourceQuery = new Query(this.sourceGraph);
     const result = sourceQuery
       .match({ type: 'module', identifier: 'main_module' }, { name: 'sources' })
@@ -315,4 +315,4 @@ class BindingAnalyzer {
   }
 }
 
-module.exports = BindingAnalyzer;
+module.exports = Binder;
