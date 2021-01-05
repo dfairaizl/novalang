@@ -598,17 +598,11 @@ class Generator {
 
     const refExpr = this.codegenNode(indexExprNode);
 
-    const ref = libLLVM.LLVMBuildLoad(
-      this.builder.builderRef,
-      this.builder.namedValues[node.attributes.identifier].storage,
-      'array'
-    );
-
     const ptr = libLLVM.LLVMBuildInBoundsGEP(
       this.builder.builderRef,
       this.builder.namedValues[node.attributes.identifier].storage,
       [Constant(Int32(), 0), refExpr],
-      null,
+      2,
       `${node.attributes.identifier}`
     );
 

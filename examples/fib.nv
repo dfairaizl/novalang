@@ -8,4 +8,4 @@ function fib(n: Int) -> Int {
   return fib(n - 1) + fib(n - 2);
 }
 
-printf("Fib %d", fib(39));
+printf("Fib %d", fib(40));

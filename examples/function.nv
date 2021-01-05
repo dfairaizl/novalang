@@ -1,5 +1,9 @@
+import printf from 'io';
+
 function addOne(x: Int) -> Int {
   return x + 1;
 }
 
 const ten = addOne(9);
+
+printf('Number is %d', ten);

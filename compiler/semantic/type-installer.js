@@ -12,7 +12,7 @@ class TypeInstaller {
   installPrimitives() {
     const builtIns = {
       'Int': 'i32',
-      'Bool': 'i1',
+      'Boolean': 'i1',
       'Void': 'void'
     }
 
