@@ -512,11 +512,12 @@ class Generator {
       const typeQuery = new Query(this.sourceGraph);
       const result = typeQuery
         .find(node)
+        .out('type')
         .out('type', { name: 'arrayType' })
         .returns('arrayType');
 
       const allocatedArray = this.builder.buildArray(
-        new Array(Int32(), arrayMembers.length),
+        new Array(this.getType(result.arrayType[0]), arrayMembers.length),
         node.attributes.identifier
       );
 
@@ -592,15 +593,20 @@ class Generator {
   }
 
   codegenArrayReference (node) {
+    debugger;
     const indexExprNode = this.sourceGraph.outgoing(node, "index_expression")[0];
 
     const refExpr = this.codegenNode(indexExprNode);
 
-    const ref = libLLVM.LLVMBuildLoad(this.builder.builderRef, this.builder.namedValues[node.attributes.identifier], 'array');
+    const ref = libLLVM.LLVMBuildLoad(
+      this.builder.builderRef,
+      this.builder.namedValues[node.attributes.identifier].storage,
+      'array'
+    );
 
     const ptr = libLLVM.LLVMBuildInBoundsGEP(
       this.builder.builderRef,
-      this.builder.namedValues[node.attributes.identifier],
+      this.builder.namedValues[node.attributes.identifier].storage,
       [Constant(Int32(), 0), refExpr],
       null,
       `${node.attributes.identifier}`
@@ -808,17 +814,6 @@ class Generator {
   }
 
   getType(typeNode) {
-    if (typeNode.attributes.dataType === 'array') {
-      switch (typeNode.attributes.memberKind) {
-        case "Int":
-          return Pointer(Int32());
-        case "Boolean":
-          return Pointer(Int1());
-        case "Void":
-          return Void();
-      }
-    }
-
     switch (typeNode.attributes.kind) {
       case "Int":
         return Int32();
@@ -827,7 +822,6 @@ class Generator {
       case "Void":
         return Void();
     }
-
 
     if (this.typeMap[typeNode.attributes.kind]) {
       return this.typeMap[typeNode.attributes.kind];

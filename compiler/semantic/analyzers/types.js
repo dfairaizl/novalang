@@ -7,15 +7,12 @@ const {
   VoidFunctionReturnError
 } = require('../errors');
 
-const ARRAY = new RegExp(/\[(.*)\]/);
-
 class TypeAnalyzer {
   constructor (sourceGraph) {
     this.sourceGraph = sourceGraph;
   }
 
   analyze () {
-    // TODO: Install the build in types so we don't need to create them via strings
     const sourceQuery = new Query(this.sourceGraph);
     const results = sourceQuery
       .match({ type: 'module' }, { name: 'modules'})
@@ -101,7 +98,6 @@ class TypeAnalyzer {
 
     if (result.expr.length) {
       // resolve expression type
-      debugger;
       const inferredType = this.analyzeType(result.expr[0]);
 
       // type match annotated to inferred
@@ -380,9 +376,13 @@ class TypeAnalyzer {
       return recType;
     }, null);
 
-    const arrayType = this.validateType(`[${type.attributes.kind}]`);
+    const arrayType = this.validateType(type.attributes.kind); // member type
 
-    return arrayType;
+    // build a type container node that points to the actual type
+    const containerType = this.sourceGraph.addNode({ type: 'type_container', kind: 'array' });
+    this.sourceGraph.addEdge(containerType, arrayType, 'type');
+
+    return containerType;
   }
 
   analyzeArrayReference(refNode) {
@@ -438,17 +438,19 @@ class TypeAnalyzer {
       .match({ type: 'type_declaration', destinationType: typeClass }, { name: 'matchedType' })
       .returns('matchedType')
 
-    if (result.matchedType) {
+    if (result.matchedType[0]) {
       const typeDef = result.matchedType[0].attributes;
 
       const buildType = this.sourceGraph.addNode({
         dataType: typeDef.dataType,
-        type: 'type',
+        type: 'type_reference',
         kind: typeDef.destinationType
       });
 
       return buildType;
     }
+
+    return null;
   }
 }
 
